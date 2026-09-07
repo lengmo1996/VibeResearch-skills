@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "paper-context.schema.json",
+  "title": "Thin Paper Context",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "paper",
+    "narrative",
+    "claims",
+    "artifacts",
+    "decisions",
+    "privacy"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "paper": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "target_venue",
+        "lifecycle_stage"
+      ],
+      "properties": {
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "target_venue": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lifecycle_stage": {
+          "enum": [
+            "planning",
+            "drafting",
+            "integration",
+            "audit",
+            "submission",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "narrative": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "problem",
+        "gap",
+        "contributions",
+        "section_order"
+      ],
+      "properties": {
+        "problem": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "gap": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "contributions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "section_order": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "$ref": "claim-evidence.schema.json#/$defs/claim"
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "experiment_plan_ref",
+        "result_refs",
+        "figure_spec_refs",
+        "audit_ledger_ref",
+        "submission_manifest_ref"
+      ],
+      "properties": {
+        "experiment_plan_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "result_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "figure_spec_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "audit_ledger_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "submission_manifest_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "decisions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "locked",
+        "open"
+      ],
+      "properties": {
+        "locked": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "open": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sensitivity",
+        "persistence_authorized"
+      ],
+      "properties": {
+        "sensitivity": {
+          "enum": [
+            "public",
+            "internal",
+            "confidential",
+            "unknown"
+          ]
+        },
+        "persistence_authorized": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+interface:
+  display_name: "写作知识采集"
+  short_description: "提取可复用写作知识或本人风格档案，附来源提交待审核区。"
+  default_prompt: "使用 $writing-knowledge-capture，提取可复用写作知识或本人风格档案，附来源提交待审核区。"
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "knowledge-hub"
+      description: "Read-only search and retrieval from a user-configured KnowledgeHub MCP server"
+      transport: "streamable_http"
+
+policy:
+  allow_implicit_invocation: true

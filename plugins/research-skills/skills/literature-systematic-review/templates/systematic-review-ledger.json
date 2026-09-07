@@ -1,0 +1,67 @@
+{
+  "schema_version": "1.0.0",
+  "review_id": "SR-001",
+  "coverage_status": "complete",
+  "protocol": {
+    "question": "Bounded review question",
+    "eligibility": "Frozen inclusion and exclusion criteria",
+    "declared_sources": [
+      "source-a"
+    ],
+    "date_range": "2020-01-01/2026-08-04",
+    "deduplication_key": "doi then title-year",
+    "screening_process": "single-screened; independence not claimed",
+    "outcomes": [
+      "outcome-a"
+    ],
+    "amendments": []
+  },
+  "search_batches": [
+    {
+      "batch_id": "SEARCH-001",
+      "source": "source-a",
+      "query_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "executed_at": "2026-08-04T00:00:00+08:00",
+      "records_found": 2,
+      "complete": true,
+      "evidence_ref": "search-log.json#SEARCH-001"
+    }
+  ],
+  "flow": {
+    "identified": 2,
+    "duplicates_removed": 0,
+    "title_abstract_screened": 2,
+    "full_text_assessed": 2,
+    "excluded_full_text": 1,
+    "included_qualitative": 1,
+    "included_quantitative": 0
+  },
+  "studies": [
+    {
+      "study_id": "STUDY-001",
+      "source_ref": "paper-a.pdf",
+      "title_abstract_decision": "include",
+      "full_text_decision": "include",
+      "exclusion_reason": null,
+      "risk_of_bias_status": "unclear",
+      "effect_data_status": "not-requested"
+    },
+    {
+      "study_id": "STUDY-002",
+      "source_ref": "paper-b.pdf",
+      "title_abstract_decision": "include",
+      "full_text_decision": "exclude",
+      "exclusion_reason": "ineligible outcome",
+      "risk_of_bias_status": "not-assessed",
+      "effect_data_status": "not-requested"
+    }
+  ],
+  "meta_analysis_gate": {
+    "status": "not-requested",
+    "quantitative_study_ids": [],
+    "effect_definition": null,
+    "compatible": null,
+    "heterogeneity_plan": null
+  },
+  "unresolved": []
+}

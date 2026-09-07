@@ -1,0 +1,41 @@
+{
+  "id": "PREFLIGHT-001",
+  "workload": {
+    "name": "unresolved",
+    "environment": "unresolved",
+    "concurrency": null
+  },
+  "requirements": [
+    {
+      "id": "REQ-001",
+      "resource": "runtime",
+      "minimum": "unresolved",
+      "preferred": null,
+      "unit": "version",
+      "hard": true,
+      "source": "unresolved"
+    }
+  ],
+  "observations": [],
+  "matches": [
+    {
+      "requirement_id": "REQ-001",
+      "status": "unknown",
+      "evidence_ids": [],
+      "headroom": null,
+      "note": "No runtime observation supplied."
+    }
+  ],
+  "bottlenecks": [],
+  "fallbacks": [],
+  "privacy": {
+    "host_identifiers_exposed": false,
+    "absolute_paths_exposed": false,
+    "environment_values_exposed": false,
+    "credentials_exposed": false
+  },
+  "warnings": ["No resource probes were executed."],
+  "unresolved": ["runtime requirement", "effective resources"],
+  "verdict": "not-evaluable",
+  "handoff": []
+}

@@ -1,0 +1,16 @@
+{
+  "automatic_email_configured": false,
+  "daily_digest_categories_configurable": true,
+  "daily_digest_report_category_configurable": true,
+  "daily_digest_runtime_included": true,
+  "daily_digest_user_configuration_required": true,
+  "email_sending_authorized": false,
+  "external_services_bundled": false,
+  "historical_baseline": "not_applicable_for_initial_public_release",
+  "license": "MIT for contributor-owned content; identified third-party portions retain the terms in NOTICE.md and LICENSES/",
+  "personal_profiles_included": false,
+  "private_history_required": false,
+  "profile_version": "1.3.0",
+  "schema_version": "1.0.0",
+  "skill_count": 31
+}

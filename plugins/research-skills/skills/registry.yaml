@@ -1,0 +1,4678 @@
+{
+  "authority": {
+    "capability_source": "skills/registry.yaml",
+    "discovery_view": "skills/skill_index.json"
+  },
+  "library_version": "0.1.0",
+  "release": "0.1.0",
+  "schema_version": "2.0.0",
+  "skills": [
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "high",
+      "expected_latency": "high",
+      "failure_behavior": "Lower confidence for cropped, blurred, unreadable, or context-free material and never reconstruct missing evidence.",
+      "handoff_to": [
+        "paper-reproduction"
+      ],
+      "id": "paper-deep-read",
+      "input_contract": {
+        "one_of": [
+          "paper_pdf",
+          "paper_text",
+          "method_section",
+          "equations",
+          "algorithm",
+          "figure_image",
+          "table_image"
+        ]
+      },
+      "mcp_tools": [
+        "rag_search",
+        "rag_get_chunk",
+        "rag_get_document",
+        "rag_get_neighbors"
+      ],
+      "mode_contracts": {
+        "*": {
+          "rag_policy": "optional",
+          "side_effect_class": "read_only"
+        }
+      },
+      "modes": [
+        "overview",
+        "method",
+        "equations",
+        "figure",
+        "table",
+        "experiments",
+        "limitations",
+        "full"
+      ],
+      "name": "paper-deep-read",
+      "negative_triggers": [
+        "implement the paper method",
+        "migrate a repository",
+        "compare multiple papers"
+      ],
+      "optional_inputs": [
+        "requested mode",
+        "question",
+        "caption or legend",
+        "page references",
+        "existing evidence ledger"
+      ],
+      "outputs": [
+        "mode-specific analysis",
+        "shared evidence ledger",
+        "limitations and uncertainty",
+        "open questions"
+      ],
+      "path": "skills/paper-deep-read/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "paper PDF",
+        "method section",
+        "equations",
+        "architecture diagram",
+        "table image",
+        "deep read"
+      ],
+      "purpose": "Analyze one complete or partial paper artifact through source-faithful overview, method, equation, figure, table, experiment, or limitation modes.",
+      "rag_policy": "optional",
+      "replacement": null,
+      "required_inputs": [
+        "one paper artifact accepted by input_contract"
+      ],
+      "role": "analysis",
+      "side_effect_class": "read_only",
+      "side_effects": [],
+      "status": "active",
+      "stop_conditions": [
+        "selected mode is complete",
+        "remaining material is unreadable or too partial"
+      ],
+      "tools": [
+        "document_reader",
+        "pdf_reader",
+        "image_reader",
+        "filesystem_read"
+      ],
+      "user_intents": [
+        "understand one paper",
+        "explain a method section",
+        "analyze equations",
+        "read an architecture figure",
+        "analyze a result table"
+      ],
+      "version": "2.0.2",
+      "workflow_steps": [
+        "identify artifact quality",
+        "select narrowest mode",
+        "reuse one evidence ledger",
+        "separate facts from inference",
+        "degrade unsupported conclusions"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "high",
+      "expected_latency": "high",
+      "failure_behavior": "Distinguish paper fact, inference, and engineering choice; without official code never claim equivalence and label code candidate implementation.",
+      "handoff_to": [
+        "code-repo-adaptation",
+        "code-debugging",
+        "code-experiment-config-management",
+        "research-dataset-metric-protocols"
+      ],
+      "id": "paper-reproduction",
+      "input_contract": {
+        "optional": [
+          "paper-deep-read evidence ledger",
+          "official or candidate repository",
+          "target repository",
+          "tensor/interface constraints",
+          "write authorization"
+        ],
+        "required": [
+          "identifiable paper or source-bounded paper analysis",
+          "requested mode"
+        ]
+      },
+      "mcp_tools": [
+        "rag_search",
+        "rag_get_chunk",
+        "rag_get_document"
+      ],
+      "mode_contracts": {
+        "*": {
+          "rag_policy": "optional",
+          "side_effect_class": "authorized_workspace_write"
+        },
+        "code-mapping": {
+          "output_sections": [
+            "Scope",
+            "Paper–Code Mapping",
+            "Expected Invariants",
+            "Unresolved Paper-to-Code Inferences"
+          ],
+          "rag_policy": "optional",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/paper-code-traceability.md#mapping-rule"
+            ]
+          },
+          "side_effect_class": "read_only"
+        },
+        "full": {
+          "output_sections": [
+            "Scope",
+            "Innovation Map",
+            "Repository Provenance",
+            "Paper–Code Mapping",
+            "Core Implementation Specification",
+            "Engineering Decision Ledger",
+            "Expected Invariants",
+            "Unresolved Paper-to-Code Inferences",
+            "Implementation Status"
+          ],
+          "rag_policy": "optional",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/paper-code-traceability.md#innovation-evidence",
+              "references/paper-code-traceability.md#repository-provenance",
+              "references/paper-code-traceability.md#mapping-rule",
+              "references/paper-code-traceability.md#implementation-specification",
+              "references/paper-code-traceability.md#engineering-decisions"
+            ],
+            "stages": {
+              "no-official-code": {
+                "required_paths": [
+                  "references/paper-code-traceability.md#no-official-code"
+                ]
+              },
+              "patch-handoff": {
+                "required_paths": [
+                  "references/paper-code-traceability.md#patch-trace",
+                  "templates/paper_reproduction_report.md#verification-handoff"
+                ]
+              }
+            }
+          },
+          "side_effect_class": "authorized_workspace_write"
+        },
+        "implementation": {
+          "output_sections": [
+            "Scope",
+            "Core Implementation Specification",
+            "Engineering Decision Ledger",
+            "Expected Invariants",
+            "Unresolved Paper-to-Code Inferences",
+            "Implementation Status"
+          ],
+          "rag_policy": "optional",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/paper-code-traceability.md#implementation-specification",
+              "references/paper-code-traceability.md#engineering-decisions"
+            ],
+            "stages": {
+              "patch-handoff": {
+                "required_paths": [
+                  "references/paper-code-traceability.md#patch-trace",
+                  "templates/paper_reproduction_report.md#verification-handoff"
+                ]
+              }
+            }
+          },
+          "side_effect_class": "authorized_workspace_write"
+        },
+        "innovation-analysis": {
+          "output_sections": [
+            "Scope",
+            "Innovation Map"
+          ],
+          "rag_policy": "optional",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/paper-code-traceability.md#innovation-evidence"
+            ]
+          },
+          "side_effect_class": "read_only"
+        },
+        "no-official-code": {
+          "output_sections": [
+            "Scope",
+            "Core Implementation Specification",
+            "Engineering Decision Ledger",
+            "Expected Invariants",
+            "Unresolved Paper-to-Code Inferences"
+          ],
+          "rag_policy": "optional",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/paper-code-traceability.md#no-official-code",
+              "references/paper-code-traceability.md#implementation-specification",
+              "references/paper-code-traceability.md#engineering-decisions"
+            ],
+            "stages": {
+              "patch-handoff": {
+                "required_paths": [
+                  "references/paper-code-traceability.md#patch-trace",
+                  "templates/paper_reproduction_report.md#verification-handoff"
+                ]
+              }
+            }
+          },
+          "side_effect_class": "authorized_workspace_write"
+        },
+        "official-code-discovery": {
+          "output_sections": [
+            "Scope",
+            "Repository Provenance"
+          ],
+          "rag_policy": "optional",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/paper-code-traceability.md#repository-provenance"
+            ]
+          },
+          "side_effect_class": "read_only"
+        }
+      },
+      "modes": [
+        "innovation-analysis",
+        "official-code-discovery",
+        "code-mapping",
+        "implementation",
+        "no-official-code",
+        "full"
+      ],
+      "name": "paper-reproduction",
+      "negative_triggers": [
+        "environment migration",
+        "minimal reproduction",
+        "verify this patch",
+        "reproduce official metrics"
+      ],
+      "optional_inputs": [
+        "paper-deep-read evidence ledger",
+        "official or candidate repository",
+        "target repository",
+        "tensor/interface constraints",
+        "write authorization"
+      ],
+      "outputs": [
+        "Innovation Map",
+        "Paper-Code Mapping",
+        "Core Implementation Specification",
+        "candidate Implementation Patch when authorized",
+        "Expected Invariants",
+        "Verification Handoff",
+        "Unresolved Paper-to-Code Inferences"
+      ],
+      "path": "skills/paper-reproduction/SKILL.md",
+      "physical_group": "coding",
+      "positive_triggers": [
+        "innovation point",
+        "official code",
+        "paper code mapping",
+        "core implementation",
+        "implement this paper module"
+      ],
+      "purpose": "Extract a paper core method, establish official-code provenance, map paper concepts to code, and optionally implement the core method as a candidate.",
+      "rag_policy": "optional",
+      "replacement": null,
+      "required_inputs": [
+        "identifiable paper or source-bounded paper analysis",
+        "requested mode"
+      ],
+      "role": "implementation",
+      "side_effect_class": "authorized_workspace_write",
+      "side_effects": [
+        "with explicit authorization may modify core method files in the target repository"
+      ],
+      "status": "active",
+      "stop_conditions": [
+        "requested mapping or candidate implementation is complete",
+        "write authorization is absent",
+        "paper-to-code ambiguity blocks safe implementation",
+        "verification handoff is complete"
+      ],
+      "tools": [
+        "document_reader",
+        "pdf_reader",
+        "filesystem_read",
+        "web_search",
+        "git_read",
+        "apply_patch"
+      ],
+      "user_intents": [
+        "identify paper innovations",
+        "find official code",
+        "map method to repository code",
+        "implement a paper module",
+        "implement when no official code exists"
+      ],
+      "version": "2.1.0",
+      "workflow_steps": [
+        "freeze paper evidence",
+        "extract innovation map",
+        "establish code provenance",
+        "map paper to code",
+        "specify interfaces and invariants",
+        "write candidate only when authorized",
+        "handoff verification"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "high",
+      "expected_latency": "high",
+      "failure_behavior": "Return a source-faithful outline and identify missing visuals or layout blockers; do not invent paper results.",
+      "handoff_to": [],
+      "id": "paper-to-ppt",
+      "input_contract": {
+        "optional": [
+          "slide template",
+          "venue",
+          "speaker notes",
+          "visual assets",
+          "language",
+          "aspect ratio",
+          "accessibility or export constraints",
+          "presentation handoff"
+        ],
+        "required": [
+          "paper, reading report, or verified research results",
+          "audience and presentation duration"
+        ]
+      },
+      "mcp_tools": [],
+      "mode_contracts": {
+        "*": {
+          "rag_policy": "never",
+          "side_effect_class": "authorized_workspace_write"
+        },
+        "deck": {
+          "rag_policy": "never",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 0,
+            "required_paths": [
+              "assets/templates/deck-content-plan.md"
+            ],
+            "stages": {
+              "accessibility": {
+                "references_max": 2,
+                "required_paths": [
+                  "references/interaction-motion-responsive-accessibility.md"
+                ]
+              },
+              "artifact-qa": {
+                "references_max": 2,
+                "required_paths": [
+                  "assets/templates/visual-qa-checklist.md"
+                ]
+              },
+              "layout": {
+                "references_max": 2,
+                "required_paths": [
+                  "references/layout-and-style-rules.md"
+                ]
+              },
+              "narrative": {
+                "references_max": 2,
+                "required_paths": [
+                  "assets/templates/deck-content-plan.md"
+                ]
+              },
+              "type-chart": {
+                "references_max": 2,
+                "required_paths": [
+                  "references/typography-color-chart-rules.md"
+                ]
+              },
+              "visual-plan": {
+                "references_max": 2,
+                "required_paths": [
+                  "references/visual-decision-framework.md",
+                  "assets/templates/visual-design-brief.md"
+                ]
+              }
+            }
+          },
+          "side_effect_class": "authorized_workspace_write"
+        },
+        "outline": {
+          "rag_policy": "never",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 0,
+            "required_paths": [
+              "assets/templates/deck-content-plan.md"
+            ]
+          },
+          "side_effect_class": "read_only"
+        },
+        "speaker-ready": {
+          "rag_policy": "never",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 0,
+            "required_paths": [
+              "assets/templates/deck-content-plan.md"
+            ],
+            "stages": {
+              "accessibility": {
+                "references_max": 2,
+                "required_paths": [
+                  "references/interaction-motion-responsive-accessibility.md"
+                ]
+              },
+              "artifact-qa": {
+                "references_max": 2,
+                "required_paths": [
+                  "assets/templates/visual-qa-checklist.md"
+                ]
+              },
+              "layout": {
+                "references_max": 2,
+                "required_paths": [
+                  "references/layout-and-style-rules.md"
+                ]
+              },
+              "narrative": {
+                "references_max": 2,
+                "required_paths": [
+                  "assets/templates/deck-content-plan.md"
+                ]
+              },
+              "type-chart": {
+                "references_max": 2,
+                "required_paths": [
+                  "references/typography-color-chart-rules.md"
+                ]
+              },
+              "visual-plan": {
+                "references_max": 2,
+                "required_paths": [
+                  "references/visual-decision-framework.md",
+                  "assets/templates/visual-design-brief.md"
+                ]
+              }
+            }
+          },
+          "side_effect_class": "authorized_workspace_write"
+        },
+        "template-adaptation": {
+          "rag_policy": "never",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "assets/templates/visual-qa-checklist.md",
+              "references/layout-and-style-rules.md"
+            ],
+            "stages": {
+              "accessibility": {
+                "references_max": 2,
+                "required_paths": [
+                  "references/interaction-motion-responsive-accessibility.md"
+                ]
+              },
+              "artifact-qa": {
+                "references_max": 2,
+                "required_paths": [
+                  "assets/templates/visual-qa-checklist.md"
+                ]
+              },
+              "layout": {
+                "references_max": 2,
+                "required_paths": [
+                  "references/layout-and-style-rules.md"
+                ]
+              },
+              "narrative": {
+                "references_max": 2,
+                "required_paths": [
+                  "assets/templates/deck-content-plan.md"
+                ]
+              },
+              "type-chart": {
+                "references_max": 2,
+                "required_paths": [
+                  "references/typography-color-chart-rules.md"
+                ]
+              },
+              "visual-plan": {
+                "references_max": 2,
+                "required_paths": [
+                  "references/visual-decision-framework.md",
+                  "assets/templates/visual-design-brief.md"
+                ]
+              }
+            }
+          },
+          "side_effect_class": "authorized_workspace_write"
+        },
+        "visual-audit": {
+          "rag_policy": "never",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 0,
+            "required_paths": [
+              "assets/templates/visual-qa-checklist.md"
+            ],
+            "stages": {
+              "accessibility": {
+                "references_max": 2,
+                "required_paths": [
+                  "references/interaction-motion-responsive-accessibility.md"
+                ]
+              },
+              "artifact-qa": {
+                "references_max": 2,
+                "required_paths": [
+                  "assets/templates/visual-qa-checklist.md"
+                ]
+              },
+              "layout": {
+                "references_max": 2,
+                "required_paths": [
+                  "references/layout-and-style-rules.md"
+                ]
+              },
+              "narrative": {
+                "references_max": 2,
+                "required_paths": [
+                  "assets/templates/deck-content-plan.md"
+                ]
+              },
+              "type-chart": {
+                "references_max": 2,
+                "required_paths": [
+                  "references/typography-color-chart-rules.md"
+                ]
+              }
+            }
+          },
+          "side_effect_class": "read_only"
+        },
+        "visual-system": {
+          "rag_policy": "never",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/visual-decision-framework.md",
+              "assets/templates/visual-design-brief.md"
+            ],
+            "stages": {
+              "accessibility": {
+                "references_max": 2,
+                "required_paths": [
+                  "references/interaction-motion-responsive-accessibility.md"
+                ]
+              },
+              "artifact-qa": {
+                "references_max": 2,
+                "required_paths": [
+                  "assets/templates/visual-qa-checklist.md"
+                ]
+              },
+              "layout": {
+                "references_max": 2,
+                "required_paths": [
+                  "references/layout-and-style-rules.md"
+                ]
+              },
+              "narrative": {
+                "references_max": 2,
+                "required_paths": [
+                  "assets/templates/deck-content-plan.md"
+                ]
+              },
+              "type-chart": {
+                "references_max": 2,
+                "required_paths": [
+                  "references/typography-color-chart-rules.md"
+                ]
+              },
+              "visual-plan": {
+                "references_max": 2,
+                "required_paths": [
+                  "references/visual-decision-framework.md",
+                  "assets/templates/visual-design-brief.md"
+                ]
+              }
+            }
+          },
+          "side_effect_class": "read_only"
+        }
+      },
+      "modes": [
+        "outline",
+        "visual-system",
+        "deck",
+        "speaker-ready",
+        "template-adaptation",
+        "visual-audit"
+      ],
+      "name": "paper-to-ppt",
+      "negative_triggers": [
+        "write manuscript prose",
+        "deep-read without presentation request",
+        "mine visual style only"
+      ],
+      "optional_inputs": [
+        "slide template",
+        "venue",
+        "speaker notes",
+        "visual assets",
+        "language",
+        "aspect ratio",
+        "accessibility or export constraints",
+        "presentation handoff"
+      ],
+      "outputs": [
+        "story arc",
+        "slide-by-slide plan",
+        "visual system plan",
+        "deck artifact",
+        "speaker notes",
+        "visual asset manifest",
+        "visual audit report"
+      ],
+      "path": "skills/paper-to-ppt/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "paper to PPT",
+        "academic slides",
+        "presentation outline",
+        "论文转幻灯片",
+        "PPT visual system",
+        "学术演示视觉审查"
+      ],
+      "purpose": "Convert verified research content into a coherent academic presentation with a context-driven, accessible visual system.",
+      "rag_policy": "never",
+      "references_to": [
+        "paper-deep-read",
+        "visual-expression-mining",
+        "visual-research-artifact-generation"
+      ],
+      "replacement": null,
+      "required_inputs": [
+        "paper, reading report, or verified research results",
+        "audience and presentation duration"
+      ],
+      "role": "implementation",
+      "side_effect_class": "authorized_workspace_write",
+      "side_effects": [
+        "writes user-requested presentation artifacts"
+      ],
+      "status": "active",
+      "stop_conditions": [
+        "deck renders and communicates the supported story within the time budget",
+        "source or required template is unavailable"
+      ],
+      "tools": [
+        "document_reader",
+        "presentation_editor",
+        "presentation_renderer",
+        "image_viewer",
+        "filesystem_write"
+      ],
+      "user_intents": [
+        "turn a paper into slides",
+        "create an academic presentation",
+        "adapt a slide template",
+        "prepare speaker-ready deck",
+        "design or audit an academic deck visual system"
+      ],
+      "version": "1.2.0",
+      "workflow_steps": [
+        "extract supported narrative",
+        "allocate slide budget",
+        "design story arc",
+        "recommend and confirm visual system",
+        "build slides",
+        "validate visual plan",
+        "render and visually verify"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "low",
+      "expected_latency": "low",
+      "failure_behavior": "Return a low-confidence preliminary category and request the missing abstract or paper; never infer experimental strength from a title.",
+      "handoff_to": [],
+      "id": "paper-triage",
+      "input_contract": {
+        "optional": [
+          "research goal",
+          "project context",
+          "time budget",
+          "priority rubric"
+        ],
+        "required": [
+          "paper title plus abstract, full text, or metadata"
+        ]
+      },
+      "mcp_tools": [
+        "rag_search",
+        "rag_get_chunk"
+      ],
+      "mode_contracts": {
+        "*": {
+          "rag_policy": "optional",
+          "side_effect_class": "read_only"
+        }
+      },
+      "modes": [
+        "single",
+        "batch",
+        "watch",
+        "project-specific"
+      ],
+      "name": "paper-triage",
+      "negative_triggers": [
+        "full method or equation analysis",
+        "multi-paper synthesis",
+        "paper reproduction"
+      ],
+      "optional_inputs": [
+        "research goal",
+        "project context",
+        "time budget",
+        "priority rubric"
+      ],
+      "outputs": [
+        "screening decision",
+        "P0-P3 priority",
+        "confidence",
+        "one next action"
+      ],
+      "path": "skills/paper-triage/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "worth reading",
+        "quick paper screening",
+        "rank these papers",
+        "阅读优先级"
+      ],
+      "purpose": "Quickly screen papers for relevance, risk, priority, and the next reading action.",
+      "rag_policy": "optional",
+      "references_to": [
+        "literature-monitor",
+        "literature-synthesis",
+        "paper-deep-read",
+        "paper-reproduction"
+      ],
+      "replacement": null,
+      "required_inputs": [
+        "paper title plus abstract, full text, or metadata"
+      ],
+      "role": "analysis",
+      "side_effect_class": "read_only",
+      "side_effects": [],
+      "status": "active",
+      "stop_conditions": [
+        "requested decision is supported",
+        "available material permits only a low-confidence preliminary decision"
+      ],
+      "tools": [
+        "document_reader",
+        "filesystem_read"
+      ],
+      "user_intents": [
+        "screen one paper",
+        "rank a paper list",
+        "select deep-reading candidates"
+      ],
+      "version": "1.0.2",
+      "workflow_steps": [
+        "declare available material",
+        "extract visible facts",
+        "assess relevance and risks",
+        "rank and choose one next action"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "high",
+      "expected_latency": "high",
+      "failure_behavior": "Preserve source files, quarantine failed records, report incomplete metadata, and never write to the read-only KnowledgeHub service.",
+      "handoff_to": [],
+      "id": "literature-kb-build",
+      "input_contract": {
+        "optional": [
+          "metadata records",
+          "chunk policy",
+          "embedding model",
+          "deduplication keys"
+        ],
+        "required": [
+          "approved source corpus",
+          "target local artifact location",
+          "indexing requirements"
+        ]
+      },
+      "mcp_tools": [],
+      "modes": [
+        "inventory",
+        "metadata",
+        "extract",
+        "chunk",
+        "index",
+        "verify",
+        "full"
+      ],
+      "name": "literature-kb-build",
+      "negative_triggers": [
+        "query an existing library",
+        "reconcile Zotero records first",
+        "analyze multiple papers"
+      ],
+      "optional_inputs": [
+        "metadata records",
+        "chunk policy",
+        "embedding model",
+        "deduplication keys"
+      ],
+      "outputs": [
+        "corpus inventory",
+        "clean metadata",
+        "extracted chunks",
+        "index manifest",
+        "quality report"
+      ],
+      "path": "skills/literature-kb-build/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "build RAG from PDFs",
+        "local literature KB",
+        "chunk and index papers",
+        "文献知识库构建"
+      ],
+      "purpose": "Build a reproducible local literature corpus from prepared PDFs with metadata, extraction, chunking, indexing, and verification.",
+      "rag_policy": "never",
+      "references_to": [
+        "literature-synthesis",
+        "paper-deep-read",
+        "tool-zotero-pdf-ingestion"
+      ],
+      "replacement": null,
+      "required_inputs": [
+        "approved source corpus",
+        "target local artifact location",
+        "indexing requirements"
+      ],
+      "role": "implementation",
+      "side_effect_class": "authorized_workspace_write",
+      "side_effects": [
+        "creates local corpus and index artifacts only with explicit authorization"
+      ],
+      "status": "active",
+      "stop_conditions": [
+        "corpus validation passes",
+        "source rights, metadata, or target storage authorization is missing"
+      ],
+      "tools": [
+        "filesystem_read",
+        "filesystem_write",
+        "pdf_reader",
+        "embedding_runtime"
+      ],
+      "user_intents": [
+        "build a literature knowledge base",
+        "prepare a PDF corpus",
+        "extract and chunk papers",
+        "create a local retrieval index"
+      ],
+      "version": "1.0.2",
+      "workflow_steps": [
+        "inventory and hash inputs",
+        "reconcile metadata",
+        "extract text",
+        "chunk deterministically",
+        "index and validate coverage"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "medium",
+      "expected_latency": "medium",
+      "failure_behavior": "Report source and coverage gaps, retain prior watchlist state, and do not present stale knowledge as a current monitor result.",
+      "handoff_to": [],
+      "id": "literature-monitor",
+      "input_contract": {
+        "optional": [
+          "date window",
+          "keywords",
+          "venues",
+          "collections",
+          "exclusion rules",
+          "prior watchlist",
+          "project-local digest configuration",
+          "authenticated arXiv MCP and Gmail connector",
+          "validated user-owned daily-digest-config.json; template is disabled by default",
+          "explicit arXiv category set and full-report category"
+        ],
+        "required": [
+          "research topic and monitoring scope"
+        ]
+      },
+      "mcp_tools": [
+        "mcp__arxiv_daily__fetch_announcement_phase",
+        "mcp__arxiv_daily__begin_digest_session",
+        "mcp__arxiv_daily__search_papers",
+        "mcp__arxiv_daily__get_abstract",
+        "mcp__arxiv_daily__download_paper",
+        "mcp__arxiv_daily__read_paper",
+        "mcp__arxiv_daily__end_digest_session",
+        "mcp__arxiv_daily__get_priority_status",
+        "mcp__codex_apps__gmail_get_profile",
+        "mcp__codex_apps__gmail_send_email",
+        "rag_search",
+        "rag_list_facets",
+        "rag_get_chunk"
+      ],
+      "mode_contracts": {
+        "*": {
+          "rag_policy": "optional",
+          "side_effect_class": "read_only"
+        },
+        "baseline": {
+          "rag_policy": "optional",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/monitoring-protocol.md",
+              "templates/monitor-report.md"
+            ]
+          },
+          "side_effect_class": "read_only"
+        },
+        "daily_arxiv_email": {
+          "rag_policy": "never",
+          "required_tools": [
+            "arxiv-daily",
+            "gmail"
+          ],
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/daily-arxiv-email.md#public-configuration-and-authorization-boundary",
+              "references/daily-arxiv-email.md#fixed-contract",
+              "references/daily-arxiv-email.md#1-recovery-and-preflight",
+              "references/daily-arxiv-email.md#verified-commit-and-backlog-drain"
+            ],
+            "stages": {
+              "commit": {
+                "depends_on": [
+                  "preflight"
+                ],
+                "required_paths": []
+              },
+              "coverage": {
+                "depends_on": [
+                  "preflight"
+                ],
+                "required_paths": [
+                  "references/daily-arxiv-email.md#2-complete-configured-category-coverage"
+                ]
+              },
+              "preflight": {
+                "required_paths": []
+              },
+              "reconcile": {
+                "depends_on": [
+                  "preflight"
+                ],
+                "required_paths": [
+                  "references/daily-arxiv-email.md#checked-gmail-reconciliation-and-send-safety"
+                ]
+              },
+              "render": {
+                "depends_on": [
+                  "preflight"
+                ],
+                "required_paths": [
+                  "references/daily-arxiv-email.md#local-rendering-and-delivery-manifest"
+                ]
+              },
+              "review": {
+                "depends_on": [
+                  "preflight"
+                ],
+                "required_paths": [
+                  "references/daily-arxiv-email.md#3-bounded-review-and-report-category-translation"
+                ]
+              },
+              "send": {
+                "depends_on": [
+                  "reconcile"
+                ],
+                "required_paths": []
+              }
+            }
+          },
+          "side_effect_class": "authorized_external_write"
+        },
+        "dataset": {
+          "rag_policy": "optional",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/monitoring-protocol.md",
+              "templates/monitor-report.md"
+            ]
+          },
+          "side_effect_class": "read_only"
+        },
+        "snapshot": {
+          "rag_policy": "optional",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/monitoring-protocol.md",
+              "templates/monitor-report.md"
+            ]
+          },
+          "side_effect_class": "read_only"
+        },
+        "watchlist": {
+          "rag_policy": "optional",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/monitoring-protocol.md",
+              "templates/monitor-report.md"
+            ]
+          },
+          "side_effect_class": "read_only"
+        },
+        "weekly": {
+          "rag_policy": "optional",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/monitoring-protocol.md",
+              "templates/monitor-report.md"
+            ]
+          },
+          "side_effect_class": "read_only"
+        }
+      },
+      "modes": [
+        "snapshot",
+        "weekly",
+        "watchlist",
+        "baseline",
+        "dataset",
+        "daily_arxiv_email"
+      ],
+      "name": "literature-monitor",
+      "negative_triggers": [
+        "one-time screening of a supplied list",
+        "build a local index",
+        "claim continuous monitoring without a scheduled mechanism"
+      ],
+      "optional_inputs": [
+        "date window",
+        "keywords",
+        "venues",
+        "collections",
+        "exclusion rules",
+        "prior watchlist",
+        "project-local digest configuration",
+        "authenticated arXiv MCP and Gmail connector",
+        "validated user-owned daily-digest-config.json; template is disabled by default",
+        "explicit arXiv category set and full-report category"
+      ],
+      "outputs": [
+        "search summary",
+        "deduplicated candidates",
+        "priority queue",
+        "change highlights",
+        "next reading actions",
+        "one transport-attested HTML email with complete selected-paper cards and configured report-category Top 50",
+        "complete configured report-category PDF attachment with Chinese summaries",
+        "configured-category retrieval coverage",
+        "grouped focus recommendations",
+        "complete local inventory classification report",
+        "bounded Top-30 model review pages and dynamically paginated report-category translations",
+        "transactional single-message Draft-attested delivery state"
+      ],
+      "path": "skills/literature-monitor/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "recent papers",
+        "weekly research monitor",
+        "watch this topic",
+        "文献巡检",
+        "daily arXiv digest"
+      ],
+      "purpose": "Monitor recent research and optionally deliver a transactional arXiv digest for user-selected categories, with complete local classification, bounded review, a configurable full-report category, and one attested HTML plus PDF email.",
+      "rag_policy": "optional",
+      "references_to": [
+        "literature-kb-build",
+        "literature-synthesis",
+        "paper-deep-read",
+        "paper-triage"
+      ],
+      "replacement": null,
+      "required_inputs": [
+        "research topic and monitoring scope"
+      ],
+      "role": "implementation",
+      "side_effect_class": "authorized_external_write",
+      "side_effects": [
+        "may update a user-requested local watchlist or ingest queue",
+        "daily email mode may write project-local reports and state and send an explicitly authorized Gmail message"
+      ],
+      "status": "active",
+      "stop_conditions": [
+        "coverage window is searched and candidates are deduplicated",
+        "any required announcement category is incomplete or fails inventory validation",
+        "current search sources are unavailable",
+        "daily email mode lacks arXiv MCP, Gmail authorization, or project-local write access",
+        "daily email mode has an incomplete user configuration or lacks explicit send authorization",
+        "a configured category is missing from coverage or the bound category configuration has changed"
+      ],
+      "tools": [
+        "web_search",
+        "document_reader",
+        "filesystem_read",
+        "filesystem_write"
+      ],
+      "user_intents": [
+        "monitor recent papers",
+        "run a weekly literature patrol",
+        "track a research direction",
+        "update a baseline watchlist",
+        "send a scheduled arXiv research digest"
+      ],
+      "version": "1.6.0",
+      "workflow_steps": [
+        "define scope and date window",
+        "preflight the real local Python runtime before acquiring the digest session",
+        "inventory configured arXiv categories from validated official announcement batches",
+        "deduplicate against history",
+        "locally classify the full inventory, model-review at most Top 30, and translate bounded source spans for the configured report category",
+        "update the candidate queue",
+        "render reports and commit state after confirmed delivery"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "high",
+      "expected_latency": "high",
+      "failure_behavior": "If required retrieval fails, stop library-wide claims and return only supplied-source findings, matrix structure, and missing work.",
+      "handoff_to": [
+        "writing-academic",
+        "research-idea-generation"
+      ],
+      "id": "literature-synthesis",
+      "input_contract": {
+        "optional": [
+          "inclusion criteria",
+          "time range",
+          "collections or tags",
+          "comparison axes",
+          "existing evidence ledger"
+        ],
+        "required": [
+          "synthesis question and scope",
+          "supplied paper set or accessible read-only literature service"
+        ]
+      },
+      "mcp_tools": [
+        "rag_status",
+        "rag_search",
+        "rag_get_chunk",
+        "rag_get_document",
+        "rag_get_neighbors",
+        "rag_resolve_reference",
+        "rag_list_facets"
+      ],
+      "mode_contracts": {
+        "compare": {
+          "output_sections": [
+            "Scope",
+            "Comparison matrix",
+            "Evidence Ledger",
+            "Coverage limitations"
+          ],
+          "rag_policy": "required",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/synthesis-protocol.md#stable-identities",
+              "references/synthesis-protocol.md#axis-contract",
+              "references/synthesis-protocol.md#comparison"
+            ],
+            "stages": {
+              "retrieval-log": {
+                "required_paths": [
+                  "references/synthesis-protocol.md#saturation-log"
+                ]
+              }
+            }
+          },
+          "side_effect_class": "read_only"
+        },
+        "comparison": {
+          "output_sections": [
+            "Scope",
+            "Comparison matrix",
+            "Evidence Ledger",
+            "Coverage limitations"
+          ],
+          "rag_policy": "required",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/synthesis-protocol.md#stable-identities",
+              "references/synthesis-protocol.md#axis-contract",
+              "references/synthesis-protocol.md#comparison"
+            ],
+            "stages": {
+              "retrieval-log": {
+                "required_paths": [
+                  "references/synthesis-protocol.md#saturation-log"
+                ]
+              }
+            }
+          },
+          "side_effect_class": "read_only"
+        },
+        "evidence-map": {
+          "output_sections": [
+            "Scope",
+            "Claim-evidence map",
+            "Coverage limitations"
+          ],
+          "rag_policy": "required",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/synthesis-protocol.md#stable-identities",
+              "references/synthesis-protocol.md#evidence-map"
+            ],
+            "stages": {
+              "retrieval-log": {
+                "required_paths": [
+                  "references/synthesis-protocol.md#saturation-log"
+                ]
+              }
+            }
+          },
+          "side_effect_class": "read_only"
+        },
+        "full": {
+          "output_sections": [
+            "Scope",
+            "Included papers",
+            "Comparison matrix",
+            "Taxonomy",
+            "Consensus",
+            "Disagreements",
+            "Gaps",
+            "Implications",
+            "Candidate citations",
+            "Evidence Ledger",
+            "Coverage limitations"
+          ],
+          "rag_policy": "required",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/synthesis-protocol.md#stable-identities",
+              "references/synthesis-protocol.md#axis-contract",
+              "references/synthesis-protocol.md#derivation-rules"
+            ],
+            "stages": {
+              "comparison": {
+                "required_paths": [
+                  "references/synthesis-protocol.md#comparison"
+                ]
+              },
+              "evidence-map": {
+                "required_paths": [
+                  "references/synthesis-protocol.md#evidence-map"
+                ]
+              },
+              "gap": {
+                "required_paths": [
+                  "references/synthesis-protocol.md#gap"
+                ]
+              },
+              "positioning": {
+                "required_paths": [
+                  "references/synthesis-protocol.md#positioning"
+                ]
+              },
+              "related-work": {
+                "depends_on": [
+                  "evidence-map"
+                ],
+                "required_paths": [
+                  "references/synthesis-protocol.md#related-work"
+                ]
+              },
+              "retrieval-log": {
+                "required_paths": [
+                  "references/synthesis-protocol.md#saturation-log"
+                ]
+              },
+              "taxonomy": {
+                "required_paths": [
+                  "references/synthesis-protocol.md#taxonomy"
+                ]
+              }
+            }
+          },
+          "side_effect_class": "read_only"
+        },
+        "gap": {
+          "output_sections": [
+            "Scope",
+            "Gaps",
+            "Evidence Ledger",
+            "Coverage limitations"
+          ],
+          "rag_policy": "required",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/synthesis-protocol.md#stable-identities",
+              "references/synthesis-protocol.md#gap"
+            ],
+            "stages": {
+              "retrieval-log": {
+                "required_paths": [
+                  "references/synthesis-protocol.md#saturation-log"
+                ]
+              }
+            }
+          },
+          "side_effect_class": "read_only"
+        },
+        "positioning": {
+          "output_sections": [
+            "Scope",
+            "Closest-work comparison",
+            "Positioning",
+            "Evidence Ledger",
+            "Coverage limitations"
+          ],
+          "rag_policy": "required",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/synthesis-protocol.md#stable-identities",
+              "references/synthesis-protocol.md#axis-contract",
+              "references/synthesis-protocol.md#positioning"
+            ],
+            "stages": {
+              "retrieval-log": {
+                "required_paths": [
+                  "references/synthesis-protocol.md#saturation-log"
+                ]
+              }
+            }
+          },
+          "side_effect_class": "read_only"
+        },
+        "related-work": {
+          "output_sections": [
+            "Scope",
+            "Claim-evidence map",
+            "Narrative plan",
+            "Candidate citations",
+            "Coverage limitations"
+          ],
+          "rag_policy": "required",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/synthesis-protocol.md#stable-identities",
+              "references/synthesis-protocol.md#evidence-map",
+              "references/synthesis-protocol.md#related-work"
+            ],
+            "stages": {
+              "retrieval-log": {
+                "required_paths": [
+                  "references/synthesis-protocol.md#saturation-log"
+                ]
+              }
+            }
+          },
+          "side_effect_class": "read_only"
+        },
+        "taxonomy": {
+          "output_sections": [
+            "Scope",
+            "Taxonomy",
+            "Evidence Ledger",
+            "Coverage limitations"
+          ],
+          "rag_policy": "required",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/synthesis-protocol.md#stable-identities",
+              "references/synthesis-protocol.md#axis-contract",
+              "references/synthesis-protocol.md#taxonomy"
+            ],
+            "stages": {
+              "retrieval-log": {
+                "required_paths": [
+                  "references/synthesis-protocol.md#saturation-log"
+                ]
+              }
+            }
+          },
+          "side_effect_class": "read_only"
+        }
+      },
+      "modes": [
+        "compare",
+        "comparison",
+        "taxonomy",
+        "gap",
+        "related-work",
+        "evidence-map",
+        "positioning",
+        "full"
+      ],
+      "name": "literature-synthesis",
+      "negative_triggers": [
+        "one-paper deep read",
+        "unsupported prose drafting",
+        "build a new literature index"
+      ],
+      "optional_inputs": [
+        "inclusion criteria",
+        "time range",
+        "collections or tags",
+        "comparison axes",
+        "existing evidence ledger"
+      ],
+      "outputs": [
+        "scope and search summary",
+        "comparison matrix",
+        "taxonomy",
+        "consensus and disagreement",
+        "gaps",
+        "candidate citations",
+        "evidence ledger",
+        "shared-schema claim-evidence map"
+      ],
+      "path": "skills/literature-synthesis/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "compare multiple papers",
+        "related work evidence map",
+        "taxonomy",
+        "research gap from literature",
+        "结合文献库"
+      ],
+      "purpose": "Synthesize multiple papers into evidence-backed comparisons, taxonomies, gaps, positioning, and related-work maps.",
+      "rag_policy": "required",
+      "replacement": null,
+      "required_inputs": [
+        "synthesis question and scope",
+        "supplied paper set or accessible read-only literature service"
+      ],
+      "role": "analysis",
+      "side_effect_class": "read_only",
+      "side_effects": [],
+      "status": "active",
+      "stop_conditions": [
+        "coverage target and evidence budget are met",
+        "required retrieval is unavailable",
+        "additional retrieval no longer changes the comparison"
+      ],
+      "tools": [
+        "document_reader",
+        "filesystem_read",
+        "table_builder"
+      ],
+      "user_intents": [
+        "compare papers",
+        "build a taxonomy",
+        "find literature-grounded gaps",
+        "prepare related work",
+        "analyze a local library"
+      ],
+      "version": "1.2.0",
+      "workflow_steps": [
+        "define scope",
+        "plan at most three retrieval questions",
+        "retrieve and deduplicate",
+        "build an evidence matrix",
+        "materialize typed claim-evidence rows for downstream use",
+        "derive bounded synthesis"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "high",
+      "expected_latency": "high",
+      "failure_behavior": "Preserve protocol and supplied-source findings, degrade coverage to partial, expose missing batches/decisions/evidence, and never fabricate screening records, appraisal judgments, or quantitative effects.",
+      "handoff_to": [
+        "writing-academic",
+        "literature-synthesis"
+      ],
+      "id": "literature-systematic-review",
+      "input_contract": {
+        "optional": [
+          "registered protocol and amendments",
+          "query strings and search dates",
+          "deduplication identifiers",
+          "screening decisions and full texts",
+          "appraisal framework",
+          "effect definitions and uncertainty inputs",
+          "prior systematic-review ledger"
+        ],
+        "required": [
+          "review question, scope, eligibility criteria, and declared sources",
+          "supplied corpus or authorized read-only retrieval path"
+        ]
+      },
+      "mcp_tools": [
+        "rag_status",
+        "rag_search",
+        "rag_get_chunk",
+        "rag_get_document",
+        "rag_get_neighbors",
+        "rag_resolve_reference",
+        "rag_list_facets"
+      ],
+      "mode_contracts": {
+        "*": {
+          "rag_policy": "required",
+          "side_effect_class": "read_only"
+        },
+        "protocol": {
+          "rag_policy": "optional",
+          "side_effect_class": "read_only"
+        }
+      },
+      "modes": [
+        "protocol",
+        "search",
+        "screening",
+        "risk-of-bias",
+        "certainty",
+        "meta-analysis",
+        "synthesis",
+        "full"
+      ],
+      "name": "literature-systematic-review",
+      "negative_triggers": [
+        "informal multi-paper comparison",
+        "one-paper reading",
+        "literature monitoring",
+        "ordinary related-work drafting"
+      ],
+      "optional_inputs": [
+        "registered protocol and amendments",
+        "query strings and search dates",
+        "deduplication identifiers",
+        "screening decisions and full texts",
+        "appraisal framework",
+        "effect definitions and uncertainty inputs",
+        "prior systematic-review ledger"
+      ],
+      "outputs": [
+        "review protocol and amendment log",
+        "auditable search batches",
+        "deduplication and screening ledger",
+        "PRISMA-style flow counts",
+        "risk-of-bias and evidence-certainty tables",
+        "meta-analysis eligibility gate",
+        "coverage-bounded synthesis and unresolved items"
+      ],
+      "path": "skills/literature-systematic-review/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "systematic review protocol",
+        "PRISMA flow",
+        "full-text exclusion reasons",
+        "risk of bias",
+        "evidence certainty",
+        "meta-analysis suitability",
+        "系统综述"
+      ],
+      "purpose": "Plan or execute protocol-bound systematic reviews with auditable search, screening, PRISMA-style flow, appraisal, coverage, and synthesis gates.",
+      "rag_policy": "required",
+      "references_to": [
+        "literature-monitor",
+        "paper-triage"
+      ],
+      "replacement": null,
+      "required_inputs": [
+        "review question, scope, eligibility criteria, and declared sources",
+        "supplied corpus or authorized read-only retrieval path"
+      ],
+      "role": "analysis",
+      "side_effect_class": "read_only",
+      "side_effects": [],
+      "status": "active",
+      "stop_conditions": [
+        "requested protocol or review artifact validates",
+        "required retrieval or full text is unavailable",
+        "flow counts cannot be reconciled from evidence",
+        "continuing would overstate coverage or pool incompatible effects"
+      ],
+      "tools": [
+        "document_reader",
+        "filesystem_read",
+        "table_builder"
+      ],
+      "user_intents": [
+        "plan a systematic review protocol",
+        "run auditable literature screening",
+        "produce PRISMA-style flow accounting",
+        "assess risk of bias or evidence certainty",
+        "gate or plan a meta-analysis"
+      ],
+      "version": "1.1.0",
+      "workflow_steps": [
+        "freeze protocol and amendments",
+        "record complete source/query/date search batches",
+        "deduplicate with unresolved conflicts preserved",
+        "apply title-abstract and full-text screening with exclusion reasons",
+        "reconcile flow counts against study decisions",
+        "appraise bias and outcome certainty",
+        "gate meta-analysis on conceptual and numeric compatibility",
+        "validate ledger and synthesize only within verified coverage"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "medium",
+      "expected_latency": "medium",
+      "failure_behavior": "State evidence limits and stop local-library claims when required retrieval fails; never substitute model memory for requested current or local evidence.",
+      "handoff_to": [],
+      "id": "research-concept-primer",
+      "input_contract": {
+        "optional": [
+          "desired depth",
+          "background level",
+          "application domain",
+          "local-library requirement"
+        ],
+        "required": [
+          "concept or technical topic"
+        ]
+      },
+      "mcp_tools": [
+        "rag_search",
+        "rag_get_chunk",
+        "rag_get_document"
+      ],
+      "mode_contracts": {
+        "*": {
+          "rag_policy": "optional",
+          "side_effect_class": "read_only"
+        }
+      },
+      "modes": [
+        "overview",
+        "technical-docs"
+      ],
+      "name": "research-concept-primer",
+      "negative_triggers": [
+        "deep read one named paper",
+        "multi-paper systematic synthesis",
+        "debug code",
+        "request final manuscript prose"
+      ],
+      "optional_inputs": [
+        "desired depth",
+        "background level",
+        "application domain",
+        "local-library requirement"
+      ],
+      "outputs": [
+        "background",
+        "core concepts",
+        "mechanism",
+        "terminology",
+        "open questions",
+        "source-linked reading path"
+      ],
+      "path": "skills/research-concept-primer/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "what is this research concept",
+        "quick primer",
+        "最近很火的技术",
+        "KnowledgeHub technical docs"
+      ],
+      "purpose": "Provide a rigorous, current primer on an unfamiliar research concept using online sources or user-requested local technical evidence.",
+      "rag_policy": "optional",
+      "references_to": [
+        "code-debugging",
+        "code-repo-adaptation",
+        "literature-monitor",
+        "literature-synthesis",
+        "paper-deep-read",
+        "research-idea-generation"
+      ],
+      "replacement": null,
+      "required_inputs": [
+        "concept or technical topic"
+      ],
+      "role": "analysis",
+      "side_effect_class": "read_only",
+      "side_effects": [],
+      "status": "active",
+      "stop_conditions": [
+        "core concepts and boundaries are explained with adequate evidence",
+        "required local technical evidence is unavailable"
+      ],
+      "tools": [
+        "web_search",
+        "document_reader"
+      ],
+      "user_intents": [
+        "quickly understand a concept",
+        "learn a hot research topic",
+        "read local technical documentation",
+        "build a technical background primer"
+      ],
+      "version": "1.0.2",
+      "workflow_steps": [
+        "scope the concept",
+        "select online or technical-doc evidence mode",
+        "collect authoritative evidence",
+        "explain core mechanisms",
+        "mark uncertainty and next reading"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "medium",
+      "expected_latency": "medium",
+      "failure_behavior": "Return not-evaluable with explicit coverage limits; never expose raw identifiers, infer missing-code semantics, claim sampled completeness, or modify source data.",
+      "handoff_to": [
+        "research-dataset-metric-protocols",
+        "research-uncertainty-units",
+        "code-debugging",
+        "research-result-analysis"
+      ],
+      "id": "research-data-quality-audit",
+      "input_contract": {
+        "optional": [
+          "schema or data dictionary",
+          "missing codes",
+          "keys ranges and categories",
+          "timestamps batches or prior snapshot",
+          "lineage and sensitive-field policy"
+        ],
+        "required": [
+          "authorized data asset or profile",
+          "stated research use and observational unit"
+        ]
+      },
+      "mcp_tools": [],
+      "modes": [
+        "schema",
+        "completeness",
+        "uniqueness",
+        "consistency",
+        "drift",
+        "lineage",
+        "fitness",
+        "full"
+      ],
+      "name": "research-data-quality-audit",
+      "negative_triggers": [
+        "design future dataset splits or metrics",
+        "clean or impute data",
+        "interpret experiment results",
+        "audit measurement uncertainty"
+      ],
+      "optional_inputs": [
+        "schema or data dictionary",
+        "missing codes",
+        "keys ranges and categories",
+        "timestamps batches or prior snapshot",
+        "lineage and sensitive-field policy"
+      ],
+      "outputs": [
+        "bounded coverage statement",
+        "rule registry",
+        "DQ-identified findings",
+        "severity and affected scope",
+        "remediation and verification options",
+        "fit conditional not-fit or not-evaluable verdict"
+      ],
+      "path": "skills/research-data-quality-audit/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "data quality audit",
+        "dataset quality",
+        "missingness audit",
+        "duplicate records",
+        "schema violations",
+        "data drift audit",
+        "数据质量审计",
+        "缺失值审计",
+        "重复记录",
+        "数据漂移"
+      ],
+      "purpose": "Audit supplied data assets for bounded quality evidence and fitness for a stated research use without modifying source data.",
+      "rag_policy": "never",
+      "replacement": null,
+      "required_inputs": [
+        "authorized data asset or profile",
+        "stated research use and observational unit"
+      ],
+      "role": "analysis",
+      "side_effect_class": "read_only",
+      "side_effects": [],
+      "status": "active",
+      "stop_conditions": [
+        "applicable rules have bounded evidence and a use-specific verdict",
+        "authorization format identity or semantics are insufficient"
+      ],
+      "tools": [
+        "filesystem_read",
+        "table_reader",
+        "document_reader",
+        "local_python"
+      ],
+      "user_intents": [
+        "audit dataset quality",
+        "profile schema missingness and duplicates",
+        "check ranges labels temporal consistency or drift",
+        "assess data lineage and fitness for use"
+      ],
+      "version": "1.1.0",
+      "workflow_steps": [
+        "confirm authorization use and observational unit",
+        "declare bounded coverage and unsupported surfaces",
+        "freeze supplied quality rules",
+        "collect aggregate read-only evidence",
+        "record stable findings and scope limits",
+        "issue a use-specific fitness verdict",
+        "handoff remediation without changing data"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "medium",
+      "expected_latency": "medium",
+      "failure_behavior": "Return a conditional protocol with unresolved decisions and never claim comparability when metric or split definitions differ.",
+      "handoff_to": [
+        "code-experiment-config-management",
+        "research-result-analysis"
+      ],
+      "id": "research-dataset-metric-protocols",
+      "input_contract": {
+        "optional": [
+          "existing splits",
+          "metric code",
+          "baselines",
+          "sample size",
+          "domain constraints",
+          "target claim and experiment IDs"
+        ],
+        "required": [
+          "task definition and dataset or evaluation setting"
+        ]
+      },
+      "mcp_tools": [
+        "rag_search",
+        "rag_get_chunk"
+      ],
+      "mode_contracts": {
+        "*": {
+          "rag_policy": "optional",
+          "side_effect_class": "read_only"
+        },
+        "comparability": {
+          "output_sections": [
+            "Scope and identities",
+            "Unresolved decisions and blocked verdicts",
+            "Handoff",
+            "Comparability ledger"
+          ],
+          "rag_policy": "optional",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/evaluation-protocol.md#7-issue-comparability-verdicts"
+            ]
+          },
+          "side_effect_class": "read_only"
+        },
+        "full": {
+          "output_sections": [
+            "Scope and identities",
+            "Evaluation units",
+            "Split protocol",
+            "Preprocessing contract",
+            "Metric registry",
+            "Leakage register",
+            "Statistical plan",
+            "Comparability ledger",
+            "Reporting contract",
+            "Unresolved decisions and blocked verdicts",
+            "Handoff"
+          ],
+          "rag_policy": "optional",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/evaluation-protocol.md"
+            ]
+          },
+          "side_effect_class": "read_only"
+        },
+        "leakage": {
+          "output_sections": [
+            "Scope and identities",
+            "Unresolved decisions and blocked verdicts",
+            "Handoff",
+            "Leakage register"
+          ],
+          "rag_policy": "optional",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/evaluation-protocol.md#5-audit-leakage-paths"
+            ]
+          },
+          "side_effect_class": "read_only"
+        },
+        "metric": {
+          "output_sections": [
+            "Scope and identities",
+            "Unresolved decisions and blocked verdicts",
+            "Handoff",
+            "Metric registry"
+          ],
+          "rag_policy": "optional",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/evaluation-protocol.md#4-register-metrics-exactly"
+            ]
+          },
+          "side_effect_class": "read_only"
+        },
+        "preprocessing": {
+          "output_sections": [
+            "Scope and identities",
+            "Unresolved decisions and blocked verdicts",
+            "Handoff",
+            "Preprocessing contract"
+          ],
+          "rag_policy": "optional",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/evaluation-protocol.md#3-order-and-fit-preprocessing"
+            ]
+          },
+          "side_effect_class": "read_only"
+        },
+        "split": {
+          "output_sections": [
+            "Scope and identities",
+            "Unresolved decisions and blocked verdicts",
+            "Handoff",
+            "Evaluation units",
+            "Split protocol"
+          ],
+          "rag_policy": "optional",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/evaluation-protocol.md#1-freeze-identity-and-units",
+              "references/evaluation-protocol.md#2-define-and-freeze-splits"
+            ]
+          },
+          "side_effect_class": "read_only"
+        },
+        "statistics": {
+          "output_sections": [
+            "Scope and identities",
+            "Unresolved decisions and blocked verdicts",
+            "Handoff",
+            "Evaluation units",
+            "Statistical plan"
+          ],
+          "rag_policy": "optional",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/evaluation-protocol.md#1-freeze-identity-and-units",
+              "references/evaluation-protocol.md#6-plan-estimation-and-statistics"
+            ]
+          },
+          "side_effect_class": "read_only"
+        }
+      },
+      "modes": [
+        "split",
+        "preprocessing",
+        "metric",
+        "statistics",
+        "leakage",
+        "comparability",
+        "full"
+      ],
+      "name": "research-dataset-metric-protocols",
+      "negative_triggers": [
+        "design the entire experiment",
+        "choose a domain-specific method",
+        "interpret existing results"
+      ],
+      "optional_inputs": [
+        "existing splits",
+        "metric code",
+        "baselines",
+        "sample size",
+        "domain constraints",
+        "target claim and experiment IDs"
+      ],
+      "outputs": [
+        "split and preprocessing protocol",
+        "metric definitions and direction",
+        "leakage checklist",
+        "statistical test plan",
+        "comparability constraints",
+        "protocol and metric identity handoff"
+      ],
+      "path": "skills/research-dataset-metric-protocols/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "dataset split protocol",
+        "metric definition",
+        "data leakage",
+        "statistical significance",
+        "评价指标协议"
+      ],
+      "purpose": "Define leakage-resistant, statistically rigorous, and comparable dataset and metric protocols.",
+      "rag_policy": "optional",
+      "references_to": [
+        "research-experiment-design",
+        "writing-academic"
+      ],
+      "replacement": null,
+      "required_inputs": [
+        "task definition and dataset or evaluation setting"
+      ],
+      "role": "analysis",
+      "side_effect_class": "read_only",
+      "side_effects": [],
+      "status": "active",
+      "stop_conditions": [
+        "all split, metric, leakage, and statistical decisions are explicit",
+        "dataset identity or evaluation unit is unknown"
+      ],
+      "tools": [
+        "document_reader",
+        "filesystem_read",
+        "table_reader"
+      ],
+      "user_intents": [
+        "define train validation test splits",
+        "choose metrics",
+        "check leakage",
+        "plan statistical tests",
+        "ensure experiment comparability"
+      ],
+      "version": "1.2.0",
+      "workflow_steps": [
+        "define evaluation unit",
+        "freeze splits and preprocessing",
+        "specify metrics exactly",
+        "bind protocol and metric IDs to claim and experiment IDs",
+        "check leakage and comparability",
+        "plan uncertainty and tests"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "medium",
+      "expected_latency": "medium",
+      "failure_behavior": "Expose unresolved assumptions and offer a bounded protocol scaffold instead of presenting an incomparable plan as final.",
+      "handoff_to": [
+        "research-dataset-metric-protocols",
+        "code-experiment-config-management",
+        "research-result-analysis"
+      ],
+      "id": "research-experiment-design",
+      "input_contract": {
+        "optional": [
+          "datasets",
+          "metrics",
+          "compute budget",
+          "baselines",
+          "constraints",
+          "expected outcomes"
+        ],
+        "required": [
+          "research question or hypothesis",
+          "target system or method"
+        ]
+      },
+      "mcp_tools": [
+        "rag_search",
+        "rag_get_chunk"
+      ],
+      "mode_contracts": {
+        "*": {
+          "rag_policy": "optional",
+          "side_effect_class": "read_only"
+        },
+        "ablation": {
+          "output_sections": [
+            "Scope and hypothesis",
+            "Risks and unresolved protocol",
+            "Handoff",
+            "Experiment matrix",
+            "Ablation and sensitivity plan",
+            "Outcome branches"
+          ],
+          "rag_policy": "optional",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/experiment-design-protocol.md#4-construct-experiment-records",
+              "references/experiment-design-protocol.md#5-design-ablations",
+              "references/experiment-design-protocol.md#6-precommit-outcome-branches"
+            ]
+          },
+          "side_effect_class": "read_only"
+        },
+        "baseline": {
+          "output_sections": [
+            "Scope and hypothesis",
+            "Risks and unresolved protocol",
+            "Handoff",
+            "Baseline and fairness protocol"
+          ],
+          "rag_policy": "optional",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/experiment-design-protocol.md#3-build-the-baseline-fairness-envelope"
+            ]
+          },
+          "side_effect_class": "read_only"
+        },
+        "control": {
+          "output_sections": [
+            "Scope and hypothesis",
+            "Risks and unresolved protocol",
+            "Handoff",
+            "Variables, controls, and confounds"
+          ],
+          "rag_policy": "optional",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/experiment-design-protocol.md#2-register-variables-controls-and-confounds"
+            ]
+          },
+          "side_effect_class": "read_only"
+        },
+        "full": {
+          "output_sections": [
+            "Scope and hypothesis",
+            "Variables, controls, and confounds",
+            "Baseline and fairness protocol",
+            "Experiment matrix",
+            "Outcome branches",
+            "Schedule, budget, and gates",
+            "Failure diagnosis",
+            "Artifact and logging contract",
+            "Risks and unresolved protocol",
+            "Handoff"
+          ],
+          "rag_policy": "optional",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/experiment-design-protocol.md"
+            ]
+          },
+          "side_effect_class": "read_only"
+        },
+        "schedule": {
+          "output_sections": [
+            "Scope and hypothesis",
+            "Risks and unresolved protocol",
+            "Handoff",
+            "Schedule, budget, and gates"
+          ],
+          "rag_policy": "never",
+          "resources": {
+            "profiles_max": 0,
+            "references_max": 1,
+            "required_paths": [
+              "references/experiment-design-protocol.md#7-schedule-by-information-and-dependency"
+            ]
+          },
+          "side_effect_class": "read_only"
+        }
+      },
+      "modes": [
+        "full",
+        "baseline",
+        "control",
+        "ablation",
+        "schedule"
+      ],
+      "name": "research-experiment-design",
+      "negative_triggers": [
+        "interpret completed results",
+        "only define splits and metrics",
+        "execute a paper reproduction"
+      ],
+      "optional_inputs": [
+        "datasets",
+        "metrics",
+        "compute budget",
+        "baselines",
+        "constraints",
+        "expected outcomes"
+      ],
+      "outputs": [
+        "variables and controls",
+        "baseline matrix",
+        "protocol",
+        "ablation plan",
+        "decision criteria",
+        "risk analysis",
+        "claim-linked experiment matrix and artifact contract"
+      ],
+      "path": "skills/research-experiment-design/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "experiment plan",
+        "ablation design",
+        "baseline selection",
+        "控制变量"
+      ],
+      "purpose": "Design fair, controlled, decision-oriented research experiments.",
+      "rag_policy": "optional",
+      "references_to": [
+        "code-repo-adaptation",
+        "paper-reproduction",
+        "writing-academic"
+      ],
+      "replacement": null,
+      "required_inputs": [
+        "research question or hypothesis",
+        "target system or method"
+      ],
+      "role": "analysis",
+      "side_effect_class": "read_only",
+      "side_effects": [],
+      "status": "active",
+      "stop_conditions": [
+        "the plan can distinguish the target hypothesis",
+        "critical protocol inputs remain unknown"
+      ],
+      "tools": [
+        "document_reader",
+        "filesystem_read"
+      ],
+      "user_intents": [
+        "design an experiment",
+        "plan baselines and controls",
+        "plan ablations",
+        "define decision criteria"
+      ],
+      "version": "1.2.0",
+      "workflow_steps": [
+        "state hypothesis",
+        "separate variables and controls",
+        "choose fair baselines and protocol",
+        "bind experiment IDs to claim IDs and evidence artifacts",
+        "plan ablations and statistics",
+        "set result-independent acceptance or stop criteria"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "medium",
+      "expected_latency": "medium",
+      "failure_behavior": "Label speculative ideas and novelty uncertainty, narrow the scope, and request missing constraints rather than inventing evidence.",
+      "handoff_to": [],
+      "id": "research-idea-generation",
+      "input_contract": {
+        "optional": [
+          "evidence-backed gaps",
+          "resources",
+          "constraints",
+          "available datasets and baselines"
+        ],
+        "required": [
+          "research goal or problem context"
+        ]
+      },
+      "mcp_tools": [
+        "rag_search",
+        "rag_get_chunk"
+      ],
+      "mode_contracts": {
+        "*": {
+          "rag_policy": "optional",
+          "side_effect_class": "read_only"
+        }
+      },
+      "modes": [
+        "problem-driven",
+        "gap-driven",
+        "resource-constrained",
+        "method-variation",
+        "application-transfer"
+      ],
+      "name": "research-idea-generation",
+      "negative_triggers": [
+        "literature synthesis is the main task",
+        "a concrete experiment plan is already requested",
+        "unsupported novelty guarantee"
+      ],
+      "optional_inputs": [
+        "evidence-backed gaps",
+        "resources",
+        "constraints",
+        "available datasets and baselines"
+      ],
+      "outputs": [
+        "ranked idea set",
+        "hypotheses",
+        "novelty risks",
+        "feasibility assessment",
+        "next validation action"
+      ],
+      "path": "skills/research-idea-generation/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "new research direction",
+        "idea generation",
+        "method variants",
+        "可行创新点"
+      ],
+      "purpose": "Generate feasible research ideas, hypotheses, and contribution directions grounded in evidence and available resources.",
+      "rag_policy": "optional",
+      "references_to": [
+        "code-repo-adaptation",
+        "literature-synthesis",
+        "publish-venue-targeting",
+        "research-experiment-design"
+      ],
+      "replacement": null,
+      "required_inputs": [
+        "research goal or problem context"
+      ],
+      "role": "analysis",
+      "side_effect_class": "read_only",
+      "side_effects": [],
+      "status": "active",
+      "stop_conditions": [
+        "a small ranked set with testable hypotheses is produced",
+        "evidence is insufficient for novelty claims"
+      ],
+      "tools": [
+        "document_reader",
+        "filesystem_read"
+      ],
+      "user_intents": [
+        "generate research ideas",
+        "propose method variants",
+        "form hypotheses",
+        "identify feasible contributions"
+      ],
+      "version": "1.0.2",
+      "workflow_steps": [
+        "clarify constraints",
+        "ground the problem",
+        "generate distinct candidates",
+        "screen novelty and feasibility",
+        "rank and hand off"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "medium",
+      "expected_latency": "medium",
+      "failure_behavior": "State comparability and data limitations, mark missing statistical or reproducibility evidence not-evaluable instead of passing it, avoid causal claims, and request the minimum missing logs or protocol facts.",
+      "handoff_to": [
+        "research-experiment-design",
+        "research-dataset-metric-protocols",
+        "writing-academic",
+        "writing-manuscript-audit"
+      ],
+      "id": "research-result-analysis",
+      "input_contract": {
+        "optional": [
+          "hypotheses",
+          "protocol",
+          "baselines",
+          "variance",
+          "run metadata",
+          "stable claim, experiment, run, protocol, and metric identities"
+        ],
+        "required": [
+          "experimental observations, logs, tables, metrics, or plots"
+        ]
+      },
+      "mcp_tools": [],
+      "modes": [
+        "summary",
+        "claim-check",
+        "failure-analysis",
+        "ablation-analysis",
+        "statistical-audit",
+        "reproducibility-check",
+        "next-step"
+      ],
+      "name": "research-result-analysis",
+      "negative_triggers": [
+        "runtime or code fault is primary",
+        "design experiments before results",
+        "rewrite conclusions as manuscript prose"
+      ],
+      "optional_inputs": [
+        "hypotheses",
+        "protocol",
+        "baselines",
+        "variance",
+        "run metadata",
+        "stable claim, experiment, run, protocol, and metric identities"
+      ],
+      "outputs": [
+        "finding summary",
+        "claim support assessment",
+        "structured claim-evidence patch",
+        "statistical-validity and reproducibility report",
+        "failure hypotheses",
+        "comparability warnings",
+        "next actions"
+      ],
+      "path": "skills/research-result-analysis/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "analyze these results",
+        "interpret logs",
+        "why did performance change",
+        "结果是否支持结论",
+        "统计假设和多重比较",
+        "seed coverage and reproducibility"
+      ],
+      "purpose": "Interpret completed experimental results, test claims, emit shared-schema claim-evidence patches, diagnose failure patterns, and choose evidence-based next steps.",
+      "rag_policy": "never",
+      "references_to": [
+        "code-debugging"
+      ],
+      "replacement": null,
+      "required_inputs": [
+        "experimental observations, logs, tables, metrics, or plots"
+      ],
+      "role": "analysis",
+      "side_effect_class": "read_only",
+      "side_effects": [],
+      "status": "active",
+      "stop_conditions": [
+        "reported results have been interpreted within their protocol",
+        "missing run metadata prevents stronger attribution"
+      ],
+      "tools": [
+        "filesystem_read",
+        "table_reader",
+        "plot_reader"
+      ],
+      "user_intents": [
+        "analyze metrics or plots",
+        "check whether results support a claim",
+        "audit statistical validity or selective-reporting risk",
+        "check run coverage and reproducibility",
+        "diagnose experimental failure",
+        "choose the next experiment"
+      ],
+      "version": "1.3.0",
+      "workflow_steps": [
+        "validate protocol comparability",
+        "summarize patterns",
+        "separate observation from explanation",
+        "test claim support",
+        "audit statistical assumptions, multiplicity, selection, and run coverage when requested",
+        "link findings to upstream identities and project them into the shared claim-evidence contract",
+        "prioritize next checks"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "medium",
+      "expected_latency": "medium",
+      "failure_behavior": "Return a conditional or blocked plan with unresolved assumptions; never invent an effect size, variance, event rate, dependence parameter, or observed result.",
+      "handoff_to": [
+        "research-experiment-design",
+        "research-dataset-metric-protocols",
+        "code-experiment-config-management",
+        "research-result-analysis"
+      ],
+      "id": "research-statistical-power",
+      "input_contract": {
+        "optional": [
+          "effect-size evidence",
+          "variance or event rate",
+          "alpha and target power",
+          "allocation",
+          "attrition",
+          "clustering or dependence",
+          "multiplicity policy",
+          "existing calculation artifact"
+        ],
+        "required": [
+          "defined study design and estimand",
+          "analysis unit and test or model family",
+          "quantity to solve for"
+        ]
+      },
+      "mcp_tools": [
+        "rag_search",
+        "rag_get_chunk"
+      ],
+      "mode_contracts": {
+        "*": {
+          "rag_policy": "optional",
+          "side_effect_class": "read_only"
+        }
+      },
+      "modes": [
+        "closed-form",
+        "simulation",
+        "sensitivity",
+        "audit",
+        "full"
+      ],
+      "name": "research-statistical-power",
+      "negative_triggers": [
+        "design the whole experiment",
+        "define dataset splits or metrics",
+        "interpret completed results",
+        "run an experiment"
+      ],
+      "optional_inputs": [
+        "effect-size evidence",
+        "variance or event rate",
+        "alpha and target power",
+        "allocation",
+        "attrition",
+        "clustering or dependence",
+        "multiplicity policy",
+        "existing calculation artifact"
+      ],
+      "outputs": [
+        "PWR-identified power plan",
+        "assumption and provenance ledger",
+        "sample-size power or MDE calculation contract",
+        "design adjustments",
+        "sensitivity scenarios",
+        "reproducibility metadata",
+        "ready conditional or blocked verdict"
+      ],
+      "path": "skills/research-statistical-power/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "sample size calculation",
+        "power analysis",
+        "minimum detectable effect",
+        "MDE",
+        "样本量估计",
+        "检验效能",
+        "最小可检测效应"
+      ],
+      "purpose": "Plan and audit sample size, statistical power, minimum detectable effect, and design adjustments for a defined study.",
+      "rag_policy": "optional",
+      "replacement": null,
+      "required_inputs": [
+        "defined study design and estimand",
+        "analysis unit and test or model family",
+        "quantity to solve for"
+      ],
+      "role": "analysis",
+      "side_effect_class": "read_only",
+      "side_effects": [],
+      "status": "active",
+      "stop_conditions": [
+        "the calculation target assumptions adjustments and implementation are auditable",
+        "a material design or effect-size assumption is unresolved"
+      ],
+      "tools": [
+        "document_reader",
+        "filesystem_read",
+        "table_reader",
+        "local_python"
+      ],
+      "user_intents": [
+        "calculate or audit sample size",
+        "plan target statistical power",
+        "estimate minimum detectable effect",
+        "adjust power for attrition or clustering",
+        "define simulation-based power analysis"
+      ],
+      "version": "1.1.0",
+      "workflow_steps": [
+        "freeze the estimand analysis unit and calculation target",
+        "record sourced assumptions and unresolved values",
+        "select closed-form or simulation calculation family",
+        "apply design adjustments explicitly",
+        "stress-test material assumptions",
+        "record implementation and reproducibility metadata",
+        "issue a fail-closed verdict and handoff"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "medium",
+      "expected_latency": "medium",
+      "failure_behavior": "Return a conditional or blocked record and never invent measurements, units, uncertainties, distributions, correlations, calibration records, or coverage claims.",
+      "handoff_to": [
+        "research-dataset-metric-protocols",
+        "research-result-analysis",
+        "code-debugging"
+      ],
+      "id": "research-uncertainty-units",
+      "input_contract": {
+        "optional": [
+          "calibration evidence",
+          "distributions and divisors",
+          "degrees of freedom",
+          "sensitivity coefficients",
+          "correlations or covariance",
+          "coverage target",
+          "simulation settings",
+          "plausibility references"
+        ],
+        "required": [
+          "measurand and measurement model",
+          "input estimates units and uncertainty statements"
+        ]
+      },
+      "mcp_tools": [
+        "rag_search",
+        "rag_get_chunk"
+      ],
+      "mode_contracts": {
+        "*": {
+          "rag_policy": "optional",
+          "side_effect_class": "read_only"
+        }
+      },
+      "modes": [
+        "unit-audit",
+        "budget",
+        "propagation",
+        "reporting",
+        "plausibility",
+        "full"
+      ],
+      "name": "research-uncertainty-units",
+      "negative_triggers": [
+        "calculate statistical power",
+        "audit dataset quality",
+        "interpret completed results",
+        "operate an instrument"
+      ],
+      "optional_inputs": [
+        "calibration evidence",
+        "distributions and divisors",
+        "degrees of freedom",
+        "sensitivity coefficients",
+        "correlations or covariance",
+        "coverage target",
+        "simulation settings",
+        "plausibility references"
+      ],
+      "outputs": [
+        "UNC-identified uncertainty and units record",
+        "unit and dimensional audit",
+        "uncertainty budget with provenance",
+        "propagation method contract",
+        "coverage and reporting statement",
+        "ready conditional or blocked verdict"
+      ],
+      "path": "skills/research-uncertainty-units/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "uncertainty budget",
+        "measurement uncertainty",
+        "dimensional consistency",
+        "unit conversion audit",
+        "Type A Type B uncertainty",
+        "coverage factor",
+        "测量不确定度",
+        "不确定度预算",
+        "量纲检查",
+        "单位换算"
+      ],
+      "purpose": "Audit physical units, dimensional consistency, measurement uncertainty budgets, propagation, coverage, and reporting.",
+      "rag_policy": "optional",
+      "references_to": [
+        "research-data-quality-audit",
+        "research-statistical-power"
+      ],
+      "replacement": null,
+      "required_inputs": [
+        "measurand and measurement model",
+        "input estimates units and uncertainty statements"
+      ],
+      "role": "analysis",
+      "side_effect_class": "read_only",
+      "side_effects": [],
+      "status": "active",
+      "stop_conditions": [
+        "the measurement model units budget propagation and report are auditable",
+        "material measurement or calibration evidence is unresolved"
+      ],
+      "tools": [
+        "document_reader",
+        "filesystem_read",
+        "table_reader",
+        "local_python"
+      ],
+      "user_intents": [
+        "audit units and dimensions",
+        "build a measurement uncertainty budget",
+        "propagate correlated uncertainty",
+        "plan Monte Carlo uncertainty propagation",
+        "format a result with coverage and significant figures",
+        "check physical plausibility"
+      ],
+      "version": "1.1.0",
+      "workflow_steps": [
+        "freeze the measurand and measurement model",
+        "attach units and uncertainty evidence to inputs",
+        "audit dimensions and special unit scales",
+        "normalize uncertainty components",
+        "resolve correlations and choose propagation",
+        "record coverage rounding and plausibility",
+        "issue a fail-closed verdict and handoff"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "medium",
+      "expected_latency": "medium",
+      "failure_behavior": "Return blocked when required reproduction or assertions are unavailable; hand compatibility causes to code-repo-adaptation and verify the returned patch later.",
+      "handoff_to": [
+        "code-repo-adaptation"
+      ],
+      "id": "code-debugging",
+      "input_contract": {
+        "optional": [
+          "relevant code and config",
+          "environment facts",
+          "recent changes",
+          "expected behavior",
+          "write authorization"
+        ],
+        "required": [
+          "failing behavior, traceback, failing test, reproduction evidence, candidate patch, or verification request"
+        ]
+      },
+      "mcp_tools": [],
+      "modes": [
+        "minimal-reproduction",
+        "traceback",
+        "numerical",
+        "runtime",
+        "regression",
+        "patch-verification"
+      ],
+      "name": "code-debugging",
+      "negative_triggers": [
+        "upgrade dependencies",
+        "migrate framework APIs",
+        "change dataset layout",
+        "port training pipeline"
+      ],
+      "optional_inputs": [
+        "relevant code and config",
+        "environment facts",
+        "recent changes",
+        "expected behavior",
+        "write authorization"
+      ],
+      "outputs": [
+        "minimal reproduction",
+        "evidence-backed root cause",
+        "minimal authorized fix",
+        "tests and invariant matrix",
+        "verified failed or blocked verdict",
+        "compatibility handoff when required"
+      ],
+      "path": "skills/code-debugging/SKILL.md",
+      "physical_group": "coding",
+      "positive_triggers": [
+        "minimal reproduction",
+        "traceback",
+        "NaN",
+        "OOM",
+        "shape mismatch",
+        "deadlock",
+        "regression",
+        "verify this patch"
+      ],
+      "purpose": "Reproduce, diagnose, minimally fix, test, and verify concrete code failures or candidate patches.",
+      "rag_policy": "never",
+      "replacement": null,
+      "required_inputs": [
+        "failing behavior, traceback, failing test, reproduction evidence, candidate patch, or verification request"
+      ],
+      "role": "debugging",
+      "side_effect_class": "authorized_workspace_write",
+      "side_effects": [
+        "with explicit authorization may apply a minimal root-cause fix",
+        "may run focused local tests and verification commands"
+      ],
+      "status": "active",
+      "stop_conditions": [
+        "verification verdict is supported",
+        "fix authorization is absent",
+        "reproduction is blocked",
+        "proven cause requires compatibility migration"
+      ],
+      "tools": [
+        "filesystem_read",
+        "shell",
+        "apply_patch",
+        "test_runner",
+        "git_read"
+      ],
+      "user_intents": [
+        "create a minimal reproduction",
+        "diagnose a traceback",
+        "fix NaN OOM shape dtype or device errors",
+        "diagnose runtime or DDP failures",
+        "find a regression",
+        "verify a candidate patch"
+      ],
+      "version": "2.0.2",
+      "workflow_steps": [
+        "normalize failure or handoff",
+        "reproduce and minimize",
+        "test discriminating hypotheses",
+        "prove root cause",
+        "apply minimal authorized fix",
+        "run focused regression",
+        "issue verdict"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "medium",
+      "expected_latency": "medium",
+      "failure_behavior": "Mark missing lifecycle decisions unclear; stop before execution when plan, command, or output isolation is incomplete; record failures without silent retry and hand them to code-debugging.",
+      "handoff_to": [
+        "code-debugging",
+        "research-result-analysis"
+      ],
+      "id": "code-experiment-config-management",
+      "input_contract": {
+        "optional": [
+          "configuration technology",
+          "output root",
+          "logging needs",
+          "checkpoint and resume requirements",
+          "project conventions",
+          "frozen experiment, claim, protocol, and metric IDs",
+          "result-independent acceptance criteria",
+          "explicitly authorized repository-native command"
+        ],
+        "required": [
+          "experiment variables and configuration context"
+        ]
+      },
+      "mcp_tools": [],
+      "modes": [
+        "config-tree",
+        "seed-policy",
+        "run-identity",
+        "checkpoint-resume",
+        "result-registry",
+        "archive",
+        "run-lifecycle",
+        "full"
+      ],
+      "name": "code-experiment-config-management",
+      "negative_triggers": [
+        "implement a method",
+        "migrate checkpoint format",
+        "debug or verify code",
+        "interpret results"
+      ],
+      "optional_inputs": [
+        "configuration technology",
+        "output root",
+        "logging needs",
+        "checkpoint and resume requirements",
+        "project conventions",
+        "frozen experiment, claim, protocol, and metric IDs",
+        "result-independent acceptance criteria",
+        "explicitly authorized repository-native command"
+      ],
+      "outputs": [
+        "configuration tree",
+        "seed policy",
+        "run identity contract",
+        "checkpoint and resume contract",
+        "result registry",
+        "archive manifest",
+        "run-state record",
+        "artifact inventory",
+        "protocol-acceptance report"
+      ],
+      "path": "skills/code-experiment-config-management/SKILL.md",
+      "physical_group": "coding",
+      "positive_triggers": [
+        "Hydra config",
+        "seed policy",
+        "run naming",
+        "checkpoint resume",
+        "experiment archive",
+        "execute planned experiment",
+        "monitor experiment run",
+        "collect run artifacts"
+      ],
+      "purpose": "Define reproducible experiment lifecycle contracts and manage the bounded execution, monitoring, artifact collection, and protocol acceptance of an already-frozen authorized run.",
+      "rag_policy": "never",
+      "replacement": null,
+      "required_inputs": [
+        "experiment variables and configuration context"
+      ],
+      "role": "implementation",
+      "side_effect_class": "authorized_workspace_write",
+      "side_effects": [
+        "with explicit authorization may modify experiment configuration and manifest files",
+        "in run-lifecycle may execute only the exact inspected repository-native command and create artifacts inside the declared isolated output root"
+      ],
+      "status": "active",
+      "stop_conditions": [
+        "requested lifecycle contract is complete",
+        "missing project decisions would materially change the design"
+      ],
+      "tools": [
+        "filesystem_read",
+        "shell",
+        "apply_patch",
+        "test_runner"
+      ],
+      "user_intents": [
+        "organize experiment configs",
+        "define seed policy",
+        "name runs",
+        "manage checkpoints and resume",
+        "archive experiment runs",
+        "execute a frozen experiment plan",
+        "monitor an authorized experiment run",
+        "collect run artifacts"
+      ],
+      "version": "2.2.0",
+      "workflow_steps": [
+        "separate variable classes",
+        "define config precedence",
+        "define seeds and run identity",
+        "define checkpoint resume",
+        "define registry and archive",
+        "for run-lifecycle validate the manifest and path boundary, execute only the exact authorized command, collect artifacts, and evaluate frozen protocol criteria"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "high",
+      "expected_latency": "high",
+      "failure_behavior": "Preserve hard constraints and unrelated work, do not diagnose ordinary defects, and never claim the candidate migration passed.",
+      "handoff_to": [
+        "code-debugging"
+      ],
+      "id": "code-repo-adaptation",
+      "input_contract": {
+        "optional": [
+          "environment inventory",
+          "dependency manifests",
+          "dataset layout",
+          "existing entrypoints",
+          "checkpoints",
+          "migration evidence",
+          "write authorization"
+        ],
+        "required": [
+          "existing repository scope",
+          "explicit source and target compatibility contract"
+        ]
+      },
+      "mcp_tools": [],
+      "modes": [
+        "repo-understanding",
+        "environment-compatibility",
+        "dependency-compatibility",
+        "framework-compatibility",
+        "dataset-compatibility",
+        "training-pipeline-compatibility",
+        "inference-compatibility",
+        "checkpoint-compatibility",
+        "compatibility-patch"
+      ],
+      "name": "code-repo-adaptation",
+      "negative_triggers": [
+        "minimal reproduction",
+        "ordinary traceback diagnosis",
+        "verify this patch",
+        "unrelated bug fix"
+      ],
+      "optional_inputs": [
+        "environment inventory",
+        "dependency manifests",
+        "dataset layout",
+        "existing entrypoints",
+        "checkpoints",
+        "migration evidence",
+        "write authorization"
+      ],
+      "outputs": [
+        "repository compatibility map",
+        "source-target compatibility matrix",
+        "candidate compatibility patch",
+        "changed paths",
+        "deviation and rollback notes",
+        "Verification Handoff"
+      ],
+      "path": "skills/code-repo-adaptation/SKILL.md",
+      "physical_group": "coding",
+      "positive_triggers": [
+        "adapt to Python or CUDA",
+        "upgrade PyTorch Lightning Diffusers Transformers",
+        "dataset layout migration",
+        "checkpoint compatibility",
+        "framework API migration"
+      ],
+      "purpose": "Migrate an existing repository across explicit environment, dependency, framework, dataset, pipeline, inference, or checkpoint compatibility contracts.",
+      "rag_policy": "never",
+      "replacement": null,
+      "required_inputs": [
+        "existing repository scope",
+        "explicit source and target compatibility contract"
+      ],
+      "role": "migration",
+      "side_effect_class": "authorized_workspace_write",
+      "side_effects": [
+        "with explicit authorization may modify compatibility-related repository files"
+      ],
+      "status": "active",
+      "stop_conditions": [
+        "candidate migration and verification handoff are complete",
+        "authorization is absent",
+        "root cause is unrelated to compatibility"
+      ],
+      "tools": [
+        "filesystem_read",
+        "shell",
+        "apply_patch",
+        "git_read"
+      ],
+      "user_intents": [
+        "understand a repository for migration",
+        "adapt environment or dependencies",
+        "migrate framework APIs",
+        "adapt dataset layout",
+        "migrate existing training or inference pipeline",
+        "convert checkpoint compatibility"
+      ],
+      "version": "2.0.2",
+      "workflow_steps": [
+        "record source and target contracts",
+        "map migration surfaces",
+        "build compatibility matrix",
+        "apply minimal authorized migration",
+        "document risks and rollback",
+        "handoff verification without executing it"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "medium",
+      "expected_latency": "medium",
+      "failure_behavior": "Use a supported neutral claim or citation-needed marker; if verified content is insufficient, return a scaffold and missing-facts list; if protected spans fail, expose failed IDs and do not present the revision as final.",
+      "handoff_to": [
+        "writing-manuscript-audit",
+        "writing-knowledge-capture"
+      ],
+      "id": "writing-academic",
+      "input_contract": {
+        "optional": [
+          "venue style",
+          "length",
+          "audience",
+          "section target",
+          "manuscript context",
+          "thin paper context",
+          "length or reduction target",
+          "terminology table",
+          "citations",
+          "evidence map",
+          "author-owned voice sample or approved task-scoped profile",
+          "accepted AUD finding IDs and protected-content manifest",
+          "contained target, block markers, replacement artifacts, and exact pre-edit hashes"
+        ],
+        "required": [
+          "target text or verified content points",
+          "writing goal",
+          "output language"
+        ]
+      },
+      "mcp_tools": [
+        "rag_search",
+        "rag_get_chunk",
+        "rag_resolve_reference"
+      ],
+      "mode_contracts": {
+        "*": {
+          "rag_policy": "optional",
+          "side_effect_class": "authorized_workspace_write"
+        },
+        "related-work": {
+          "rag_policy": "required",
+          "side_effect_class": "authorized_workspace_write"
+        }
+      },
+      "modes": [
+        "outline",
+        "draft",
+        "rewrite",
+        "de-template",
+        "author-voice",
+        "compress",
+        "expand",
+        "clarify",
+        "venue-style",
+        "related-work",
+        "reviewer-response",
+        "revision-patch"
+      ],
+      "name": "writing-academic",
+      "negative_triggers": [
+        "reverse-outline or diagnose structure",
+        "diagnose manuscript defects",
+        "AI authorship probability or detector evasion",
+        "imitate a named third party",
+        "patch source code",
+        "interpret raw results",
+        "discover or compare literature without an evidence map"
+      ],
+      "optional_inputs": [
+        "venue style",
+        "length",
+        "audience",
+        "section target",
+        "manuscript context",
+        "thin paper context",
+        "length or reduction target",
+        "terminology table",
+        "citations",
+        "evidence map",
+        "author-owned voice sample or approved task-scoped profile",
+        "accepted AUD finding IDs and protected-content manifest",
+        "contained target, block markers, replacement artifacts, and exact pre-edit hashes"
+      ],
+      "outputs": [
+        "story map and paragraph plan for outline",
+        "paper story, section dependency plan, and task-local context patch for whole-paper outline",
+        "revised text",
+        "accepted finding disposition for de-template",
+        "task-local voice calibration scope and confidence",
+        "literal protected-span validation result",
+        "optional compression report",
+        "hash-bound revision manifest, preview or apply status, and conflict report",
+        "compact change rationale",
+        "terminology decisions",
+        "unsupported claim markers",
+        "unresolved evidence"
+      ],
+      "path": "skills/writing-academic/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "plan an introduction story",
+        "introduction 大纲和故事线",
+        "rewrite academically",
+        "de-template this academic paragraph",
+        "去模板化重写",
+        "match my own academic voice",
+        "按我的写作语气改写",
+        "draft an abstract",
+        "polish this section",
+        "reviewer response",
+        "related work prose",
+        "hash-bound manuscript patch",
+        "带原文 hash 的修订 patch"
+      ],
+      "purpose": "Plan a paper or section story and draft, revise, de-template, voice-calibrate, or measurably compress academic prose while preserving scientific meaning, evidence, formulas, data, and citation identity.",
+      "rag_policy": "optional",
+      "replacement": null,
+      "required_inputs": [
+        "target text or verified content points",
+        "writing goal",
+        "output language"
+      ],
+      "role": "implementation",
+      "side_effect_class": "authorized_workspace_write",
+      "side_effects": [
+        "may write a user-requested manuscript artifact",
+        "revision-patch may atomically replace only the exact authorized contained manuscript after all hash preconditions pass"
+      ],
+      "status": "active",
+      "stop_conditions": [
+        "requested prose and preservation checks are complete",
+        "required source facts are missing"
+      ],
+      "tools": [
+        "document_reader",
+        "filesystem_read",
+        "document_editor",
+        "filesystem_write"
+      ],
+      "user_intents": [
+        "outline a paper or section story",
+        "draft manuscript prose",
+        "rewrite or polish",
+        "rewrite accepted AUD findings into less formulaic final prose",
+        "match an author-owned task-local voice sample",
+        "compress or expand",
+        "write related work",
+        "respond to reviewers",
+        "prepare or apply a hash-bound manuscript revision patch"
+      ],
+      "version": "1.5.0",
+      "workflow_steps": [
+        "freeze immutable facts",
+        "select the narrowest mode",
+        "load the full-manuscript lifecycle or one matching section guide, never both",
+        "build a story map and paragraph plan when structural planning is requested",
+        "check claim-to-evidence gaps",
+        "draft at requested level",
+        "for de-template consume accepted findings without rerunning the full audit",
+        "for author-voice calibrate only from a user-owned task-local sample or approved profile",
+        "run at most one corrective pass after preservation validation",
+        "measure compression targets and protected-content preservation when requested",
+        "for revision-patch validate contained paths, unique markers, target and block hashes, then apply atomically only with exact authorization",
+        "verify preservation"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "medium",
+      "expected_latency": "medium",
+      "failure_behavior": "Keep invalid approval records pending, reject raw-sample profile fields, return insufficient-profile-evidence when ownership or support is weak, note missing deduplication when optional retrieval fails, and never claim uniqueness without required history.",
+      "handoff_to": [
+        "writing-academic"
+      ],
+      "id": "writing-knowledge-capture",
+      "input_contract": {
+        "optional": [
+          "domain",
+          "existing candidates",
+          "destination category",
+          "language genre and domain scope",
+          "author-owned confirmation for style samples",
+          "entry-specific approval"
+        ],
+        "required": [
+          "source material or explicit user instruction",
+          "intended use"
+        ]
+      },
+      "mcp_tools": [
+        "rag_search",
+        "rag_get_chunk"
+      ],
+      "mode_contracts": {
+        "*": {
+          "rag_policy": "optional",
+          "side_effect_class": "authorized_workspace_write"
+        }
+      },
+      "modes": [
+        "term",
+        "phrase",
+        "argument-pattern",
+        "structure",
+        "reviewer-response",
+        "error-rule",
+        "style-preference",
+        "deduplicate",
+        "approve",
+        "reject"
+      ],
+      "name": "writing-knowledge-capture",
+      "negative_triggers": [
+        "write final manuscript prose",
+        "apply a style profile to final prose",
+        "store raw writing samples or chat",
+        "imitate a named third party",
+        "mine visual design patterns",
+        "write directly to RAG",
+        "implicit approval"
+      ],
+      "optional_inputs": [
+        "domain",
+        "existing candidates",
+        "destination category",
+        "language genre and domain scope",
+        "author-owned confirmation for style samples",
+        "entry-specific approval"
+      ],
+      "outputs": [
+        "provenance-rich candidate record",
+        "privacy-bounded WSP profile candidate with trait-level evidence",
+        "pending review status",
+        "deduplication result"
+      ],
+      "path": "skills/writing-knowledge-capture/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "accumulate writing expressions",
+        "save this terminology",
+        "stage for review",
+        "积累论证结构",
+        "stage my author style profile",
+        "待审核的写作风格档案"
+      ],
+      "purpose": "Extract reusable academic-writing knowledge or a privacy-bounded author-owned style profile into a reviewable pending-candidate workflow.",
+      "rag_policy": "optional",
+      "replacement": null,
+      "required_inputs": [
+        "source material or explicit user instruction",
+        "intended use"
+      ],
+      "role": "implementation",
+      "side_effect_class": "authorized_workspace_write",
+      "side_effects": [
+        "writes only to review staging when explicitly requested",
+        "moves or copies a candidate only after entry-specific approval"
+      ],
+      "status": "active",
+      "stop_conditions": [
+        "candidate is staged pending review",
+        "style-sample ownership or reuse consent is unclear",
+        "style evidence is insufficient for a bounded profile",
+        "approval evidence is missing",
+        "source cannot support a reusable candidate"
+      ],
+      "tools": [
+        "document_reader",
+        "filesystem_read",
+        "filesystem_write"
+      ],
+      "user_intents": [
+        "save reusable terminology",
+        "capture phrases or argument patterns",
+        "stage an author-owned academic style profile without raw samples",
+        "deduplicate writing knowledge",
+        "approve or reject a staged candidate"
+      ],
+      "version": "1.1.2",
+      "workflow_steps": [
+        "extract reusable candidates",
+        "normalize and deduplicate",
+        "record provenance and boundaries",
+        "for style-preference abstract scoped traits without storing raw samples",
+        "validate candidate or profile against its matching schema",
+        "stage pending review",
+        "apply explicit entry-level decision"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "high",
+      "expected_latency": "high",
+      "failure_behavior": "Stop only the evidence-dependent verdict, return insufficient-sample instead of a prose-style guess, retain independent checks, and report missing or unreadable material as unresolved.",
+      "handoff_to": [
+        "writing-academic",
+        "research-result-analysis",
+        "publish-preflight",
+        "writing-review-triage"
+      ],
+      "id": "writing-manuscript-audit",
+      "input_contract": {
+        "optional": [
+          "venue",
+          "strictness",
+          "supplementary material",
+          "logs",
+          "terminology or symbol glossary",
+          "approved author-style profile",
+          "original AUD finding ledger and separately revised material",
+          "frozen manuscript snapshot and reviewer isolation status"
+        ],
+        "required": [
+          "manuscript or scoped section",
+          "audit mode"
+        ]
+      },
+      "mcp_tools": [
+        "rag_search",
+        "rag_get_chunk",
+        "rag_resolve_reference"
+      ],
+      "mode_contracts": {
+        "*": {
+          "rag_policy": "optional",
+          "side_effect_class": "read_only"
+        },
+        "artifact-leakage": {
+          "rag_policy": "never",
+          "side_effect_class": "read_only"
+        },
+        "citation-evidence": {
+          "rag_policy": "required",
+          "side_effect_class": "read_only"
+        },
+        "language": {
+          "rag_policy": "never",
+          "side_effect_class": "read_only"
+        },
+        "prose-style": {
+          "rag_policy": "never",
+          "side_effect_class": "read_only"
+        },
+        "structure": {
+          "rag_policy": "never",
+          "side_effect_class": "read_only"
+        },
+        "table-data": {
+          "rag_policy": "never",
+          "side_effect_class": "read_only"
+        },
+        "terminology": {
+          "rag_policy": "recommended",
+          "side_effect_class": "read_only"
+        }
+      },
+      "modes": [
+        "structure",
+        "language",
+        "prose-style",
+        "artifact-leakage",
+        "logic",
+        "terminology",
+        "consistency",
+        "formula",
+        "table-data",
+        "citation-evidence",
+        "reviewer",
+        "panel-review",
+        "closure",
+        "full"
+      ],
+      "name": "writing-manuscript-audit",
+      "negative_triggers": [
+        "forward outline or story planning",
+        "direct rewriting is primary",
+        "triage received reviewer comments",
+        "AI authorship probability or classification",
+        "detector-evasion or bypass advice",
+        "understand another paper",
+        "submission packaging only",
+        "interpret raw experiment outcomes"
+      ],
+      "optional_inputs": [
+        "venue",
+        "strictness",
+        "supplementary material",
+        "logs",
+        "terminology or symbol glossary",
+        "approved author-style profile",
+        "original AUD finding ledger and separately revised material",
+        "frozen manuscript snapshot and reviewer isolation status"
+      ],
+      "outputs": [
+        "paragraph-level reverse outline for structure mode",
+        "executive summary",
+        "severity-ranked location-specific issues",
+        "masked-sample prose-quality diagnostic without authorship inference",
+        "authoring-artifact leakage findings",
+        "reviewer-scoped records and post-collection synthesis matrix",
+        "evidence",
+        "minimal corrections",
+        "unresolved items",
+        "finding closure ledger"
+      ],
+      "path": "skills/writing-manuscript-audit/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "reverse outline",
+        "反向梳理段落功能",
+        "audit",
+        "reviewer-style critique",
+        "independent review panel",
+        "先独立评审再综合",
+        "templated prose signatures",
+        "模板化写作痕迹",
+        "prompt residue or unresolved placeholders",
+        "生成过程痕迹",
+        "table and text consistency",
+        "citation supports claim",
+        "全文审查",
+        "verify audit findings",
+        "close audit findings"
+      ],
+      "purpose": "Reverse-outline, diagnose, or verify closure of manuscript argument, language, bounded prose-quality, authoring-artifact, logic, consistency, formula, data, scientific-quality, and citation-evidence findings.",
+      "rag_policy": "optional",
+      "replacement": null,
+      "required_inputs": [
+        "manuscript or scoped section",
+        "audit mode"
+      ],
+      "role": "analysis",
+      "side_effect_class": "read_only",
+      "side_effects": [],
+      "status": "active",
+      "stop_conditions": [
+        "selected checks are complete",
+        "fewer than three substantive prose sentences remain after masking for prose-style",
+        "required citation evidence is unavailable for citation verdicts"
+      ],
+      "tools": [
+        "document_reader",
+        "pdf_reader",
+        "spreadsheet_reader",
+        "filesystem_read"
+      ],
+      "user_intents": [
+        "reverse-outline manuscript structure",
+        "audit a manuscript",
+        "collect reviewer perspectives before panel synthesis",
+        "diagnose clustered templated prose signatures without inferring authorship",
+        "locate prompt residue placeholders or drafting artifacts",
+        "check terminology or formulas",
+        "cross-check tables and text",
+        "review scientific quality",
+        "verify citation support",
+        "re-audit revised material and close verified findings"
+      ],
+      "version": "1.5.0",
+      "workflow_steps": [
+        "declare scope",
+        "map paragraph functions and argument dependencies for structure mode",
+        "build terminology and symbol tables",
+        "extract auditable items",
+        "mask non-prose spans and calibrate usable-sample confidence for prose checks",
+        "require clustered style signals or one exact literal artifact",
+        "run only selected checks",
+        "for panel-review freeze one shared snapshot, collect reviewer records before synthesis, and preserve supported minority opinions",
+        "merge root causes and assign severity",
+        "for closure verify protected content and evidence before closing or reopening findings"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "medium",
+      "expected_latency": "medium",
+      "failure_behavior": "Separate ambiguous comments, request only necessary context, and avoid drafting unsupported rebuttal claims.",
+      "handoff_to": [],
+      "id": "writing-review-triage",
+      "input_contract": {
+        "optional": [
+          "manuscript",
+          "venue constraints",
+          "response length",
+          "deadlines",
+          "author priorities"
+        ],
+        "required": [
+          "reviewer comments"
+        ]
+      },
+      "mcp_tools": [],
+      "modes": [
+        "triage",
+        "response-plan",
+        "revision-plan"
+      ],
+      "name": "writing-review-triage",
+      "negative_triggers": [
+        "write final reviewer response only",
+        "scientific manuscript audit without received comments",
+        "submission compliance"
+      ],
+      "optional_inputs": [
+        "manuscript",
+        "venue constraints",
+        "response length",
+        "deadlines",
+        "author priorities"
+      ],
+      "outputs": [
+        "issue clusters",
+        "severity and urgency",
+        "must-fix list",
+        "response strategy",
+        "evidence needs"
+      ],
+      "path": "skills/writing-review-triage/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "reviewer comments",
+        "OpenReview response plan",
+        "审稿意见分诊",
+        "must fix versus optional"
+      ],
+      "purpose": "Group reviewer comments, estimate severity, and build a must-fix response plan before drafting replies.",
+      "rag_policy": "never",
+      "references_to": [
+        "research-experiment-design",
+        "research-result-analysis",
+        "writing-academic",
+        "writing-manuscript-audit"
+      ],
+      "replacement": null,
+      "required_inputs": [
+        "reviewer comments"
+      ],
+      "role": "analysis",
+      "side_effect_class": "read_only",
+      "side_effects": [],
+      "status": "active",
+      "stop_conditions": [
+        "every actionable comment has an owner, priority, and next action",
+        "critical manuscript context is unavailable"
+      ],
+      "tools": [
+        "document_reader",
+        "filesystem_read"
+      ],
+      "user_intents": [
+        "triage reviewer comments",
+        "prioritize revisions",
+        "plan rebuttal strategy",
+        "identify must-fix issues"
+      ],
+      "version": "1.0.2",
+      "workflow_steps": [
+        "normalize comments",
+        "cluster root issues",
+        "rank severity and dependency",
+        "map fixes and evidence",
+        "prepare writing handoff"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "medium",
+      "expected_latency": "medium",
+      "failure_behavior": "Mark unverifiable requirements and block a readiness claim; do not guess current venue rules or upload anything.",
+      "handoff_to": [
+        "writing-manuscript-audit",
+        "writing-academic",
+        "visual-research-artifact-generation"
+      ],
+      "id": "publish-preflight",
+      "input_contract": {
+        "optional": [
+          "official checklist",
+          "supplementary material",
+          "deadline phase",
+          "anonymity status",
+          "candidate package root for read-only presence and hash checks"
+        ],
+        "required": [
+          "target venue or submission channel",
+          "submission artifacts or manifest"
+        ]
+      },
+      "mcp_tools": [],
+      "modes": [
+        "conference",
+        "journal",
+        "camera-ready",
+        "arxiv"
+      ],
+      "name": "publish-preflight",
+      "negative_triggers": [
+        "choose a venue",
+        "review scientific novelty",
+        "rewrite the manuscript"
+      ],
+      "optional_inputs": [
+        "official checklist",
+        "supplementary material",
+        "deadline phase",
+        "anonymity status",
+        "candidate package root for read-only presence and hash checks"
+      ],
+      "outputs": [
+        "blocking checklist",
+        "compliance findings",
+        "machine-readable packaging manifest",
+        "manifest checker result",
+        "desk-reject risks",
+        "next actions"
+      ],
+      "path": "skills/publish-preflight/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "submission checklist",
+        "camera ready",
+        "desk reject risk",
+        "投稿前检查"
+      ],
+      "purpose": "Check submission readiness, packaging, anonymity, page limits, and desk-reject risks through an evidence-linked, machine-validated candidate manifest.",
+      "rag_policy": "never",
+      "references_to": [
+        "publish-venue-targeting"
+      ],
+      "replacement": null,
+      "required_inputs": [
+        "target venue or submission channel",
+        "submission artifacts or manifest"
+      ],
+      "role": "implementation",
+      "side_effect_class": "authorized_workspace_write",
+      "side_effects": [
+        "may prepare user-requested submission artifacts without uploading"
+      ],
+      "status": "active",
+      "stop_conditions": [
+        "all known hard constraints and artifacts are checked",
+        "authoritative venue rules are unavailable"
+      ],
+      "tools": [
+        "document_reader",
+        "filesystem_read",
+        "web_search"
+      ],
+      "user_intents": [
+        "preflight a submission",
+        "check anonymity and packaging",
+        "verify camera-ready compliance",
+        "prepare arXiv upload"
+      ],
+      "version": "1.2.0",
+      "workflow_steps": [
+        "identify authoritative rules",
+        "inventory artifacts",
+        "validate stable rule, artifact, check, and finding mappings",
+        "check hard constraints",
+        "check anonymity and references",
+        "rank blockers"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "medium",
+      "expected_latency": "medium",
+      "failure_behavior": "State uncertainty, avoid acceptance predictions, and request or verify missing current venue constraints.",
+      "handoff_to": [],
+      "id": "publish-venue-targeting",
+      "input_contract": {
+        "optional": [
+          "target timeline",
+          "manuscript summary",
+          "venue preferences",
+          "risk tolerance"
+        ],
+        "required": [
+          "paper topic, maturity, and contribution type"
+        ]
+      },
+      "mcp_tools": [
+        "rag_search",
+        "rag_get_chunk"
+      ],
+      "mode_contracts": {
+        "*": {
+          "rag_policy": "never",
+          "side_effect_class": "read_only"
+        }
+      },
+      "modes": [
+        "shortlist",
+        "fit-analysis",
+        "primary-backup",
+        "revision-strategy"
+      ],
+      "name": "publish-venue-targeting",
+      "negative_triggers": [
+        "venue already chosen and upload is near",
+        "manuscript compliance only",
+        "guarantee acceptance"
+      ],
+      "optional_inputs": [
+        "target timeline",
+        "manuscript summary",
+        "venue preferences",
+        "risk tolerance"
+      ],
+      "outputs": [
+        "ranked venue shortlist",
+        "fit rationale",
+        "mismatch risks",
+        "revision priorities",
+        "backup plan"
+      ],
+      "path": "skills/publish-venue-targeting/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "where should I submit",
+        "TIP or TPAMI",
+        "venue shortlist",
+        "投稿 venue"
+      ],
+      "purpose": "Rank suitable publication venues and explain fit, revision needs, risks, and backup options.",
+      "rag_policy": "never",
+      "references_to": [
+        "publish-preflight",
+        "research-experiment-design",
+        "writing-academic"
+      ],
+      "replacement": null,
+      "required_inputs": [
+        "paper topic, maturity, and contribution type"
+      ],
+      "role": "analysis",
+      "side_effect_class": "read_only",
+      "side_effects": [],
+      "status": "active",
+      "stop_conditions": [
+        "a bounded ranked shortlist and backup strategy are supported",
+        "current authoritative venue information is unavailable"
+      ],
+      "tools": [
+        "document_reader",
+        "web_search"
+      ],
+      "user_intents": [
+        "choose a conference or journal",
+        "compare venue fit",
+        "build a primary and backup venue plan"
+      ],
+      "version": "1.1.0",
+      "workflow_steps": [
+        "characterize contribution",
+        "identify candidate venues",
+        "verify current scope and constraints",
+        "rank fit and risk",
+        "propose backup path"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "medium",
+      "expected_latency": "medium",
+      "failure_behavior": "Report unreadable visuals and provide only supported layout observations; never recreate copyrighted assets verbatim.",
+      "handoff_to": [
+        "paper-to-ppt",
+        "visual-research-artifact-generation"
+      ],
+      "id": "visual-expression-mining",
+      "input_contract": {
+        "optional": [
+          "venue style",
+          "project narrative",
+          "existing visual assets",
+          "library filter",
+          "presentation context"
+        ],
+        "required": [
+          "source visual artifacts or identifiable papers",
+          "target visual use"
+        ]
+      },
+      "mcp_tools": [
+        "rag_search",
+        "rag_get_chunk",
+        "rag_get_document"
+      ],
+      "mode_contracts": {
+        "*": {
+          "rag_policy": "optional",
+          "side_effect_class": "read_only"
+        }
+      },
+      "modes": [
+        "figure",
+        "table",
+        "schematic",
+        "storytelling",
+        "asset-pattern"
+      ],
+      "name": "visual-expression-mining",
+      "negative_triggers": [
+        "generate the final LaTeX table or plot",
+        "write manuscript prose",
+        "copy a copyrighted figure",
+        "choose the final deck style"
+      ],
+      "optional_inputs": [
+        "venue style",
+        "project narrative",
+        "existing visual assets",
+        "library filter",
+        "presentation context"
+      ],
+      "outputs": [
+        "visual pattern inventory",
+        "layout rationale",
+        "reusable design rules",
+        "adaptation cautions",
+        "optional presentation handoff"
+      ],
+      "path": "skills/visual-expression-mining/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "figure design patterns",
+        "table style mining",
+        "visual storytelling",
+        "图表表达积累"
+      ],
+      "purpose": "Mine reusable visual-expression patterns and optionally hand source-traceable presentation candidates to paper-to-ppt.",
+      "rag_policy": "optional",
+      "references_to": [
+        "paper-deep-read"
+      ],
+      "replacement": null,
+      "required_inputs": [
+        "source visual artifacts or identifiable papers",
+        "target visual use"
+      ],
+      "role": "analysis",
+      "side_effect_class": "read_only",
+      "side_effects": [],
+      "status": "active",
+      "stop_conditions": [
+        "patterns are source-linked and adapted without copying",
+        "visual source quality is insufficient"
+      ],
+      "tools": [
+        "document_reader",
+        "pdf_renderer",
+        "image_viewer"
+      ],
+      "user_intents": [
+        "study figure design",
+        "mine table layouts",
+        "extract schematic patterns",
+        "improve visual storytelling",
+        "prepare a presentation visual-asset handoff"
+      ],
+      "version": "1.1.2",
+      "workflow_steps": [
+        "select source visuals",
+        "identify layout and encoding",
+        "compare patterns",
+        "abstract reusable principles",
+        "map to target use",
+        "prepare presentation handoff when requested"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "medium",
+      "expected_latency": "medium",
+      "failure_behavior": "Do not fabricate values or hidden visual content; preserve editable source and report exact compile, render, or evidence blockers.",
+      "handoff_to": [
+        "writing-academic",
+        "writing-manuscript-audit"
+      ],
+      "id": "visual-research-artifact-generation",
+      "input_contract": {
+        "optional": [
+          "verified data",
+          "existing editable source",
+          "venue format",
+          "dimensions",
+          "theme and color policy",
+          "caption and label",
+          "statistical annotations",
+          "desired backend or output formats",
+          "stable claim and evidence IDs",
+          "paper-context narrative role and companion figure IDs"
+        ],
+        "required": [
+          "natural-language visual goal, structured data or graph, or existing visualization",
+          "intended artifact or use context when not derivable"
+        ]
+      },
+      "mcp_tools": [],
+      "modes": [
+        "drawio-diagram",
+        "tikz-diagram",
+        "pgfplots",
+        "data-plot",
+        "latex-table",
+        "multi-panel"
+      ],
+      "name": "visual-research-artifact-generation",
+      "negative_triggers": [
+        "mine visual styles",
+        "analyze result meaning",
+        "create a complete slide deck",
+        "generate a photo or illustration",
+        "invent missing values"
+      ],
+      "optional_inputs": [
+        "verified data",
+        "existing editable source",
+        "venue format",
+        "dimensions",
+        "theme and color policy",
+        "caption and label",
+        "statistical annotations",
+        "desired backend or output formats",
+        "stable claim and evidence IDs",
+        "paper-context narrative role and companion figure IDs"
+      ],
+      "outputs": [
+        "editable visual source",
+        "rendered preview when available",
+        "source-to-output mapping",
+        "figure role and claim-evidence mapping",
+        "cross-figure consistency record",
+        "reproduction command",
+        "validation status",
+        "unresolved uncertainty"
+      ],
+      "path": "skills/visual-research-artifact-generation/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "editable Draw.io diagram",
+        "drawio research figure",
+        "LaTeX table",
+        "plot these results",
+        "PGFPlots",
+        "TikZ diagram",
+        "publication-ready visual",
+        "生成可编辑流程图",
+        "生成论文图表"
+      ],
+      "purpose": "Generate editable, publication-ready, claim-linked research visual artifacts with figure roles, provenance, cross-figure consistency, and independent render validation.",
+      "rag_policy": "never",
+      "references_to": [
+        "paper-to-ppt",
+        "research-result-analysis",
+        "visual-expression-mining"
+      ],
+      "replacement": null,
+      "required_inputs": [
+        "natural-language visual goal, structured data or graph, or existing visualization",
+        "intended artifact or use context when not derivable"
+      ],
+      "role": "implementation",
+      "side_effect_class": "authorized_workspace_write",
+      "side_effects": [
+        "writes user-requested source and rendered artifacts"
+      ],
+      "status": "active",
+      "stop_conditions": [
+        "source and requested rendered output pass content and layout checks",
+        "required data or observable graph semantics are missing or inconsistent"
+      ],
+      "tools": [
+        "filesystem_read",
+        "apply_patch",
+        "latex_compiler",
+        "plot_runtime",
+        "image_viewer"
+      ],
+      "user_intents": [
+        "create an editable Draw.io research diagram",
+        "generate a LaTeX table",
+        "generate a TikZ or PGFPlots figure",
+        "plot verified research data",
+        "reconstruct an existing research visualization",
+        "compose a multi-panel research visual"
+      ],
+      "version": "1.2.0",
+      "workflow_steps": [
+        "inspect and classify supplied material",
+        "select the lightest sufficient visual backend",
+        "validate source facts and data",
+        "declare figure role, target claims, evidence, and companion relationships",
+        "generate editable source",
+        "render and inspect when runtimes exist",
+        "cross-check content, labels, geometry and values",
+        "deliver source, preview, provenance and reproduction instructions"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "medium",
+      "expected_latency": "medium",
+      "failure_behavior": "Preserve source variants and unresolved fields; distinguish zero hit, rate limit, timeout, access denial, and conflict without inventing metadata.",
+      "handoff_to": [
+        "literature-synthesis",
+        "literature-systematic-review",
+        "writing-manuscript-audit",
+        "tool-zotero-pdf-ingestion"
+      ],
+      "id": "tool-citation-metadata-validation",
+      "input_contract": {
+        "optional": [
+          "BibTeX or manuscript context",
+          "allowed metadata sources",
+          "source restrictions",
+          "known version relationships"
+        ],
+        "required": [
+          "citation records or identifiers",
+          "desired validation depth"
+        ]
+      },
+      "mcp_tools": [],
+      "modes": [
+        "normalize",
+        "resolve",
+        "cross-check",
+        "deduplicate",
+        "version-link",
+        "bibliography-audit",
+        "full"
+      ],
+      "name": "tool-citation-metadata-validation",
+      "negative_triggers": [
+        "discover literature on a topic",
+        "screen paper relevance",
+        "synthesize scientific findings",
+        "write Zotero or KnowledgeHub"
+      ],
+      "optional_inputs": [
+        "BibTeX or manuscript context",
+        "allowed metadata sources",
+        "source restrictions",
+        "known version relationships"
+      ],
+      "outputs": [
+        "normalized identifier ledger",
+        "queried-source ledger",
+        "field-level metadata provenance",
+        "conflicts and missing fields",
+        "duplicate and version groups",
+        "verified partial conflict or unresolved verdict"
+      ],
+      "path": "skills/tool-citation-metadata-validation/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "validate citation metadata",
+        "verify DOI metadata",
+        "check PMID or arXiv ID",
+        "duplicate citations",
+        "citation metadata conflict",
+        "引用元数据核验",
+        "DOI 核验",
+        "重复引用"
+      ],
+      "purpose": "Normalize, resolve, cross-check, deduplicate, and audit citation identifiers and bibliographic metadata with field-level provenance.",
+      "rag_policy": "never",
+      "references_to": [
+        "paper-triage"
+      ],
+      "replacement": null,
+      "required_inputs": [
+        "citation records or identifiers",
+        "desired validation depth"
+      ],
+      "role": "implementation",
+      "side_effect_class": "read_only",
+      "side_effects": [],
+      "status": "active",
+      "stop_conditions": [
+        "requested identifiers and fields have provenance-backed states",
+        "source access fails or record identity remains ambiguous"
+      ],
+      "tools": [
+        "document_reader",
+        "filesystem_read",
+        "web_search"
+      ],
+      "user_intents": [
+        "validate DOI PMID PMCID or arXiv identifiers",
+        "cross-check citation metadata",
+        "detect duplicate or versioned references",
+        "audit bibliography metadata provenance"
+      ],
+      "version": "1.1.0",
+      "workflow_steps": [
+        "inventory original records",
+        "normalize and syntax-check identifiers",
+        "resolve through task-relevant authoritative sources",
+        "cross-check fields with provenance",
+        "group duplicates and versions conservatively",
+        "classify failures and issue verdict"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "low",
+      "expected_latency": "low",
+      "failure_behavior": "Return not-evaluable with unknown observations; never infer unlimited resources, expose environment identifiers, install components, or launch workloads.",
+      "handoff_to": [
+        "code-experiment-config-management",
+        "code-repo-adaptation",
+        "code-debugging"
+      ],
+      "id": "tool-resource-preflight",
+      "input_contract": {
+        "optional": [
+          "resource snapshot",
+          "runtime and dependency lock",
+          "scheduler or container allocation",
+          "wall-time and cost budget",
+          "acceptable fallbacks"
+        ],
+        "required": [
+          "defined workload",
+          "hard and preferred requirements",
+          "intended execution environment"
+        ]
+      },
+      "mcp_tools": [],
+      "modes": [
+        "inventory",
+        "requirements",
+        "match",
+        "fallback",
+        "audit",
+        "full"
+      ],
+      "name": "tool-resource-preflight",
+      "negative_triggers": [
+        "stress test hardware",
+        "install packages or drivers",
+        "launch a job",
+        "provision cloud resources"
+      ],
+      "optional_inputs": [
+        "resource snapshot",
+        "runtime and dependency lock",
+        "scheduler or container allocation",
+        "wall-time and cost budget",
+        "acceptable fallbacks"
+      ],
+      "outputs": [
+        "redacted resource inventory",
+        "requirement-to-evidence matrix",
+        "effective constraints and bottlenecks",
+        "bounded fallbacks",
+        "go conditional no-go or not-evaluable verdict"
+      ],
+      "path": "skills/tool-resource-preflight/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "resource preflight",
+        "check available resources",
+        "GPU memory preflight",
+        "workload feasibility",
+        "CPU memory disk requirements",
+        "资源预检",
+        "可用资源检查",
+        "显存是否够",
+        "运行可行性"
+      ],
+      "purpose": "Match workload requirements to effective CPU, memory, disk, accelerator, runtime, permission, scheduler, time, and cost evidence before execution.",
+      "rag_policy": "never",
+      "replacement": null,
+      "required_inputs": [
+        "defined workload",
+        "hard and preferred requirements",
+        "intended execution environment"
+      ],
+      "role": "implementation",
+      "side_effect_class": "read_only",
+      "side_effects": [],
+      "status": "active",
+      "stop_conditions": [
+        "all hard requirements have effective-scope evidence and a verdict",
+        "required probes are unavailable or workload requirements are undefined"
+      ],
+      "tools": [
+        "filesystem_read",
+        "shell_read_only",
+        "local_python"
+      ],
+      "user_intents": [
+        "check resources before a workload",
+        "inventory effective CPU memory disk or GPU",
+        "assess runtime and dependency feasibility",
+        "plan resource fallbacks and go no-go"
+      ],
+      "version": "1.1.0",
+      "workflow_steps": [
+        "freeze workload and typed requirements",
+        "reuse or plan narrow read-only probes",
+        "record evidence class and scope",
+        "derive effective constraints conservatively",
+        "match requirements and identify bottlenecks",
+        "propose non-executing fallbacks and verdict"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "medium",
+      "expected_latency": "medium",
+      "failure_behavior": "Return partial, blocked, or not-run with resume state; never reveal secrets, treat zero hit as absence proof, or claim cross-database completeness.",
+      "handoff_to": [
+        "tool-citation-metadata-validation",
+        "literature-systematic-review",
+        "literature-synthesis"
+      ],
+      "id": "tool-scientific-database-query",
+      "input_contract": {
+        "optional": [
+          "documented endpoint and schema",
+          "server and local filters",
+          "request and record budgets",
+          "stable sort and resume ledger"
+        ],
+        "required": [
+          "target entity or fact",
+          "database class or named source",
+          "identifiers constraints and requested fields",
+          "targeted or exhaustive scope"
+        ]
+      },
+      "mcp_tools": [],
+      "modes": [
+        "capability",
+        "targeted",
+        "exhaustive",
+        "resume",
+        "cross-check",
+        "audit"
+      ],
+      "name": "tool-scientific-database-query",
+      "negative_triggers": [
+        "broad web search",
+        "synthesize literature",
+        "unsupported scraping",
+        "unrestricted bulk download"
+      ],
+      "optional_inputs": [
+        "documented endpoint and schema",
+        "server and local filters",
+        "request and record budgets",
+        "stable sort and resume ledger"
+      ],
+      "outputs": [
+        "retrieval contract",
+        "source capability record",
+        "redacted query plan",
+        "page and retry ledger",
+        "count reconciliation",
+        "coverage limits and resume state",
+        "complete partial blocked or not-run verdict"
+      ],
+      "path": "skills/tool-scientific-database-query/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "scientific database query",
+        "query a database API",
+        "API pagination audit",
+        "exhaustive database retrieval",
+        "resume database query",
+        "科学数据库查询",
+        "数据库 API 分页",
+        "查询完整性"
+      ],
+      "purpose": "Plan, execute, resume, or audit bounded read-only scientific database queries with pagination, count reconciliation, and provenance.",
+      "rag_policy": "never",
+      "replacement": null,
+      "required_inputs": [
+        "target entity or fact",
+        "database class or named source",
+        "identifiers constraints and requested fields",
+        "targeted or exhaustive scope"
+      ],
+      "role": "implementation",
+      "side_effect_class": "read_only",
+      "side_effects": [],
+      "status": "active",
+      "stop_conditions": [
+        "requested pages and counts reconcile within approved budgets",
+        "access schema rate limit budget or identifier ambiguity blocks retrieval"
+      ],
+      "tools": [
+        "filesystem_read",
+        "document_reader",
+        "web_search"
+      ],
+      "user_intents": [
+        "query a named scientific database API",
+        "plan exhaustive pagination and count reconciliation",
+        "resume a partial database retrieval",
+        "audit query provenance and completeness"
+      ],
+      "version": "1.1.0",
+      "workflow_steps": [
+        "freeze retrieval contract and scope",
+        "select the narrowest authoritative source",
+        "validate structured fields filters and identifiers",
+        "plan count pagination ordering rate and budgets",
+        "record every bounded request and response state",
+        "reconcile counts and issue source-scoped verdict"
+      ]
+    },
+    {
+      "activation": "primary",
+      "allow_implicit_primary": true,
+      "dependencies": [],
+      "expected_cost": "medium",
+      "expected_latency": "medium",
+      "failure_behavior": "Keep ambiguous matches unresolved, preserve originals, and report missing metadata or attachments without inventing identifiers.",
+      "handoff_to": [],
+      "id": "tool-zotero-pdf-ingestion",
+      "input_contract": {
+        "optional": [
+          "collection filter",
+          "citation-key policy",
+          "deduplication rules",
+          "export format"
+        ],
+        "required": [
+          "Zotero export or accessible local library metadata",
+          "PDF source set"
+        ]
+      },
+      "mcp_tools": [],
+      "mode_contracts": {
+        "*": {
+          "rag_policy": "never",
+          "side_effect_class": "read_only"
+        },
+        "export": {
+          "rag_policy": "never",
+          "side_effect_class": "authorized_workspace_write"
+        },
+        "prepare-kb": {
+          "rag_policy": "never",
+          "side_effect_class": "authorized_workspace_write"
+        }
+      },
+      "modes": [
+        "inventory",
+        "reconcile",
+        "deduplicate",
+        "export",
+        "prepare-kb"
+      ],
+      "name": "tool-zotero-pdf-ingestion",
+      "negative_triggers": [
+        "build embeddings or an index",
+        "analyze literature content",
+        "modify Zotero without authorization"
+      ],
+      "optional_inputs": [
+        "collection filter",
+        "citation-key policy",
+        "deduplication rules",
+        "export format"
+      ],
+      "outputs": [
+        "reconciled record manifest",
+        "duplicate report",
+        "missing attachment report",
+        "clean export"
+      ],
+      "path": "skills/tool-zotero-pdf-ingestion/SKILL.md",
+      "physical_group": "global",
+      "positive_triggers": [
+        "Zotero attachments",
+        "reconcile Zotero and PDFs",
+        "deduplicate bibliography",
+        "Zotero PDF 接入"
+      ],
+      "purpose": "Reconcile Zotero metadata and PDF attachments into a clean, deduplicated corpus manifest.",
+      "rag_policy": "never",
+      "references_to": [
+        "literature-kb-build"
+      ],
+      "replacement": null,
+      "required_inputs": [
+        "Zotero export or accessible local library metadata",
+        "PDF source set"
+      ],
+      "role": "implementation",
+      "side_effect_class": "authorized_workspace_write",
+      "side_effects": [
+        "may write an export or corpus manifest; does not alter Zotero by default"
+      ],
+      "status": "active",
+      "stop_conditions": [
+        "records are reconciled or conflicts are isolated",
+        "source library access is unavailable"
+      ],
+      "tools": [
+        "filesystem_read",
+        "filesystem_write",
+        "zotero_read"
+      ],
+      "user_intents": [
+        "connect Zotero records to PDFs",
+        "deduplicate paper records",
+        "export clean metadata",
+        "prepare KB inputs"
+      ],
+      "version": "1.1.0",
+      "workflow_steps": [
+        "inventory records and attachments",
+        "normalize identifiers",
+        "match and deduplicate",
+        "report conflicts",
+        "export approved manifest"
+      ]
+    }
+  ]
+}

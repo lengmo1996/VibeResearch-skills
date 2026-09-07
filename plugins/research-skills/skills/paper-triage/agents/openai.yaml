@@ -1,0 +1,13 @@
+interface:
+  display_name: "论文筛选"
+  short_description: "快速筛选论文并评估相关性，生成带优先级的阅读队列。"
+  default_prompt: "使用 $paper-triage，快速筛选论文并评估相关性，生成带优先级的阅读队列。"
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "knowledge-hub"
+      description: "Read-only search and retrieval from a user-configured KnowledgeHub MCP server"
+      transport: "streamable_http"
+
+policy:
+  allow_implicit_invocation: true

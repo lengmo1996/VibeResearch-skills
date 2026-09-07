@@ -1,0 +1,443 @@
+{
+  "schema_version": "1.0.0",
+  "catalog_policy": "Role-based academic composition suggestions. Numeric margins, area shares, and capacities are local heuristics; check the actual rendered content and viewing conditions.",
+  "field_semantics": {
+    "grid": "Textual composition instruction, not renderer coordinates.",
+    "visual_ratio": "Approximate share of usable content area assigned to the primary evidence, excluding title and footer.",
+    "max_items": "Independently explained blocks or panels; not individual shapes, words, equation symbols, or data samples."
+  },
+  "layouts": [
+    {
+      "id": "title-context",
+      "roles": [
+        "title"
+      ],
+      "content_types": [
+        "title",
+        "metadata",
+        "hero-visual"
+      ],
+      "density": [
+        "low"
+      ],
+      "grid": "Title and subtitle above a compact source/authorship region; optional contextual visual to the right.",
+      "safe_margin_in": 0.48,
+      "visual_ratio": 0.3,
+      "max_items": 3,
+      "rules": [
+        "Identify the paper or talk and distinguish source authors from the presenter.",
+        "Use a verified contextual image only when it explains the subject.",
+        "Keep affiliations and source metadata readable without competing with the title."
+      ]
+    },
+    {
+      "id": "section-route",
+      "roles": [
+        "section"
+      ],
+      "content_types": [
+        "navigation",
+        "title"
+      ],
+      "density": [
+        "low"
+      ],
+      "grid": "Section heading with a short route list and a compact reference to the previous question.",
+      "safe_margin_in": 0.48,
+      "visual_ratio": 0.18,
+      "max_items": 4,
+      "rules": [
+        "State the purpose of the next segment, not an unsupported result.",
+        "Retain the same chapter labels and navigation position throughout the deck.",
+        "Keep navigation text accessible in the linear reading order."
+      ]
+    },
+    {
+      "id": "question-evidence",
+      "roles": [
+        "motivation",
+        "problem"
+      ],
+      "content_types": [
+        "claim",
+        "evidence",
+        "hero-visual"
+      ],
+      "density": [
+        "low",
+        "medium"
+      ],
+      "grid": "Large observed example on the left; bounded research question and context on the right.",
+      "safe_margin_in": 0.48,
+      "visual_ratio": 0.62,
+      "max_items": 3,
+      "rules": [
+        "Separate the observed problem from the hypothesis offered to explain it.",
+        "Put the source beside the motivating example.",
+        "Keep the question connected to the evidence the talk will later evaluate."
+      ]
+    },
+    {
+      "id": "task-pair",
+      "roles": [
+        "task-definition"
+      ],
+      "content_types": [
+        "input-output",
+        "comparison",
+        "evidence"
+      ],
+      "density": [
+        "low",
+        "medium"
+      ],
+      "grid": "Aligned input and target/output regions with condition labels; task definition beneath.",
+      "safe_margin_in": 0.48,
+      "visual_ratio": 0.68,
+      "max_items": 4,
+      "rules": [
+        "Label inputs, available conditions, and desired outputs explicitly.",
+        "Identify whether the displayed target is measured, annotated, simulated, or illustrative.",
+        "Preserve sample identity and comparable scale across paired views."
+      ]
+    },
+    {
+      "id": "method-pipeline",
+      "roles": [
+        "method-overview"
+      ],
+      "content_types": [
+        "pipeline",
+        "architecture",
+        "flow"
+      ],
+      "density": [
+        "medium"
+      ],
+      "grid": "One horizontal process path; supporting supervision or condition track below; numbered module labels.",
+      "safe_margin_in": 0.48,
+      "visual_ratio": 0.74,
+      "max_items": 6,
+      "rules": [
+        "Label every major input, transformation, and output.",
+        "Distinguish data flow, supervision, and optional branches by connector labels or patterns.",
+        "Reuse module names in later detail slides and include a complete static path."
+      ]
+    },
+    {
+      "id": "module-detail",
+      "roles": [
+        "key-module"
+      ],
+      "content_types": [
+        "architecture",
+        "flow",
+        "pipeline",
+        "equation"
+      ],
+      "density": [
+        "medium"
+      ],
+      "grid": "Small context diagram at the side and enlarged module with one explanation region.",
+      "safe_margin_in": 0.48,
+      "visual_ratio": 0.66,
+      "max_items": 4,
+      "rules": [
+        "Mark the enlarged module in the overview so the audience keeps its location.",
+        "Explain its role before presenting internal details.",
+        "Keep variables, tensors, and connector meanings consistent with the overview."
+      ]
+    },
+    {
+      "id": "equation-explanation",
+      "roles": [
+        "equation"
+      ],
+      "content_types": [
+        "equation",
+        "definitions",
+        "claim"
+      ],
+      "density": [
+        "low",
+        "medium"
+      ],
+      "grid": "Equation in a broad central region; aligned symbol definitions and a short interpretation below.",
+      "safe_margin_in": 0.48,
+      "visual_ratio": 0.58,
+      "max_items": 4,
+      "rules": [
+        "Preserve the source equation and define the symbols used on this page.",
+        "State whether an expression is exact, approximate, assumed, or proposed.",
+        "Use a separate derivation page when explanation and mathematics no longer fit legibly."
+      ]
+    },
+    {
+      "id": "benchmark-evidence",
+      "roles": [
+        "main-results",
+        "results"
+      ],
+      "content_types": [
+        "chart",
+        "comparison",
+        "table"
+      ],
+      "density": [
+        "medium"
+      ],
+      "grid": "Primary quantitative comparison above; protocol, caveat, and source in a compact aligned strip below.",
+      "safe_margin_in": 0.48,
+      "visual_ratio": 0.76,
+      "max_items": 6,
+      "rules": [
+        "Show metric name, units, direction, method identities, and the tested condition.",
+        "Keep the title no stronger than the available comparison and uncertainty.",
+        "Use direct labels and point to the full result if the view is a selected subset."
+      ]
+    },
+    {
+      "id": "ablation-contrast",
+      "roles": [
+        "ablation"
+      ],
+      "content_types": [
+        "chart",
+        "comparison",
+        "table",
+        "matrix"
+      ],
+      "density": [
+        "medium"
+      ],
+      "grid": "Matched condition table or paired result panels with a shared baseline and takeaway.",
+      "safe_margin_in": 0.48,
+      "visual_ratio": 0.72,
+      "max_items": 6,
+      "rules": [
+        "Name the component or condition changed and what was held fixed.",
+        "Retain the common baseline and evaluation protocol.",
+        "Separate measured differences from hypotheses about their mechanism."
+      ]
+    },
+    {
+      "id": "paired-observations",
+      "roles": [
+        "qualitative-results"
+      ],
+      "content_types": [
+        "small-multiples",
+        "image-grid",
+        "comparison"
+      ],
+      "density": [
+        "medium"
+      ],
+      "grid": "Aligned sample rows and method columns; matched enlargements use explicit crop markers.",
+      "safe_margin_in": 0.48,
+      "visual_ratio": 0.8,
+      "max_items": 6,
+      "rules": [
+        "Keep method order, sample identity, crop, and display scale consistent.",
+        "State how examples were selected and include a source trace.",
+        "Label any normalization or registration difference that changes comparison meaning."
+      ]
+    },
+    {
+      "id": "failure-analysis",
+      "roles": [
+        "failure-cases"
+      ],
+      "content_types": [
+        "image-grid",
+        "comparison",
+        "evidence",
+        "chart"
+      ],
+      "density": [
+        "low",
+        "medium"
+      ],
+      "grid": "Observed failure on one side; reference view and bounded diagnosis on the other.",
+      "safe_margin_in": 0.48,
+      "visual_ratio": 0.66,
+      "max_items": 4,
+      "rules": [
+        "Identify the observed defect separately from a proposed explanation.",
+        "Show a relevant reference or comparison under labeled conditions.",
+        "Connect the failure to a claim boundary or next diagnostic test."
+      ]
+    },
+    {
+      "id": "related-work-matrix",
+      "roles": [
+        "related-work"
+      ],
+      "content_types": [
+        "matrix",
+        "table",
+        "comparison"
+      ],
+      "density": [
+        "medium"
+      ],
+      "grid": "Labeled comparison matrix with a short statement of the dimensions being compared.",
+      "safe_margin_in": 0.48,
+      "visual_ratio": 0.72,
+      "max_items": 6,
+      "rules": [
+        "Use explicit, source-supported comparison dimensions.",
+        "Keep unknown or unreported entries distinct from absent capabilities.",
+        "Provide a source for each compared work and avoid unsupported superiority labels."
+      ]
+    },
+    {
+      "id": "scope-boundary",
+      "roles": [
+        "limitations",
+        "risks"
+      ],
+      "content_types": [
+        "claim",
+        "evidence",
+        "list"
+      ],
+      "density": [
+        "low",
+        "medium"
+      ],
+      "grid": "Evidence or untested condition paired with its implication for the current claim.",
+      "safe_margin_in": 0.48,
+      "visual_ratio": 0.46,
+      "max_items": 4,
+      "rules": [
+        "Distinguish observed limitations from conditions that were not tested.",
+        "Explain which conclusion each limitation narrows.",
+        "Treat a proposed remedy as future work until evidence verifies it."
+      ]
+    },
+    {
+      "id": "decision-update",
+      "roles": [
+        "progress",
+        "project-status"
+      ],
+      "content_types": [
+        "table",
+        "evidence",
+        "status",
+        "comparison"
+      ],
+      "density": [
+        "medium"
+      ],
+      "grid": "Dated observed outputs on the left; blocker, dependency, and decision on the right.",
+      "safe_margin_in": 0.48,
+      "visual_ratio": 0.52,
+      "max_items": 5,
+      "rules": [
+        "Separate completed, running, blocked, and planned entries using explicit words.",
+        "Attach verification evidence and dates to completed outputs.",
+        "End with the concrete decision or action that the displayed state supports."
+      ]
+    },
+    {
+      "id": "milestone-plan",
+      "roles": [
+        "next-steps",
+        "schedule"
+      ],
+      "content_types": [
+        "timeline",
+        "plan",
+        "dependencies"
+      ],
+      "density": [
+        "low",
+        "medium"
+      ],
+      "grid": "Ordered milestones with dependency connectors and a labeled evidence-of-completion column.",
+      "safe_margin_in": 0.48,
+      "visual_ratio": 0.54,
+      "max_items": 5,
+      "rules": [
+        "Distinguish target dates from observed completion dates.",
+        "Name the verification condition for each planned milestone.",
+        "Expose unresolved dependencies without implying completion percentages that were not measured."
+      ]
+    },
+    {
+      "id": "teaching-example",
+      "roles": [
+        "worked-example",
+        "exercise"
+      ],
+      "content_types": [
+        "example",
+        "equation",
+        "comparison",
+        "flow"
+      ],
+      "density": [
+        "low",
+        "medium"
+      ],
+      "grid": "Prompt and known quantities in a fixed region; numbered solution states occupy the remaining area.",
+      "safe_margin_in": 0.48,
+      "visual_ratio": 0.6,
+      "max_items": 4,
+      "rules": [
+        "Give the learner a clear task before the answer.",
+        "Label intermediate states so the static handout remains understandable.",
+        "State the rule or assumption each transformation uses."
+      ]
+    },
+    {
+      "id": "takeaway-sources",
+      "roles": [
+        "takeaway",
+        "summary"
+      ],
+      "content_types": [
+        "takeaways",
+        "claim",
+        "evidence"
+      ],
+      "density": [
+        "low"
+      ],
+      "grid": "Short supported conclusions with stable references to evidence slides; one visible boundary statement.",
+      "safe_margin_in": 0.48,
+      "visual_ratio": 0.38,
+      "max_items": 3,
+      "rules": [
+        "Summarize only what the talk actually established.",
+        "Point each conclusion to the evidence already shown.",
+        "Keep the central limitation visible when it conditions the conclusion."
+      ]
+    },
+    {
+      "id": "discussion-index",
+      "roles": [
+        "q-and-a"
+      ],
+      "content_types": [
+        "questions",
+        "navigation",
+        "references"
+      ],
+      "density": [
+        "low"
+      ],
+      "grid": "Main discussion question and a compact labeled index to backup evidence.",
+      "safe_margin_in": 0.48,
+      "visual_ratio": 0.22,
+      "max_items": 5,
+      "rules": [
+        "Use descriptive appendix labels and a usable return route.",
+        "Keep necessary conclusions on the main linear path.",
+        "Provide static slide references as well as clickable links."
+      ]
+    }
+  ]
+}

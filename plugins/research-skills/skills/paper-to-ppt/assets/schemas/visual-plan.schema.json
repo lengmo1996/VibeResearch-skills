@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://viberesearch.local/schemas/paper-to-ppt/visual-plan.schema.json",
+  "title": "Paper-to-PPT Visual Plan",
+  "type": "object",
+  "required": ["schema_version", "brief", "candidates", "visual_system", "slides", "warnings"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "brief": {
+      "type": "object",
+      "required": ["deck_type", "audience", "language", "aspect_ratio"],
+      "properties": {
+        "deck_type": {"type": "string"},
+        "audience": {"type": "string"},
+        "language": {"enum": ["zh", "en", "bilingual"]},
+        "aspect_ratio": {"enum": ["16:9", "4:3"]},
+        "domain": {"type": "string"},
+        "duration_minutes": {"type": "number", "exclusiveMinimum": 0}
+      }
+    },
+    "candidates": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 4,
+      "items": {"type": "object", "required": ["id", "name", "score", "rationale"]}
+    },
+    "visual_system": {
+      "type": "object",
+      "required": ["style_id", "palette", "typography", "spacing", "chart_style", "motion_policy"]
+    },
+    "slides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "role", "layout", "hierarchy", "accessibility", "motion"]
+      }
+    },
+    "warnings": {"type": "array", "items": {"type": "string"}}
+  }
+}

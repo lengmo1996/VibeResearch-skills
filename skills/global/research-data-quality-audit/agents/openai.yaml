@@ -1,0 +1,7 @@
+interface:
+  display_name: "研究数据质量审计"
+  short_description: "审计数据集结构、缺失、重复、漂移与研究适用性，且不修改源数据。"
+  default_prompt: "使用 $research-data-quality-audit，审计数据集结构、缺失、重复、漂移与研究适用性，且不修改源数据。"
+
+policy:
+  allow_implicit_invocation: true

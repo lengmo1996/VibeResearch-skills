@@ -1,0 +1,47 @@
+# Search patterns for adapting repos to the current ML stack.
+
+torch:
+  - 'torch\.load\('
+  - 'torch\.save\('
+  - 'torch\.compile'
+  - 'torch\._dynamo'
+  - 'torch\.jit'
+  - 'torch\.cuda\.amp'
+  - 'torch\.amp'
+  - 'torch\.distributed'
+  - 'DistributedDataParallel'
+  - 'torchvision\.models'
+  - 'pretrained=True'
+
+lightning:
+  - 'pytorch_lightning'
+  - 'lightning\.pytorch'
+  - 'Trainer\('
+  - 'resume_from_checkpoint'
+  - 'gpus='
+  - 'accelerator='
+  - 'devices='
+  - 'strategy='
+  - 'precision='
+  - 'load_from_checkpoint'
+
+huggingface:
+  - 'transformers'
+  - 'diffusers'
+  - 'accelerate'
+  - 'AutoTokenizer'
+  - 'AutoModel'
+  - 'GenerationConfig'
+  - 'DiffusionPipeline'
+  - 'from_pretrained'
+  - 'enable_xformers'
+  - 'device_map'
+  - 'trust_remote_code'
+
+cuda_extensions:
+  - 'flash_attn'
+  - 'xformers'
+  - 'triton\.jit'
+  - 'CUDAExtension'
+  - 'cpp_extension'
+  - 'scaled_dot_product_attention'

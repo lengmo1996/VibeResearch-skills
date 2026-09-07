@@ -1,0 +1,6 @@
+interface:
+  display_name: "文献知识库构建"
+  short_description: "从获批 PDF 构建分代、可追溯、可验证且可回滚的本地文献检索语料库。"
+  default_prompt: "使用 $literature-kb-build，从获批 PDF 构建分代、可追溯、可验证且可回滚的本地文献检索语料库。"
+policy:
+  allow_implicit_invocation: true

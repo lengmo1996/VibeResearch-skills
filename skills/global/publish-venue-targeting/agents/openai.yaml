@@ -1,0 +1,13 @@
+interface:
+  display_name: "投稿场所定位"
+  short_description: "基于官方当前规则匹配论文贡献、成熟度与投稿 venue，并给出主备切换条件。"
+  default_prompt: "使用 $publish-venue-targeting，基于官方当前规则匹配论文贡献、成熟度与投稿 venue，并给出主备切换条件。"
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "knowledge-hub"
+      description: "Read-only search and retrieval from a user-configured KnowledgeHub MCP server"
+      transport: "streamable_http"
+
+policy:
+  allow_implicit_invocation: true

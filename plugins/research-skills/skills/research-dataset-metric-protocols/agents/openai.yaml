@@ -1,0 +1,13 @@
+interface:
+  display_name: "研究数据集与指标协议"
+  short_description: "冻结数据划分、预处理、指标、泄漏控制和统计协议，并判定结果可比性。"
+  default_prompt: "使用 $research-dataset-metric-protocols，冻结数据划分、预处理、指标、泄漏控制和统计协议，并判定结果可比性。"
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "knowledge-hub"
+      description: "Read-only search and retrieval from a user-configured KnowledgeHub MCP server"
+      transport: "streamable_http"
+
+policy:
+  allow_implicit_invocation: true

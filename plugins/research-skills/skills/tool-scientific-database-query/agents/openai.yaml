@@ -1,0 +1,7 @@
+interface:
+  display_name: "科学数据库查询"
+  short_description: "规划和审计有界科学数据库查询，记录分页、计数对账与来源。"
+  default_prompt: "使用 $tool-scientific-database-query，规划和审计有界科学数据库查询，记录分页、计数对账与来源。"
+
+policy:
+  allow_implicit_invocation: true

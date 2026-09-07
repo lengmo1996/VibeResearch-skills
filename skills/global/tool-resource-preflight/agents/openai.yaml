@@ -1,0 +1,7 @@
+interface:
+  display_name: "资源预检"
+  short_description: "核对工作负载与实际可用资源，识别瓶颈并给出可执行性结论。"
+  default_prompt: "使用 $tool-resource-preflight，核对工作负载与实际可用资源，识别瓶颈并给出可执行性结论。"
+
+policy:
+  allow_implicit_invocation: true

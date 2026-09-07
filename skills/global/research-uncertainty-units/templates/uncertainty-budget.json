@@ -1,0 +1,74 @@
+{
+  "id": "UNC-001",
+  "mode": "full",
+  "measurand": {
+    "name": "unresolved",
+    "value": null,
+    "unit": "unresolved",
+    "measurement_model": "unresolved"
+  },
+  "inputs": [
+    {
+      "symbol": "x",
+      "estimate": null,
+      "unit": "unresolved",
+      "stated_uncertainty": null,
+      "uncertainty_unit": "unresolved",
+      "evaluation_type": "unresolved",
+      "distribution": "unresolved",
+      "divisor": null,
+      "standard_uncertainty": null,
+      "degrees_of_freedom": null,
+      "sensitivity_coefficient": null,
+      "source": "unresolved",
+      "status": "unresolved"
+    }
+  ],
+  "correlations": [],
+  "correlation_policy": {
+    "status": "unresolved",
+    "source": "unresolved"
+  },
+  "unit_audit": [
+    {
+      "expression": "unresolved",
+      "expected_dimension": "unresolved",
+      "observed_dimension": "unresolved",
+      "status": "unresolved"
+    }
+  ],
+  "propagation": {
+    "method": "unresolved",
+    "implementation": "unresolved",
+    "implementation_version": "unresolved",
+    "linearization_check": "unresolved",
+    "seed": null,
+    "repetitions": null
+  },
+  "result": {
+    "estimate": null,
+    "unit": "unresolved",
+    "combined_standard_uncertainty": null,
+    "coverage_factor": null,
+    "coverage_probability": null,
+    "expanded_uncertainty": null,
+    "rounding_rule": "unresolved",
+    "reporting_statement": "unresolved"
+  },
+  "plausibility": {
+    "method": "not-requested",
+    "reference": null,
+    "verdict": "not-evaluated"
+  },
+  "limitations": [
+    "Measurement inputs and calibration evidence have not been supplied."
+  ],
+  "unresolved": [
+    "measurand",
+    "measurement model",
+    "input units and uncertainty evidence",
+    "propagation method"
+  ],
+  "verdict": "blocked",
+  "handoff": []
+}

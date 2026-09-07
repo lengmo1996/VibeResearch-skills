@@ -1,0 +1,394 @@
+{
+  "schema_version": "1.0.0",
+  "skills": [
+    {
+      "modes": [
+        "overview",
+        "method",
+        "equations",
+        "figure",
+        "table",
+        "experiments",
+        "limitations",
+        "full"
+      ],
+      "name": "paper-deep-read",
+      "path": "skills/paper-deep-read/SKILL.md"
+    },
+    {
+      "modes": [
+        "innovation-analysis",
+        "official-code-discovery",
+        "code-mapping",
+        "implementation",
+        "no-official-code",
+        "full"
+      ],
+      "name": "paper-reproduction",
+      "path": "skills/paper-reproduction/SKILL.md"
+    },
+    {
+      "modes": [
+        "outline",
+        "visual-system",
+        "deck",
+        "speaker-ready",
+        "template-adaptation",
+        "visual-audit"
+      ],
+      "name": "paper-to-ppt",
+      "path": "skills/paper-to-ppt/SKILL.md"
+    },
+    {
+      "modes": [
+        "single",
+        "batch",
+        "watch",
+        "project-specific"
+      ],
+      "name": "paper-triage",
+      "path": "skills/paper-triage/SKILL.md"
+    },
+    {
+      "modes": [
+        "inventory",
+        "metadata",
+        "extract",
+        "chunk",
+        "index",
+        "verify",
+        "full"
+      ],
+      "name": "literature-kb-build",
+      "path": "skills/literature-kb-build/SKILL.md"
+    },
+    {
+      "modes": [
+        "snapshot",
+        "weekly",
+        "watchlist",
+        "baseline",
+        "dataset",
+        "daily_arxiv_email"
+      ],
+      "name": "literature-monitor",
+      "path": "skills/literature-monitor/SKILL.md"
+    },
+    {
+      "modes": [
+        "compare",
+        "comparison",
+        "taxonomy",
+        "gap",
+        "related-work",
+        "evidence-map",
+        "positioning",
+        "full"
+      ],
+      "name": "literature-synthesis",
+      "path": "skills/literature-synthesis/SKILL.md"
+    },
+    {
+      "modes": [
+        "protocol",
+        "search",
+        "screening",
+        "risk-of-bias",
+        "certainty",
+        "meta-analysis",
+        "synthesis",
+        "full"
+      ],
+      "name": "literature-systematic-review",
+      "path": "skills/literature-systematic-review/SKILL.md"
+    },
+    {
+      "modes": [
+        "overview",
+        "technical-docs"
+      ],
+      "name": "research-concept-primer",
+      "path": "skills/research-concept-primer/SKILL.md"
+    },
+    {
+      "modes": [
+        "schema",
+        "completeness",
+        "uniqueness",
+        "consistency",
+        "drift",
+        "lineage",
+        "fitness",
+        "full"
+      ],
+      "name": "research-data-quality-audit",
+      "path": "skills/research-data-quality-audit/SKILL.md"
+    },
+    {
+      "modes": [
+        "split",
+        "preprocessing",
+        "metric",
+        "statistics",
+        "leakage",
+        "comparability",
+        "full"
+      ],
+      "name": "research-dataset-metric-protocols",
+      "path": "skills/research-dataset-metric-protocols/SKILL.md"
+    },
+    {
+      "modes": [
+        "full",
+        "baseline",
+        "control",
+        "ablation",
+        "schedule"
+      ],
+      "name": "research-experiment-design",
+      "path": "skills/research-experiment-design/SKILL.md"
+    },
+    {
+      "modes": [
+        "problem-driven",
+        "gap-driven",
+        "resource-constrained",
+        "method-variation",
+        "application-transfer"
+      ],
+      "name": "research-idea-generation",
+      "path": "skills/research-idea-generation/SKILL.md"
+    },
+    {
+      "modes": [
+        "summary",
+        "claim-check",
+        "failure-analysis",
+        "ablation-analysis",
+        "statistical-audit",
+        "reproducibility-check",
+        "next-step"
+      ],
+      "name": "research-result-analysis",
+      "path": "skills/research-result-analysis/SKILL.md"
+    },
+    {
+      "modes": [
+        "closed-form",
+        "simulation",
+        "sensitivity",
+        "audit",
+        "full"
+      ],
+      "name": "research-statistical-power",
+      "path": "skills/research-statistical-power/SKILL.md"
+    },
+    {
+      "modes": [
+        "unit-audit",
+        "budget",
+        "propagation",
+        "reporting",
+        "plausibility",
+        "full"
+      ],
+      "name": "research-uncertainty-units",
+      "path": "skills/research-uncertainty-units/SKILL.md"
+    },
+    {
+      "modes": [
+        "minimal-reproduction",
+        "traceback",
+        "numerical",
+        "runtime",
+        "regression",
+        "patch-verification"
+      ],
+      "name": "code-debugging",
+      "path": "skills/code-debugging/SKILL.md"
+    },
+    {
+      "modes": [
+        "config-tree",
+        "seed-policy",
+        "run-identity",
+        "checkpoint-resume",
+        "result-registry",
+        "archive",
+        "run-lifecycle",
+        "full"
+      ],
+      "name": "code-experiment-config-management",
+      "path": "skills/code-experiment-config-management/SKILL.md"
+    },
+    {
+      "modes": [
+        "repo-understanding",
+        "environment-compatibility",
+        "dependency-compatibility",
+        "framework-compatibility",
+        "dataset-compatibility",
+        "training-pipeline-compatibility",
+        "inference-compatibility",
+        "checkpoint-compatibility",
+        "compatibility-patch"
+      ],
+      "name": "code-repo-adaptation",
+      "path": "skills/code-repo-adaptation/SKILL.md"
+    },
+    {
+      "modes": [
+        "outline",
+        "draft",
+        "rewrite",
+        "de-template",
+        "author-voice",
+        "compress",
+        "expand",
+        "clarify",
+        "venue-style",
+        "related-work",
+        "reviewer-response",
+        "revision-patch"
+      ],
+      "name": "writing-academic",
+      "path": "skills/writing-academic/SKILL.md"
+    },
+    {
+      "modes": [
+        "term",
+        "phrase",
+        "argument-pattern",
+        "structure",
+        "reviewer-response",
+        "error-rule",
+        "style-preference",
+        "deduplicate",
+        "approve",
+        "reject"
+      ],
+      "name": "writing-knowledge-capture",
+      "path": "skills/writing-knowledge-capture/SKILL.md"
+    },
+    {
+      "modes": [
+        "structure",
+        "language",
+        "prose-style",
+        "artifact-leakage",
+        "logic",
+        "terminology",
+        "consistency",
+        "formula",
+        "table-data",
+        "citation-evidence",
+        "reviewer",
+        "panel-review",
+        "closure",
+        "full"
+      ],
+      "name": "writing-manuscript-audit",
+      "path": "skills/writing-manuscript-audit/SKILL.md"
+    },
+    {
+      "modes": [
+        "triage",
+        "response-plan",
+        "revision-plan"
+      ],
+      "name": "writing-review-triage",
+      "path": "skills/writing-review-triage/SKILL.md"
+    },
+    {
+      "modes": [
+        "conference",
+        "journal",
+        "camera-ready",
+        "arxiv"
+      ],
+      "name": "publish-preflight",
+      "path": "skills/publish-preflight/SKILL.md"
+    },
+    {
+      "modes": [
+        "shortlist",
+        "fit-analysis",
+        "primary-backup",
+        "revision-strategy"
+      ],
+      "name": "publish-venue-targeting",
+      "path": "skills/publish-venue-targeting/SKILL.md"
+    },
+    {
+      "modes": [
+        "figure",
+        "table",
+        "schematic",
+        "storytelling",
+        "asset-pattern"
+      ],
+      "name": "visual-expression-mining",
+      "path": "skills/visual-expression-mining/SKILL.md"
+    },
+    {
+      "modes": [
+        "drawio-diagram",
+        "tikz-diagram",
+        "pgfplots",
+        "data-plot",
+        "latex-table",
+        "multi-panel"
+      ],
+      "name": "visual-research-artifact-generation",
+      "path": "skills/visual-research-artifact-generation/SKILL.md"
+    },
+    {
+      "modes": [
+        "normalize",
+        "resolve",
+        "cross-check",
+        "deduplicate",
+        "version-link",
+        "bibliography-audit",
+        "full"
+      ],
+      "name": "tool-citation-metadata-validation",
+      "path": "skills/tool-citation-metadata-validation/SKILL.md"
+    },
+    {
+      "modes": [
+        "inventory",
+        "requirements",
+        "match",
+        "fallback",
+        "audit",
+        "full"
+      ],
+      "name": "tool-resource-preflight",
+      "path": "skills/tool-resource-preflight/SKILL.md"
+    },
+    {
+      "modes": [
+        "capability",
+        "targeted",
+        "exhaustive",
+        "resume",
+        "cross-check",
+        "audit"
+      ],
+      "name": "tool-scientific-database-query",
+      "path": "skills/tool-scientific-database-query/SKILL.md"
+    },
+    {
+      "modes": [
+        "inventory",
+        "reconcile",
+        "deduplicate",
+        "export",
+        "prepare-kb"
+      ],
+      "name": "tool-zotero-pdf-ingestion",
+      "path": "skills/tool-zotero-pdf-ingestion/SKILL.md"
+    }
+  ]
+}

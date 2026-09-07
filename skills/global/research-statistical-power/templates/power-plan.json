@@ -1,0 +1,70 @@
+{
+  "id": "PWR-001",
+  "mode": "sensitivity",
+  "solve_for": "sample-size",
+  "design": {
+    "estimand": "unresolved",
+    "analysis_unit": "unresolved",
+    "test_or_model": "unresolved",
+    "sidedness": "two-sided",
+    "allocation_ratio": 1.0
+  },
+  "calculation": {
+    "alpha": 0.05,
+    "target_power": 0.8,
+    "effect_size": null,
+    "effect_scale": "unresolved",
+    "method": "unresolved",
+    "implementation": "unresolved",
+    "implementation_version": "unresolved",
+    "rounding_policy": "round up to whole analysis units",
+    "unadjusted_total_n": null,
+    "adjusted_total_n": null,
+    "achieved_power": null
+  },
+  "assumptions": [
+    {
+      "parameter": "effect_size",
+      "value_or_range": "unresolved",
+      "units_or_scale": "unresolved",
+      "source_type": "unresolved",
+      "source_locator": "unresolved",
+      "status": "unresolved",
+      "limitations": "No effect-size evidence supplied."
+    }
+  ],
+  "adjustments": {
+    "attrition_rate": 0.0,
+    "intraclass_correlation": null,
+    "mean_cluster_size": null,
+    "design_effect": null,
+    "multiplicity_policy": "unresolved"
+  },
+  "simulation": null,
+  "sensitivity": [
+    {
+      "scenario": "lower plausible effect",
+      "effect_size": null,
+      "result": null
+    },
+    {
+      "scenario": "upper plausible effect",
+      "effect_size": null,
+      "result": null
+    }
+  ],
+  "limitations": [
+    "The scientific design and effect-size evidence are not yet resolved."
+  ],
+  "unresolved": [
+    "estimand",
+    "analysis unit",
+    "effect-size scale and source",
+    "calculation method and implementation"
+  ],
+  "verdict": "blocked",
+  "handoff": [
+    "Resolve the scientific design with research-experiment-design.",
+    "Bind metrics and analysis protocol with research-dataset-metric-protocols."
+  ]
+}

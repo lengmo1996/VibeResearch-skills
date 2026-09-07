@@ -1,0 +1,6 @@
+interface:
+  display_name: "投稿预检"
+  short_description: "按官方规则审计投稿包，并验证 manifest 与 readiness gate。"
+  default_prompt: "使用 $publish-preflight，按官方规则审计投稿包，并验证 manifest 与 readiness gate。"
+policy:
+  allow_implicit_invocation: true

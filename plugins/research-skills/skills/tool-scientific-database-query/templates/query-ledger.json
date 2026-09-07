@@ -1,0 +1,44 @@
+{
+  "id": "QRY-001",
+  "mode": "targeted",
+  "scope": "targeted",
+  "contract": {
+    "target": "unresolved",
+    "identifiers": [],
+    "constraints": {},
+    "fields": [],
+    "deduplication_key": "unresolved"
+  },
+  "source": {
+    "database": "unresolved",
+    "api_version_or_date": "unresolved",
+    "documentation_locator": "unresolved",
+    "authentication_mode": "not-checked"
+  },
+  "plan": {
+    "endpoint": "unresolved",
+    "method": "GET",
+    "parameters_redacted": {},
+    "server_filters": [],
+    "local_filters": [],
+    "pagination": "unresolved",
+    "stable_sort": "unresolved",
+    "request_budget": 0,
+    "record_budget": 0
+  },
+  "pages": [],
+  "identifier_conversions": [],
+  "counts": {
+    "expected": null,
+    "server_retrieved": 0,
+    "local_filtered": 0,
+    "deduplicated": 0,
+    "final": 0
+  },
+  "failures": [],
+  "next_state": "not-run",
+  "coverage_limits": ["No external query executed."],
+  "unresolved": ["query contract", "source capability", "pagination"],
+  "verdict": "not-run",
+  "handoff": []
+}

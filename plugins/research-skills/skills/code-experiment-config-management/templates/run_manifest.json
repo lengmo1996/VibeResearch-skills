@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0.0",
+  "run": {
+    "id": "RUN-001",
+    "experiment_ids": [
+      "EXP-001"
+    ],
+    "claim_ids": [
+      "CLM-001"
+    ],
+    "protocol_ids": [
+      "PROT-001"
+    ],
+    "metric_ids": [
+      "MET-001"
+    ],
+    "status": "planned"
+  },
+  "launch": {
+    "entrypoint": "train.py",
+    "argv": [
+      "--config",
+      "configs/exp001.yaml"
+    ],
+    "working_directory": "."
+  },
+  "identity": {
+    "code": "",
+    "data": "",
+    "config_fingerprint": "",
+    "seeds": {}
+  },
+  "output_root": "runs/RUN-001",
+  "acceptance_criteria": [
+    {
+      "id": "ACC-001",
+      "description": "Required result artifact exists and carries matching IDs.",
+      "status": "pending",
+      "evidence_refs": []
+    }
+  ],
+  "artifacts": []
+}

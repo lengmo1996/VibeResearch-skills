@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0.0",
+  "source_label": "before.md",
+  "revised_label": "after.md",
+  "protected_spans": [
+    {
+      "id": "CIT-001",
+      "text": "\\cite{verified-key}",
+      "expected_count": 1
+    }
+  ]
+}

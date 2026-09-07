@@ -1,0 +1,56 @@
+# Python data/scientific ecosystem compatibility rules for the current environment.
+# Target versions: numpy 2.4.1, pandas 3.0.1, scipy 1.17.1, pyarrow 23.0.1, pillow 12.0.0.
+
+rules:
+  - id: numpy-2x-removed-aliases
+    package: numpy
+    target: "2.4.1"
+    severity: likely-breaking
+    search_patterns:
+      - 'np\.int\b'
+      - 'np\.float\b'
+      - 'np\.bool\b'
+      - 'np\.complex\b'
+      - 'np\.object\b'
+    migration:
+      summary: "Replace removed NumPy aliases with Python builtins or explicit NumPy dtypes."
+      examples:
+        - before: "np.int"
+          after: "int or np.int64, depending on required precision"
+        - before: "np.float"
+          after: "float or np.float64"
+
+  - id: pandas-3x-io-and-dtype-checks
+    package: pandas
+    target: "3.0.1"
+    severity: needs-review
+    search_patterns:
+      - 'pd\.read_'
+      - 'DataFrame\.append\('
+      - '\.ix\['
+      - "inplace=True"
+    migration:
+      summary: "Audit old Pandas code for removed APIs, dtype inference changes, and IO behavior changes."
+
+  - id: pillow-12-constants
+    package: pillow
+    target: "12.0.0"
+    severity: likely-breaking
+    search_patterns:
+      - 'Image\.ANTIALIAS'
+      - 'Image\.LINEAR'
+      - 'Image\.CUBIC'
+    migration:
+      summary: "Replace old Pillow constants with Image.Resampling enums where applicable."
+
+  - id: pyarrow-datasets-serialization
+    package: pyarrow
+    target: "23.0.1"
+    severity: needs-review
+    search_patterns:
+      - "pyarrow"
+      - 'Dataset\.map\('
+      - "load_from_disk"
+      - "save_to_disk"
+    migration:
+      summary: "Validate Arrow schema, extension types, multiprocessing map, and cached dataset compatibility."

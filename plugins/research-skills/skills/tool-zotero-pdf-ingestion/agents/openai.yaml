@@ -1,0 +1,6 @@
+interface:
+  display_name: "Zotero PDF 接入"
+  short_description: "以非破坏方式对齐 Zotero 记录、附件与散落 PDF，保留冲突并生成可验证清单。"
+  default_prompt: "使用 $tool-zotero-pdf-ingestion，以非破坏方式对齐 Zotero 记录、附件与散落 PDF，保留冲突并生成可验证清单。"
+policy:
+  allow_implicit_invocation: true

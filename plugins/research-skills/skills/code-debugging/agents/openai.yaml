@@ -1,0 +1,6 @@
+interface:
+  display_name: "代码调试"
+  short_description: "建立最小复现、定位根因、应用最小修复并完成测试验证。"
+  default_prompt: "使用 $code-debugging，建立最小复现、定位根因、应用最小修复并完成测试验证。"
+policy:
+  allow_implicit_invocation: true

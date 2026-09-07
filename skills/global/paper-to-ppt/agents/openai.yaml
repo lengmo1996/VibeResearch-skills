@@ -1,0 +1,6 @@
+interface:
+  display_name: "论文转演示文稿"
+  short_description: "将核验后的研究内容转为具有统一视觉系统并经过审查的学术演示文稿。"
+  default_prompt: "使用 $paper-to-ppt，将核验后的研究内容转为具有统一视觉系统并经过审查的学术演示文稿。"
+policy:
+  allow_implicit_invocation: true

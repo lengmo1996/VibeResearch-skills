@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "record_id": "REC-EXAMPLE-001",
+  "zotero_key": "ABCD1234",
+  "pdf_path": "papers/example.pdf",
+  "pdf_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "status": "matched",
+  "relationship": "one-to-one",
+  "match_decision": {
+    "method": "attachment-link",
+    "evidence": ["Zotero attachment relation"],
+    "confidence": 1.0,
+    "alternative_record_ids": [],
+    "review_required": false
+  },
+  "metadata": {
+    "title": {
+      "original": "Example Paper",
+      "normalized": "example paper",
+      "source": "zotero",
+      "confidence": 0.9
+    }
+  },
+  "conflicts": [],
+  "kb_ready": false
+}

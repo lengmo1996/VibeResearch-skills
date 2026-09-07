@@ -1,0 +1,6 @@
+interface:
+  display_name: "仓库兼容性迁移"
+  short_description: "迁移仓库的环境、依赖、框架、数据与训练推理兼容接口。"
+  default_prompt: "使用 $code-repo-adaptation，迁移仓库的环境、依赖、框架、数据与训练推理兼容接口。"
+policy:
+  allow_implicit_invocation: true

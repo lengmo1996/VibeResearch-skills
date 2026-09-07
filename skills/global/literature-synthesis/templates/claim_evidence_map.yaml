@@ -1,0 +1,11 @@
+schema_version: 1.0.0
+claims:
+  - claim_id: CLM-001
+    text: ""
+    status: proposed
+    scope: ""
+    evidence_refs:
+      - kind: paper
+        ref: PAP-001
+        status: candidate
+        note: ""

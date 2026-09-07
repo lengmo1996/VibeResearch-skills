@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.1.0",
+  "target_file": "manuscript.md",
+  "target_sha256": "replace-with-64-lowercase-hex",
+  "patches": [
+    {
+      "id": "REV-001",
+      "accepted_audit_ids": [
+        "AUD-001"
+      ],
+      "start_marker": "<!-- REV:REV-001:START -->",
+      "end_marker": "<!-- REV:REV-001:END -->",
+      "original_sha256": "replace-with-64-lowercase-hex",
+      "replacement_file": "revisions/REV-001.md",
+      "replacement_sha256": "replace-with-sha256-of-reviewed-replacement-bytes"
+    }
+  ]
+}

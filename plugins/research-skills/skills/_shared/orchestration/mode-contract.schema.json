@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mode-contract.schema.json",
+  "title": "Skill mode contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "skill",
+    "mode",
+    "deliverable",
+    "required_inputs",
+    "output_sections",
+    "rag_policy",
+    "side_effect_class",
+    "resources",
+    "stop_conditions"
+  ],
+  "properties": {
+    "skill": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)+$"
+    },
+    "mode": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "deliverable": {
+      "type": "string",
+      "minLength": 1
+    },
+    "required_inputs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "output_sections": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "rag_policy": {
+      "enum": [
+        "never",
+        "optional",
+        "recommended",
+        "required",
+        "per-subcheck"
+      ]
+    },
+    "side_effect_class": {
+      "enum": [
+        "read_only",
+        "authorized_workspace_write",
+        "authorized_external_write"
+      ]
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "references_max",
+        "profiles_max"
+      ],
+      "properties": {
+        "references_max": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "profiles_max": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "required_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "stages": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "required_paths"
+            ],
+            "properties": {
+              "required_paths": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "uniqueItems": true
+              },
+              "depends_on": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "uniqueItems": true
+              },
+              "references_max": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "stop_conditions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    }
+  }
+}

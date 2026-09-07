@@ -1,0 +1,6 @@
+interface:
+  display_name: "实验配置与运行管理"
+  short_description: "管理实验配置、运行身份、受控执行、制品收集与归档。"
+  default_prompt: "使用 $code-experiment-config-management，管理实验配置、运行身份、受控执行、制品收集与归档。"
+policy:
+  allow_implicit_invocation: true

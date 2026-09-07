@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0.0",
+  "profile_id": "WSP-EXAMPLE-001",
+  "status": "pending_review",
+  "scope": {
+    "language": "en",
+    "genre": "academic-manuscript",
+    "domains": [
+      "computer-vision"
+    ],
+    "applicable_sections": [
+      "method"
+    ],
+    "avoid_when": "Writing outside the declared language, genre, domain, or section"
+  },
+  "traits": [
+    {
+      "trait_id": "TR-001",
+      "dimension": "claim-calibration",
+      "preference": "Use cautious claims tied directly to observed evidence.",
+      "evidence": [
+        {
+          "source_id": "SRC-001",
+          "locator": "method paragraph 3"
+        }
+      ],
+      "confidence": 0.8
+    }
+  ],
+  "terminology": {
+    "preserve": [
+      "bounded claim"
+    ],
+    "avoid": []
+  },
+  "source_refs": [
+    {
+      "source_id": "SRC-001",
+      "origin": "user-supplied",
+      "title": "Author-owned sample",
+      "author_owned": true
+    }
+  ],
+  "privacy": {
+    "raw_sample_stored": false,
+    "long_excerpt_stored": false,
+    "full_prompt_stored": false,
+    "retention": "abstract-traits-and-source-refs-only"
+  },
+  "deduplication": {
+    "scope": "supplied candidates",
+    "result": "unknown",
+    "matched_profile_ids": []
+  },
+  "created_at": "2000-01-01T00:00:00Z",
+  "decision": null
+}

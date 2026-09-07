@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://viberesearch.local/schemas/retrieval-context.schema.json",
+  "title": "Task-local KnowledgeHub Retrieval Context",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "queries",
+    "result_ids",
+    "expanded_chunks",
+    "documents",
+    "evidence_ledger",
+    "degraded"
+  ],
+  "properties": {
+    "queries": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {"type": "string", "minLength": 1, "maxLength": 4000}
+    },
+    "result_ids": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "expanded_chunks": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "documents": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "evidence_ledger": {
+      "type": "array",
+      "items": {"type": "object"}
+    },
+    "tool_call_keys": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true,
+      "default": []
+    },
+    "rag_policy": {
+      "enum": ["never", "optional", "recommended", "required"],
+      "default": "optional"
+    },
+    "degraded": {"type": "boolean"}
+  }
+}

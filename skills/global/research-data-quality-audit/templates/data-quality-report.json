@@ -1,0 +1,39 @@
+{
+  "audit_id": "DQA-001",
+  "stated_use": "unresolved",
+  "authorization": "unresolved",
+  "observational_unit": "unresolved",
+  "assets": [
+    {
+      "asset_id": "unresolved",
+      "version": "unresolved",
+      "format": "unresolved",
+      "source_locator": "redacted"
+    }
+  ],
+  "coverage": {
+    "method": "unresolved",
+    "complete": false,
+    "rows_or_records_scanned": 0,
+    "total_rows_or_records": null,
+    "fields_scanned": 0,
+    "truncated": false,
+    "unsupported_surfaces": []
+  },
+  "rule_registry": [],
+  "findings": [],
+  "fitness": {
+    "verdict": "not-evaluable",
+    "blocking_finding_ids": [],
+    "conditions": [],
+    "scope_limit": "No authorized data profile supplied."
+  },
+  "privacy": {
+    "raw_rows_exposed": false,
+    "direct_identifiers_exposed": false,
+    "tokenization_note": "No identifiers were processed."
+  },
+  "limitations": ["No data profile or schema supplied."],
+  "unresolved": ["authorization", "stated use", "asset identity", "schema semantics"],
+  "handoff": []
+}

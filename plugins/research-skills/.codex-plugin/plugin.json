@@ -1,0 +1,14 @@
+{
+  "author": {
+    "name": "lengmo"
+  },
+  "description": "通用科研 Skills：论文、文献、实验、代码、写作、投稿和研究视觉。",
+  "interface": {
+    "defaultPrompt": "为当前科研任务选择范围最窄的 Skill，并保留证据和授权边界。",
+    "displayName": "VibeResearch",
+    "shortDescription": "31 个具有证据边界和轻量模式的科研工作流。"
+  },
+  "name": "research-skills",
+  "skills": "./skills/",
+  "version": "0.1.0"
+}

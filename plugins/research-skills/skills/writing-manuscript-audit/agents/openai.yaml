@@ -1,0 +1,13 @@
+interface:
+  display_name: "论文稿件审计"
+  short_description: "反向梳理、审计或独立分视角评审稿件，并以证据复验 AUD findings。"
+  default_prompt: "使用 $writing-manuscript-audit，反向梳理、审计或独立分视角评审稿件，并以证据复验 AUD findings。"
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "knowledge-hub"
+      description: "Read-only search and retrieval from a user-configured KnowledgeHub MCP server"
+      transport: "streamable_http"
+
+policy:
+  allow_implicit_invocation: true

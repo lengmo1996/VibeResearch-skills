@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0.0",
+  "submission": {
+    "id": "SUB-001",
+    "mode": "conference",
+    "venue": "not provided",
+    "cycle": "not provided",
+    "track": "not provided",
+    "phase": "initial",
+    "portal": "not provided"
+  },
+  "rules": [
+    {
+      "id": "RULE-001",
+      "requirement": "Current official hard requirement",
+      "class": "hard",
+      "applicable": true,
+      "source": "not provided",
+      "effective_cycle": "not provided",
+      "retrieved_at": "not provided",
+      "status": "unresolved"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "ART-001",
+      "path": "paper.pdf",
+      "role": "main manuscript",
+      "required": true,
+      "status": "not-provided",
+      "sha256": ""
+    }
+  ],
+  "checks": [
+    {
+      "id": "CHK-001",
+      "rule_ids": [
+        "RULE-001"
+      ],
+      "artifact_ids": [
+        "ART-001"
+      ],
+      "result": "blocked",
+      "evidence": "Official rule or artifact not provided"
+    }
+  ],
+  "findings": [
+    {
+      "id": "FIND-001",
+      "severity": "Blocker",
+      "rule_ids": [
+        "RULE-001"
+      ],
+      "artifact_ids": [
+        "ART-001"
+      ],
+      "check_ids": [
+        "CHK-001"
+      ],
+      "location": "submission package",
+      "evidence": "Required rule or artifact is unresolved",
+      "action": "Provide the current official rule and exact candidate artifact",
+      "recheck": "Re-run the manifest checker"
+    }
+  ],
+  "verdict": {
+    "status": "Blocked",
+    "rationale": "Authoritative rule or required artifact is unavailable",
+    "portal_identity_confirmed": false
+  }
+}

@@ -1,0 +1,295 @@
+{
+  "schema_version": "1.0.0",
+  "catalog_policy": "Mappings from evidence questions to presentation views. Required tokens check declared field presence, not scientific truth, visible placement, or statistical validity. Source traces are separately required by the visual-plan validator.",
+  "uncertainty_policy": "Use only supplied or reproducibly verified uncertainty. Identify independent unit and sample/run context; when uncertainty is unavailable, label that limitation rather than inventing intervals.",
+  "charts": [
+    {
+      "id": "labeled-comparison",
+      "evidence_types": [
+        "comparison",
+        "ranking",
+        "benchmark"
+      ],
+      "recommended": [
+        "Labeled dot plot with supported error bars when available.",
+        "Bars for magnitude with a zero origin, or a compact table when exact values are central."
+      ],
+      "avoid": [
+        "Decorative depth or area that changes apparent magnitude.",
+        "Unlabeled metric direction, altered method order, or a hidden truncated axis.",
+        "A superiority title unsupported by the scope and uncertainty of the measurements."
+      ],
+      "required": [
+        "metric-name",
+        "units",
+        "baseline-identity",
+        "direct-takeaway"
+      ],
+      "accessibility": [
+        "Directly label methods and values needed for the claim.",
+        "Use markers or patterns as well as color.",
+        "Describe the comparison and its limitation in alternative text or accessible companion text."
+      ],
+      "review_context": [
+        "Identify dataset/population, evaluation protocol, independent unit, sample/run count where available, and uncertainty status.",
+        "The four required tokens preserve caller compatibility; they do not waive the context review."
+      ]
+    },
+    {
+      "id": "ordered-change",
+      "evidence_types": [
+        "trend",
+        "time-series",
+        "learning-curve"
+      ],
+      "recommended": [
+        "Observed points at their actual positions, with lines only when the order has meaning.",
+        "Labeled small multiples when several series cannot be read in one view."
+      ],
+      "avoid": [
+        "Connecting missing observations as if measured.",
+        "Mixing elapsed time, iterations, and samples without identifying the axis.",
+        "Using a smoothed curve without showing or explaining the underlying observations."
+      ],
+      "required": [
+        "x-variable",
+        "y-variable",
+        "units",
+        "series-identity",
+        "observation-context"
+      ],
+      "accessibility": [
+        "Label each series or pair a legend with distinct line styles.",
+        "State the observed trend and material gaps in the description.",
+        "Provide the underlying values or an accessible summary when needed."
+      ]
+    },
+    {
+      "id": "sample-distribution",
+      "evidence_types": [
+        "distribution",
+        "variability"
+      ],
+      "recommended": [
+        "Individual observations when their number permits inspection.",
+        "Histogram or summary distribution plot with its binning or summary definition stated."
+      ],
+      "avoid": [
+        "A mean-only view when dispersion is the question.",
+        "Comparing groups with unexplained changes in bin width or normalization.",
+        "Treating repeated measurements as independent samples."
+      ],
+      "required": [
+        "variable-name",
+        "units",
+        "sample-count",
+        "independent-unit",
+        "group-definition",
+        "summary-definition"
+      ],
+      "accessibility": [
+        "Label groups and summarize center, spread, and relevant outliers in text.",
+        "Use shapes or patterns alongside grouping colors.",
+        "Explain the meaning of box, whisker, or density marks."
+      ]
+    },
+    {
+      "id": "paired-association",
+      "evidence_types": [
+        "correlation",
+        "association"
+      ],
+      "recommended": [
+        "Scatter plot with labeled axes and documented pairing.",
+        "A fitted relationship only when its model and uncertainty are supplied."
+      ],
+      "avoid": [
+        "A causal title supported only by correlation.",
+        "Hiding overlapping points or unexplained excluded observations.",
+        "Displaying a fitted line as raw observation."
+      ],
+      "required": [
+        "x-variable",
+        "y-variable",
+        "units",
+        "sample-count",
+        "pairing-definition"
+      ],
+      "accessibility": [
+        "Describe the association, grouping, and unusual points without relying on position alone.",
+        "Use distinct markers and labels for groups.",
+        "Supply a numeric summary or data reference for precise inspection."
+      ]
+    },
+    {
+      "id": "controlled-ablation",
+      "evidence_types": [
+        "ablation",
+        "component-effect"
+      ],
+      "recommended": [
+        "Matched condition table with the common reference retained.",
+        "Paired differences or points when the measurements support that pairing."
+      ],
+      "avoid": [
+        "Attributing a change to one component when other conditions changed.",
+        "Dropping the reference condition or unfavorable variants.",
+        "Treating unreported uncertainty as zero."
+      ],
+      "required": [
+        "metric-name",
+        "units",
+        "baseline-identity",
+        "changed-component",
+        "shared-protocol"
+      ],
+      "accessibility": [
+        "Write component states explicitly, including absent or disabled states.",
+        "Use text labels for positive, negative, and inconclusive differences.",
+        "Describe the measured effect and the limits of the interpretation."
+      ]
+    },
+    {
+      "id": "estimate-with-uncertainty",
+      "evidence_types": [
+        "uncertainty",
+        "interval-estimates"
+      ],
+      "recommended": [
+        "Point estimate and labeled interval with a common scale.",
+        "Individual runs beside the aggregate when available and relevant."
+      ],
+      "avoid": [
+        "Invented error bars for single values.",
+        "Unlabeled mixing of standard deviation, standard error, confidence intervals, and ranges.",
+        "A significance conclusion inferred only from visual interval overlap."
+      ],
+      "required": [
+        "metric-name",
+        "units",
+        "estimate-definition",
+        "uncertainty-definition",
+        "sample-count",
+        "independent-unit"
+      ],
+      "accessibility": [
+        "State what the interval encodes and its level where applicable.",
+        "Use endpoint or estimate labels when exact values matter.",
+        "Provide an accessible numeric account of estimates and intervals."
+      ]
+    },
+    {
+      "id": "matrix-or-field",
+      "evidence_types": [
+        "heatmap",
+        "matrix",
+        "spatial-field"
+      ],
+      "recommended": [
+        "Heat map with a labeled scale and defined coordinates or cell meanings.",
+        "Small multiples with a shared scale for comparable conditions."
+      ],
+      "avoid": [
+        "Unexplained per-panel normalization.",
+        "Using a color scale as evidence of physical units when the data are normalized intensities.",
+        "Rendering missing values as ordinary low values."
+      ],
+      "required": [
+        "cell-or-coordinate-definition",
+        "quantity-name",
+        "units",
+        "scale-definition",
+        "missing-value-treatment"
+      ],
+      "accessibility": [
+        "Label values or key regions needed for the claim.",
+        "Describe the spatial or matrix pattern and any missing cells.",
+        "Provide a table or textual summary where color differences carry essential values."
+      ]
+    },
+    {
+      "id": "aligned-example-panels",
+      "evidence_types": [
+        "qualitative",
+        "image-comparison",
+        "failure-cases"
+      ],
+      "recommended": [
+        "Matched sample rows with method columns and consistent crop markers.",
+        "A full context frame beside an explicitly located enlargement."
+      ],
+      "avoid": [
+        "Different crop, range, or aspect ratio presented as a direct comparison.",
+        "Examples selected for appearance without a selection note.",
+        "Claims about physical accuracy from appearance alone."
+      ],
+      "required": [
+        "sample-identity",
+        "method-identity",
+        "selection-note",
+        "display-scale",
+        "alignment-context"
+      ],
+      "accessibility": [
+        "Label every sample and method outside the image.",
+        "Describe the relevant visible difference and its limits.",
+        "Use crop markers and text to identify regions rather than color alone."
+      ]
+    },
+    {
+      "id": "defined-composition",
+      "evidence_types": [
+        "composition",
+        "part-to-whole"
+      ],
+      "recommended": [
+        "Labeled stacked bars when comparing proportions across groups.",
+        "A compact table when denominator and exact shares need close inspection."
+      ],
+      "avoid": [
+        "Percentages with different or unstated denominators.",
+        "Treating overlapping categories as a partition of one whole.",
+        "Unexplained normalization of incomplete totals."
+      ],
+      "required": [
+        "category-definition",
+        "denominator",
+        "units",
+        "missing-category-treatment"
+      ],
+      "accessibility": [
+        "Label categories and their shares directly when practical.",
+        "Pair color with labels or patterns.",
+        "State the denominator and any excluded or missing category in text."
+      ]
+    },
+    {
+      "id": "dated-plan-and-state",
+      "evidence_types": [
+        "timeline",
+        "progress",
+        "schedule"
+      ],
+      "recommended": [
+        "Dated milestones with explicit observed or planned state.",
+        "Dependency view when ordering and blockers matter more than elapsed duration."
+      ],
+      "avoid": [
+        "Presenting target dates as completion evidence.",
+        "Unmeasured percentage completion or implied certainty of future delivery.",
+        "Hiding a dependency to simplify the visual."
+      ],
+      "required": [
+        "date-basis",
+        "state-definition",
+        "dependency-context",
+        "verification-reference"
+      ],
+      "accessibility": [
+        "Write status words beside each milestone.",
+        "Use shapes or connector labels to distinguish dependencies and states.",
+        "Provide a linear text account of actions, dates, and unresolved blockers."
+      ]
+    }
+  ]
+}

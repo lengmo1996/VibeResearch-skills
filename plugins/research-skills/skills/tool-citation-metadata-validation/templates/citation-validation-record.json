@@ -1,0 +1,21 @@
+{
+  "id": "CITE-001",
+  "mode": "cross-check",
+  "input_record": {
+    "title": "unresolved",
+    "authors": [],
+    "year": null
+  },
+  "identifiers": [],
+  "sources": [],
+  "canonical_fields": {},
+  "field_provenance": [],
+  "conflicts": [],
+  "duplicate_groups": [],
+  "version_links": [],
+  "retrieval_failures": [],
+  "limitations": ["No identifiers or source records supplied."],
+  "unresolved": ["record identity", "bibliographic fields"],
+  "verdict": "unresolved",
+  "handoff": []
+}

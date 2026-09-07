@@ -1,0 +1,6 @@
+interface:
+  display_name: "研究视觉制品生成"
+  short_description: "生成可编辑、论断关联并经过独立渲染验证的研究视觉制品。"
+  default_prompt: "使用 $visual-research-artifact-generation，生成可编辑、论断关联并经过独立渲染验证的研究视觉制品。"
+policy:
+  allow_implicit_invocation: true

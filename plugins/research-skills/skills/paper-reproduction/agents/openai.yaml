@@ -1,0 +1,12 @@
+interface:
+  display_name: "论文复现"
+  short_description: "映射论文方法与官方代码，生成候选核心实现及验证交接。"
+  default_prompt: "使用 $paper-reproduction，映射论文方法与官方代码，生成候选核心实现及验证交接。"
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "knowledge-hub"
+      description: "Optional read-only retrieval for user-library paper or implementation evidence"
+      transport: "streamable_http"
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,32 @@
+{
+  "paper-light": {
+    "node_styles": {
+      "default": "rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#374151;fontColor=#111827;fontSize=13;",
+      "process": "rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#2563eb;fontColor=#111827;fontSize=13;",
+      "data": "shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#059669;fontColor=#111827;fontSize=13;",
+      "decision": "rhombus;whiteSpace=wrap;html=1;fillColor=#fffbeb;strokeColor=#d97706;fontColor=#111827;fontSize=13;",
+      "note": "shape=note;whiteSpace=wrap;html=1;fillColor=#f9fafb;strokeColor=#6b7280;fontColor=#374151;fontSize=12;",
+      "group": "swimlane;horizontal=1;startSize=30;rounded=1;whiteSpace=wrap;html=1;fillColor=#f9fafb;swimlaneFillColor=#ffffff;strokeColor=#6b7280;fontColor=#111827;fontStyle=1;"
+    },
+    "edge_styles": {
+      "default": "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4b5563;endArrow=block;endFill=1;",
+      "dashed": "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6b7280;dashed=1;endArrow=block;endFill=1;",
+      "dependency": "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7c3aed;dashed=1;endArrow=open;endFill=0;"
+    }
+  },
+  "paper-grayscale": {
+    "node_styles": {
+      "default": "rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontColor=#111111;fontSize=13;",
+      "process": "rounded=1;whiteSpace=wrap;html=1;fillColor=#f2f2f2;strokeColor=#222222;fontColor=#111111;fontSize=13;",
+      "data": "shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#555555;fontColor=#111111;fontSize=13;",
+      "decision": "rhombus;whiteSpace=wrap;html=1;fillColor=#e5e5e5;strokeColor=#222222;fontColor=#111111;fontSize=13;",
+      "note": "shape=note;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#777777;fontColor=#333333;fontSize=12;",
+      "group": "swimlane;horizontal=1;startSize=30;rounded=1;whiteSpace=wrap;html=1;fillColor=#e5e5e5;swimlaneFillColor=#ffffff;strokeColor=#333333;fontColor=#111111;fontStyle=1;"
+    },
+    "edge_styles": {
+      "default": "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;endArrow=block;endFill=1;",
+      "dashed": "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#555555;dashed=1;endArrow=block;endFill=1;",
+      "dependency": "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#555555;dashed=1;endArrow=open;endFill=0;"
+    }
+  }
+}

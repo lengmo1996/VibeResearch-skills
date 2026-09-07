@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "handoff-envelope.schema.json",
+  "title": "Inter-Skill handoff envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "handoff_id",
+    "from",
+    "to",
+    "artifact_refs",
+    "protected_invariants",
+    "unresolved_items",
+    "evidence_state",
+    "approval_state"
+  ],
+  "properties": {
+    "handoff_id": {
+      "type": "string",
+      "pattern": "^HOF-[A-Za-z0-9][A-Za-z0-9._-]{2,63}$"
+    },
+    "from": {
+      "$ref": "#/$defs/endpoint"
+    },
+    "to": {
+      "$ref": "#/$defs/endpoint"
+    },
+    "artifact_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "protected_invariants": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "unresolved_items": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "evidence_state": {
+      "enum": [
+        "observed",
+        "corroborated",
+        "inference",
+        "unresolved"
+      ]
+    },
+    "approval_state": {
+      "enum": [
+        "not-required",
+        "pending",
+        "approved",
+        "blocked"
+      ]
+    }
+  },
+  "$defs": {
+    "endpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "skill",
+        "mode"
+      ],
+      "properties": {
+        "skill": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)+$"
+        },
+        "mode": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        }
+      }
+    }
+  }
+}

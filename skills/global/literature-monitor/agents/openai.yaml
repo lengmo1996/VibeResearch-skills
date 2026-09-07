@@ -1,0 +1,7 @@
+interface:
+  display_name: "文献监测"
+  short_description: "按时间窗口监测研究变化；自选 arXiv 分类，配置并授权后生成、核验和恢复每日邮件。"
+  default_prompt: "使用 $literature-monitor，按指定主题和时间窗口监测研究变化；如需每日 arXiv 邮件，先验证我选择的分类、主报告类别、本地配置和明确发送授权，再遵循完整事务协议。"
+
+policy:
+  allow_implicit_invocation: true

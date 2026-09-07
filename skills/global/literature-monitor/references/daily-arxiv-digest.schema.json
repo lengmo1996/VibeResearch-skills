@@ -1,0 +1,674 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Configurable Literature Monitor Daily arXiv Digest v4",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "coverage_policy",
+    "run_id",
+    "date",
+    "retrieval_window",
+    "stats",
+    "inventory_summary",
+    "overview",
+    "reading_order",
+    "focus_papers",
+    "watch_papers",
+    "trends",
+    "actionable_insights",
+    "retrieval_coverage",
+    "exclusion_stats",
+    "cs_cv_report",
+    "arxiv_tools",
+    "local_reports",
+    "report_category",
+    "public_profile_sha256",
+    "report_already_known_count"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 4
+    },
+    "coverage_policy": {
+      "const": "configured-categories-summary-pdf-v4"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "retrieval_window": {
+      "type": "object",
+      "required": [
+        "basis",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "basis": {
+          "const": "announcement_batch"
+        },
+        "from": {
+          "type": "string",
+          "format": "date"
+        },
+        "to": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    },
+    "stats": {
+      "type": "object",
+      "required": [
+        "retrieved",
+        "unique",
+        "candidates",
+        "model_reviewed",
+        "budget_deferred",
+        "local_background",
+        "focus",
+        "watch",
+        "cv_remainder",
+        "excluded_hidden"
+      ],
+      "properties": {
+        "retrieved": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unique": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "candidates": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "model_reviewed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 30
+        },
+        "budget_deferred": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "local_background": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "focus": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "watch": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "cv_remainder": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "excluded_hidden": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "inventory_summary": {
+      "type": "object",
+      "required": [
+        "inventory_count",
+        "report_record_count",
+        "model_candidate_limit",
+        "model_visible_bytes",
+        "review_page_count",
+        "cv_summary_page_count",
+        "cv_summary_visible_bytes"
+      ],
+      "properties": {
+        "inventory_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "report_record_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "model_candidate_limit": {
+          "const": 30
+        },
+        "model_visible_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 60000
+        },
+        "review_page_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "cv_summary_page_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 20
+        },
+        "cv_summary_visible_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 600000
+        }
+      }
+    },
+    "overview": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reading_order": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "string"
+      }
+    },
+    "focus_papers": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "$ref": "#/$defs/paper"
+      }
+    },
+    "watch_papers": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "$ref": "#/$defs/paper"
+      }
+    },
+    "trends": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "actionable_insights": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "retrieval_coverage": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "$ref": "#/$defs/categoryCoverage"
+      }
+    },
+    "exclusion_stats": {
+      "type": "object",
+      "required": [
+        "configured_primary_exclusion",
+        "configured_secondary_exclusion",
+        "cs_cv_total_hidden",
+        "total_hidden"
+      ],
+      "properties": {
+        "configured_primary_exclusion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "configured_secondary_exclusion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cs_cv_total_hidden": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total_hidden": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "cs_cv_report": {
+      "type": "object",
+      "required": [
+        "total",
+        "detailed",
+        "compact"
+      ],
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "detailed": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "$ref": "#/$defs/cvDetailed"
+          }
+        },
+        "compact": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/cvCompact"
+          }
+        }
+      }
+    },
+    "arxiv_tools": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "local_reports": {
+      "type": "object",
+      "required": [
+        "inventory_json",
+        "inventory_markdown"
+      ],
+      "properties": {
+        "inventory_json": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inventory_markdown": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "next_version_check_cursor": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "transaction_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "delivery_status": {
+      "enum": [
+        "pending",
+        "committing",
+        "committed"
+      ]
+    },
+    "rendered_at": {
+      "type": "string"
+    },
+    "report_files": {
+      "type": "object"
+    },
+    "gmail_message_id": {
+      "type": "string"
+    },
+    "gmail_message_ids": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "commit_started_at": {
+      "type": "string"
+    },
+    "committed_at": {
+      "type": "string"
+    },
+    "report_category": {
+      "$ref": "#/$defs/arxivCategory"
+    },
+    "public_profile_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "report_already_known_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Unique report-category papers already known in the frozen local inventory; computed by the runtime, never a user configuration field."
+    }
+  },
+  "$defs": {
+    "cvDetailed": {
+      "type": "object",
+      "required": [
+        "title",
+        "authors",
+        "arxiv_id",
+        "version",
+        "announcement_date",
+        "announcement_types",
+        "query_sources",
+        "categories",
+        "submitted_or_updated",
+        "arxiv_url",
+        "pdf_url",
+        "relevance_score",
+        "core_conclusion",
+        "research_problem",
+        "method_overview",
+        "contributions"
+      ],
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "authors": {
+          "type": "array"
+        },
+        "arxiv_id": {
+          "type": "string"
+        },
+        "version": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "announcement_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "announcement_types": {
+          "type": "array"
+        },
+        "query_sources": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/arxivCategory"
+          }
+        },
+        "categories": {
+          "type": "array"
+        },
+        "submitted_or_updated": {
+          "type": "string"
+        },
+        "arxiv_url": {
+          "type": "string"
+        },
+        "pdf_url": {
+          "type": "string"
+        },
+        "relevance_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "core_conclusion": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "research_problem": {
+          "type": "string",
+          "maxLength": 48
+        },
+        "method_overview": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "contributions": {
+          "type": "string",
+          "maxLength": 48
+        }
+      }
+    },
+    "cvCompact": {
+      "type": "object",
+      "required": [
+        "title",
+        "arxiv_id",
+        "version",
+        "announcement_date",
+        "announcement_types",
+        "query_sources",
+        "submitted_or_updated",
+        "arxiv_url",
+        "pdf_url",
+        "relevance_score",
+        "core_conclusion"
+      ],
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "arxiv_id": {
+          "type": "string"
+        },
+        "version": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "announcement_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "announcement_types": {
+          "type": "array"
+        },
+        "query_sources": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/arxivCategory"
+          }
+        },
+        "submitted_or_updated": {
+          "type": "string"
+        },
+        "arxiv_url": {
+          "type": "string"
+        },
+        "pdf_url": {
+          "type": "string"
+        },
+        "relevance_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "core_conclusion": {
+          "type": "string",
+          "maxLength": 56
+        }
+      }
+    },
+    "paper": {
+      "type": "object",
+      "required": [
+        "title",
+        "authors",
+        "arxiv_id",
+        "version",
+        "announcement_date",
+        "announcement_types",
+        "categories",
+        "query_sources",
+        "submitted_or_updated",
+        "arxiv_url",
+        "pdf_url",
+        "relevance_score",
+        "recommendation",
+        "core_conclusion",
+        "research_problem",
+        "method_overview",
+        "contributions",
+        "research_relation",
+        "transferable_ideas",
+        "limitations",
+        "worth_reading",
+        "follow_up",
+        "evidence_level",
+        "topic_group"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "authors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "arxiv_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "announcement_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "announcement_types": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "new",
+              "cross_list",
+              "replacement"
+            ]
+          }
+        },
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "query_sources": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/arxivCategory"
+          }
+        },
+        "submitted_or_updated": {
+          "type": "string"
+        },
+        "arxiv_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "pdf_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "relevance_score": {
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 100
+        },
+        "recommendation": {
+          "type": "string"
+        },
+        "core_conclusion": {
+          "type": "string"
+        },
+        "research_problem": {
+          "type": "string"
+        },
+        "method_overview": {
+          "type": "string"
+        },
+        "contributions": {
+          "type": "string"
+        },
+        "research_relation": {
+          "type": "string"
+        },
+        "transferable_ideas": {
+          "type": "string"
+        },
+        "limitations": {
+          "type": "string"
+        },
+        "worth_reading": {
+          "type": "string"
+        },
+        "follow_up": {
+          "type": "string"
+        },
+        "evidence_level": {
+          "const": "abstract"
+        },
+        "topic_group": {
+          "enum": [
+            "direct_interest",
+            "method_interest",
+            "transfer_interest",
+            "other_relevant"
+          ]
+        }
+      }
+    },
+    "categoryCoverage": {
+      "type": "object",
+      "required": [
+        "category",
+        "complete",
+        "raw_count",
+        "unique_count",
+        "batches"
+      ],
+      "properties": {
+        "category": {
+          "$ref": "#/$defs/arxivCategory"
+        },
+        "complete": {
+          "const": true
+        },
+        "raw_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unique_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "batches": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "arxivCategory": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*(?:\\.[A-Za-z][A-Za-z0-9]*(?:-[a-z0-9]+)*)?$",
+      "description": "Canonical specific arXiv category, checked against the user's validated selection at runtime."
+    }
+  },
+  "description": "Structural report schema. The runtime additionally validates official category IDs against the bundled taxonomy, exact coverage of the user's selected categories, report-category membership and the bound profile hash."
+}

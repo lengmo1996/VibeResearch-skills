@@ -1,0 +1,13 @@
+interface:
+  display_name: "研究实验设计"
+  short_description: "把研究假设转成公平、可证伪、具备依赖与结果分支的实验决策计划。"
+  default_prompt: "使用 $research-experiment-design，把研究假设转成公平、可证伪、具备依赖与结果分支的实验决策计划。"
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "knowledge-hub"
+      description: "Read-only search and retrieval from a user-configured KnowledgeHub MCP server"
+      transport: "streamable_http"
+
+policy:
+  allow_implicit_invocation: true

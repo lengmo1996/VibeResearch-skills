@@ -1,0 +1,688 @@
+{
+  "schema_version": "1.0.0",
+  "catalog_policy": "Authoring presets for six academic deck types. Numeric sizes and spacing are local heuristics, not standards. Font lists are candidates to resolve and inspect, not bundled fonts. Preset order is the recommender tie-breaker.",
+  "palette_policy": "Color roles stay stable within a deck. Only text/background is checked by the current validator; inspect all actual color uses. Every identity and status also needs a label, marker, or pattern.",
+  "presets": [
+    {
+      "id": "precise-blue",
+      "name": "证据讲解 / Evidence explanation",
+      "preferred_deck_types": [
+        "paper-talk",
+        "lab-meeting"
+      ],
+      "preferred_domains": [
+        "computer-science",
+        "general"
+      ],
+      "tone": [
+        "analytical",
+        "clear",
+        "discussion"
+      ],
+      "palette": {
+        "background": "#FCFDFE",
+        "surface": "#EEF3F8",
+        "text": "#172B3A",
+        "muted": "#4D5D6A",
+        "primary": "#1B4F80",
+        "secondary": "#3D6260",
+        "accent": "#854B19",
+        "border": "#738391"
+      },
+      "typography": {
+        "zh": {
+          "heading": [
+            "Microsoft YaHei",
+            "Noto Sans CJK SC",
+            "SimHei"
+          ],
+          "body": [
+            "Microsoft YaHei",
+            "Noto Sans CJK SC",
+            "SimSun"
+          ],
+          "monospace": [
+            "Cascadia Mono",
+            "Consolas",
+            "monospace"
+          ],
+          "math": [
+            "Cambria Math",
+            "STIX Two Math"
+          ]
+        },
+        "en": {
+          "heading": [
+            "Aptos Display",
+            "Noto Sans",
+            "Arial"
+          ],
+          "body": [
+            "Aptos",
+            "Noto Sans",
+            "Arial"
+          ],
+          "monospace": [
+            "Cascadia Mono",
+            "Consolas",
+            "monospace"
+          ],
+          "math": [
+            "Cambria Math",
+            "STIX Two Math"
+          ]
+        },
+        "bilingual": {
+          "heading": [
+            "Microsoft YaHei",
+            "Aptos Display",
+            "Noto Sans CJK SC",
+            "Noto Sans"
+          ],
+          "body": [
+            "Microsoft YaHei",
+            "Aptos",
+            "Noto Sans CJK SC",
+            "Noto Sans"
+          ],
+          "monospace": [
+            "Cascadia Mono",
+            "Consolas",
+            "monospace"
+          ],
+          "math": [
+            "Cambria Math",
+            "STIX Two Math"
+          ]
+        },
+        "sizes_pt": {
+          "title": 34,
+          "body": 23,
+          "caption": 17,
+          "source": 11
+        }
+      },
+      "spacing": {
+        "safe_margin_in": 0.48,
+        "gutter_in": 0.28,
+        "paragraph_gap_pt": 10,
+        "baseline_step_pt": 4
+      },
+      "chart_style": "Use one aligned comparison region with direct method labels. Put the source and caveat beside the evidence, and retain the same comparison order across slides.",
+      "motion": "Default to a complete static view. Use an immediate reveal only to explain order; provide labeled static states and a reduced-motion path.",
+      "rationale": "Supports paper explanation and lab discussion by giving the primary result a large region and reserving a side column for interpretation and a question.",
+      "evidence_treatment": [
+        "Use claim-plus-evidence pages for observations, then a separate question region for discussion.",
+        "Enlarge the relevant method segment on a following page while retaining its module names.",
+        "Use labeled markers as well as color to identify methods."
+      ]
+    },
+    {
+      "id": "biomedical-teal",
+      "name": "研究条件与结果 / Study conditions and results",
+      "preferred_deck_types": [
+        "paper-talk",
+        "lab-meeting"
+      ],
+      "preferred_domains": [
+        "biomedicine",
+        "clinical-research",
+        "life-sciences"
+      ],
+      "tone": [
+        "careful",
+        "analytical",
+        "evidence"
+      ],
+      "palette": {
+        "background": "#FCFEFD",
+        "surface": "#EDF5F1",
+        "text": "#18342E",
+        "muted": "#4B635D",
+        "primary": "#14634F",
+        "secondary": "#3B567A",
+        "accent": "#855323",
+        "border": "#6B877D"
+      },
+      "typography": {
+        "zh": {
+          "heading": [
+            "Microsoft YaHei",
+            "Noto Sans CJK SC",
+            "SimHei"
+          ],
+          "body": [
+            "Microsoft YaHei",
+            "Noto Sans CJK SC",
+            "SimSun"
+          ],
+          "monospace": [
+            "Cascadia Mono",
+            "Consolas",
+            "monospace"
+          ],
+          "math": [
+            "Cambria Math",
+            "STIX Two Math"
+          ]
+        },
+        "en": {
+          "heading": [
+            "Aptos Display",
+            "Noto Sans",
+            "Arial"
+          ],
+          "body": [
+            "Aptos",
+            "Noto Sans",
+            "Arial"
+          ],
+          "monospace": [
+            "Cascadia Mono",
+            "Consolas",
+            "monospace"
+          ],
+          "math": [
+            "Cambria Math",
+            "STIX Two Math"
+          ]
+        },
+        "bilingual": {
+          "heading": [
+            "Microsoft YaHei",
+            "Aptos Display",
+            "Noto Sans CJK SC",
+            "Noto Sans"
+          ],
+          "body": [
+            "Microsoft YaHei",
+            "Aptos",
+            "Noto Sans CJK SC",
+            "Noto Sans"
+          ],
+          "monospace": [
+            "Cascadia Mono",
+            "Consolas",
+            "monospace"
+          ],
+          "math": [
+            "Cambria Math",
+            "STIX Two Math"
+          ]
+        },
+        "sizes_pt": {
+          "title": 34,
+          "body": 23,
+          "caption": 17,
+          "source": 12
+        }
+      },
+      "spacing": {
+        "safe_margin_in": 0.48,
+        "gutter_in": 0.28,
+        "paragraph_gap_pt": 10,
+        "baseline_step_pt": 4
+      },
+      "chart_style": "Reserve a labeled study-context strip for cohort, endpoint, unit, and observation window; show available uncertainty next to the estimate.",
+      "motion": "Default to a complete static view. Use an immediate reveal only to explain order; provide labeled static states and a reduced-motion path.",
+      "rationale": "Keeps study conditions visible while the audience reads an estimate, reducing the chance of treating a result from one population as an unrestricted claim.",
+      "evidence_treatment": [
+        "Pair a result region with study-context labels rather than decorative status badges.",
+        "Identify endpoint and analysis population consistently across comparisons.",
+        "Keep observational association and causal claims distinct in titles and notes."
+      ]
+    },
+    {
+      "id": "technical-indigo",
+      "name": "进度与依赖 / Progress and dependencies",
+      "preferred_deck_types": [
+        "project-update"
+      ],
+      "preferred_domains": [
+        "artificial-intelligence",
+        "engineering",
+        "computer-science",
+        "general"
+      ],
+      "tone": [
+        "practical",
+        "technical",
+        "decision"
+      ],
+      "palette": {
+        "background": "#FDFDFE",
+        "surface": "#F0F1F9",
+        "text": "#262A46",
+        "muted": "#595D73",
+        "primary": "#434A8F",
+        "secondary": "#27666A",
+        "accent": "#8B482B",
+        "border": "#7C819B"
+      },
+      "typography": {
+        "zh": {
+          "heading": [
+            "Microsoft YaHei",
+            "Noto Sans CJK SC",
+            "SimHei"
+          ],
+          "body": [
+            "Microsoft YaHei",
+            "Noto Sans CJK SC",
+            "SimSun"
+          ],
+          "monospace": [
+            "Cascadia Mono",
+            "Consolas",
+            "monospace"
+          ],
+          "math": [
+            "Cambria Math",
+            "STIX Two Math"
+          ]
+        },
+        "en": {
+          "heading": [
+            "Aptos Display",
+            "Noto Sans",
+            "Arial"
+          ],
+          "body": [
+            "Aptos",
+            "Noto Sans",
+            "Arial"
+          ],
+          "monospace": [
+            "Cascadia Mono",
+            "Consolas",
+            "monospace"
+          ],
+          "math": [
+            "Cambria Math",
+            "STIX Two Math"
+          ]
+        },
+        "bilingual": {
+          "heading": [
+            "Microsoft YaHei",
+            "Aptos Display",
+            "Noto Sans CJK SC",
+            "Noto Sans"
+          ],
+          "body": [
+            "Microsoft YaHei",
+            "Aptos",
+            "Noto Sans CJK SC",
+            "Noto Sans"
+          ],
+          "monospace": [
+            "Cascadia Mono",
+            "Consolas",
+            "monospace"
+          ],
+          "math": [
+            "Cambria Math",
+            "STIX Two Math"
+          ]
+        },
+        "sizes_pt": {
+          "title": 32,
+          "body": 22,
+          "caption": 16,
+          "source": 11
+        }
+      },
+      "spacing": {
+        "safe_margin_in": 0.48,
+        "gutter_in": 0.28,
+        "paragraph_gap_pt": 10,
+        "baseline_step_pt": 4
+      },
+      "chart_style": "Use dated evidence snapshots beside a dependency or action column. Distinguish measured, in-progress, and planned entries with words and shape markers.",
+      "motion": "Default to a complete static view. Use an immediate reveal only to explain order; provide labeled static states and a reduced-motion path.",
+      "rationale": "Supports a progress decision by connecting each completed output or blocker to its evidence and the next verifiable action.",
+      "evidence_treatment": [
+        "Use a stable observed-state column and a separate next-action column.",
+        "Attach dates and verification references to completed items.",
+        "Show unresolved dependencies explicitly; do not draw planned progress as measured improvement."
+      ]
+    },
+    {
+      "id": "defense-evidence",
+      "name": "论点与支撑 / Thesis and support",
+      "preferred_deck_types": [
+        "defense"
+      ],
+      "preferred_domains": [
+        "general"
+      ],
+      "tone": [
+        "formal",
+        "careful",
+        "structured"
+      ],
+      "palette": {
+        "background": "#FFFDFC",
+        "surface": "#F4F0EC",
+        "text": "#302B27",
+        "muted": "#635B53",
+        "primary": "#614839",
+        "secondary": "#325F69",
+        "accent": "#794160",
+        "border": "#95877A"
+      },
+      "typography": {
+        "zh": {
+          "heading": [
+            "Microsoft YaHei",
+            "Noto Sans CJK SC",
+            "SimHei"
+          ],
+          "body": [
+            "Microsoft YaHei",
+            "Noto Sans CJK SC",
+            "SimSun"
+          ],
+          "monospace": [
+            "Cascadia Mono",
+            "Consolas",
+            "monospace"
+          ],
+          "math": [
+            "Cambria Math",
+            "STIX Two Math"
+          ]
+        },
+        "en": {
+          "heading": [
+            "Aptos Display",
+            "Noto Sans",
+            "Arial"
+          ],
+          "body": [
+            "Aptos",
+            "Noto Sans",
+            "Arial"
+          ],
+          "monospace": [
+            "Cascadia Mono",
+            "Consolas",
+            "monospace"
+          ],
+          "math": [
+            "Cambria Math",
+            "STIX Two Math"
+          ]
+        },
+        "bilingual": {
+          "heading": [
+            "Microsoft YaHei",
+            "Aptos Display",
+            "Noto Sans CJK SC",
+            "Noto Sans"
+          ],
+          "body": [
+            "Microsoft YaHei",
+            "Aptos",
+            "Noto Sans CJK SC",
+            "Noto Sans"
+          ],
+          "monospace": [
+            "Cascadia Mono",
+            "Consolas",
+            "monospace"
+          ],
+          "math": [
+            "Cambria Math",
+            "STIX Two Math"
+          ]
+        },
+        "sizes_pt": {
+          "title": 34,
+          "body": 23,
+          "caption": 17,
+          "source": 12
+        }
+      },
+      "spacing": {
+        "safe_margin_in": 0.48,
+        "gutter_in": 0.28,
+        "paragraph_gap_pt": 10,
+        "baseline_step_pt": 4
+      },
+      "chart_style": "Use stable contribution labels and a compact evidence index. Preserve comparable scales and baseline identities when returning to earlier results.",
+      "motion": "Default to a complete static view. Use an immediate reveal only to explain order; provide labeled static states and a reduced-motion path.",
+      "rationale": "Connects contributions across a longer argument: chapter navigation remains quiet while the current claim, evidence, and boundary remain easy to locate.",
+      "evidence_treatment": [
+        "Introduce each contribution with its question and supporting evidence references.",
+        "Repeat a small contribution index when moving between chapters.",
+        "End each contribution with its supported scope and unresolved limitation."
+      ]
+    },
+    {
+      "id": "conference-focus",
+      "name": "核心结果 / Central result",
+      "preferred_deck_types": [
+        "conference"
+      ],
+      "preferred_domains": [
+        "general"
+      ],
+      "tone": [
+        "focused",
+        "clear",
+        "concise"
+      ],
+      "palette": {
+        "background": "#FEFEFC",
+        "surface": "#F2F3ED",
+        "text": "#252E25",
+        "muted": "#586153",
+        "primary": "#3F6132",
+        "secondary": "#365E78",
+        "accent": "#8A431F",
+        "border": "#85927C"
+      },
+      "typography": {
+        "zh": {
+          "heading": [
+            "Microsoft YaHei",
+            "Noto Sans CJK SC",
+            "SimHei"
+          ],
+          "body": [
+            "Microsoft YaHei",
+            "Noto Sans CJK SC",
+            "SimSun"
+          ],
+          "monospace": [
+            "Cascadia Mono",
+            "Consolas",
+            "monospace"
+          ],
+          "math": [
+            "Cambria Math",
+            "STIX Two Math"
+          ]
+        },
+        "en": {
+          "heading": [
+            "Aptos Display",
+            "Noto Sans",
+            "Arial"
+          ],
+          "body": [
+            "Aptos",
+            "Noto Sans",
+            "Arial"
+          ],
+          "monospace": [
+            "Cascadia Mono",
+            "Consolas",
+            "monospace"
+          ],
+          "math": [
+            "Cambria Math",
+            "STIX Two Math"
+          ]
+        },
+        "bilingual": {
+          "heading": [
+            "Microsoft YaHei",
+            "Aptos Display",
+            "Noto Sans CJK SC",
+            "Noto Sans"
+          ],
+          "body": [
+            "Microsoft YaHei",
+            "Aptos",
+            "Noto Sans CJK SC",
+            "Noto Sans"
+          ],
+          "monospace": [
+            "Cascadia Mono",
+            "Consolas",
+            "monospace"
+          ],
+          "math": [
+            "Cambria Math",
+            "STIX Two Math"
+          ]
+        },
+        "sizes_pt": {
+          "title": 38,
+          "body": 24,
+          "caption": 18,
+          "source": 12
+        }
+      },
+      "spacing": {
+        "safe_margin_in": 0.48,
+        "gutter_in": 0.28,
+        "paragraph_gap_pt": 10,
+        "baseline_step_pt": 4
+      },
+      "chart_style": "Enlarge the central comparison and label it directly. Keep protocol details legible in a short caption and route supporting breakdowns to named backup pages.",
+      "motion": "Default to a complete static view. Use an immediate reveal only to explain order; provide labeled static states and a reduced-motion path.",
+      "rationale": "Serves a short talk with a mixed audience by minimizing simultaneous comparisons while leaving a trace to the full evidence and its limits.",
+      "evidence_treatment": [
+        "Keep a single claim and evidence view in the foreground.",
+        "Use the same short method names in the pipeline, central result, and final takeaway.",
+        "Use an appendix reference for full tables; clearly label any displayed subset."
+      ]
+    },
+    {
+      "id": "teaching-sequence",
+      "name": "例题与解释 / Worked examples",
+      "preferred_deck_types": [
+        "course"
+      ],
+      "preferred_domains": [
+        "general",
+        "education"
+      ],
+      "tone": [
+        "explanatory",
+        "patient",
+        "interactive"
+      ],
+      "palette": {
+        "background": "#FEFDFC",
+        "surface": "#F6F0E9",
+        "text": "#332D28",
+        "muted": "#665B51",
+        "primary": "#7C4A24",
+        "secondary": "#295F68",
+        "accent": "#694779",
+        "border": "#9B8975"
+      },
+      "typography": {
+        "zh": {
+          "heading": [
+            "Microsoft YaHei",
+            "Noto Sans CJK SC",
+            "SimHei"
+          ],
+          "body": [
+            "Microsoft YaHei",
+            "Noto Sans CJK SC",
+            "SimSun"
+          ],
+          "monospace": [
+            "Cascadia Mono",
+            "Consolas",
+            "monospace"
+          ],
+          "math": [
+            "Cambria Math",
+            "STIX Two Math"
+          ]
+        },
+        "en": {
+          "heading": [
+            "Aptos Display",
+            "Noto Sans",
+            "Arial"
+          ],
+          "body": [
+            "Aptos",
+            "Noto Sans",
+            "Arial"
+          ],
+          "monospace": [
+            "Cascadia Mono",
+            "Consolas",
+            "monospace"
+          ],
+          "math": [
+            "Cambria Math",
+            "STIX Two Math"
+          ]
+        },
+        "bilingual": {
+          "heading": [
+            "Microsoft YaHei",
+            "Aptos Display",
+            "Noto Sans CJK SC",
+            "Noto Sans"
+          ],
+          "body": [
+            "Microsoft YaHei",
+            "Aptos",
+            "Noto Sans CJK SC",
+            "Noto Sans"
+          ],
+          "monospace": [
+            "Cascadia Mono",
+            "Consolas",
+            "monospace"
+          ],
+          "math": [
+            "Cambria Math",
+            "STIX Two Math"
+          ]
+        },
+        "sizes_pt": {
+          "title": 36,
+          "body": 24,
+          "caption": 18,
+          "source": 12
+        }
+      },
+      "spacing": {
+        "safe_margin_in": 0.48,
+        "gutter_in": 0.28,
+        "paragraph_gap_pt": 10,
+        "baseline_step_pt": 4
+      },
+      "chart_style": "Keep known quantities, intermediate states, and result labels in fixed positions. Use labeled steps and a complete static solution rather than relying on animation.",
+      "motion": "Default to a complete static view. Use an immediate reveal only to explain order; provide labeled static states and a reduced-motion path.",
+      "rationale": "Supports explanation and practice by separating the learner prompt from the worked solution while preserving both in a usable handout.",
+      "evidence_treatment": [
+        "Use a prompt page before the worked example or a clearly separated prompt region.",
+        "Reveal only the current reasoning step during the talk; retain all labeled steps in static output.",
+        "Revisit the concept using a changed example and state what stays invariant."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+interface:
+  display_name: "引文元数据核验"
+  short_description: "核验引文标识符与书目信息，保留字段级来源、冲突和版本关系。"
+  default_prompt: "使用 $tool-citation-metadata-validation，核验引文标识符与书目信息，保留字段级来源、冲突和版本关系。"
+
+policy:
+  allow_implicit_invocation: true

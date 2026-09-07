@@ -1,0 +1,23 @@
+schema_version: 1.0.0
+paper:
+  title: null
+  target_venue: null
+  lifecycle_stage: planning
+narrative:
+  problem: null
+  gap: null
+  contributions: []
+  section_order: []
+claims: []
+artifacts:
+  experiment_plan_ref: null
+  result_refs: []
+  figure_spec_refs: []
+  audit_ledger_ref: null
+  submission_manifest_ref: null
+decisions:
+  locked: []
+  open: []
+privacy:
+  sensitivity: unknown
+  persistence_authorized: false

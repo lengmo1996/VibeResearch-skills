@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "configured": false,
+  "digest_root": "",
+  "coordination_root": "",
+  "recipient": "me",
+  "timezone": "",
+  "categories": [],
+  "category_order": [],
+  "report_category": "",
+  "topic_tiers": {"A": [], "B": [], "C": []},
+  "topic_labels": {
+    "direct_interest": "直接关注主题",
+    "method_interest": "方法主题",
+    "transfer_interest": "可迁移主题",
+    "other_relevant": "其他相关主题"
+  },
+  "architecture_terms": [],
+  "context_terms": [],
+  "exclusions": {"primary": [], "secondary": []}
+}

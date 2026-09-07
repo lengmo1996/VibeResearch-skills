@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0.0",
+  "claims": [
+    {
+      "claim_id": "CLM-001",
+      "text": "Bounded claim text",
+      "status": "proposed",
+      "scope": "Declared evaluation scope",
+      "evidence_refs": [
+        {
+          "kind": "result",
+          "ref": "result://RUN-001/EXP-001/PROT-001/MET-001/FIND-001",
+          "status": "candidate",
+          "note": "analysis_status=inconclusive; blocker or strongest allowed wording"
+        }
+      ]
+    }
+  ]
+}
