@@ -3001,7 +3001,7 @@ def cv_delivery_coverage_errors(digest: dict[str, Any]) -> list[str]:
         delivered_unique = len(selected_cv_ids | remainder_ids)
         if delivered_unique != expected_delivered:
             errors.append(
-                f"{_report_category_text('selected cs.CV plus cv_daily_remainder must cover every non-hidden announced cs.CV paper (')}{delivered_unique} delivered, {expected_unique} announced, {cs_cv_hidden} hidden)"
+                (_report_category_text('selected cs.CV plus cv_daily_remainder must cover every non-hidden announced cs.CV paper (') + f'{delivered_unique}' + ' delivered, ' + f'{expected_unique}' + ' announced, ' + f'{cs_cv_hidden}' + ' hidden)')
             )
     return errors
 
@@ -4975,7 +4975,7 @@ def _finalize_digest_v3_legacy(root: Path, run_id: str) -> dict[str, Any]:
             "review_page_count": len(manifest["pages"]),
         },
         "overview": (
-            f"{_report_category_text('本次完整检索七个 arXiv 分类，共获得 ')}{ledger['retrieved_count']} 条公告记录，去重后 {ledger['unique_count']} 篇；本地预筛后由模型复核 {len(decisions)} 篇，推荐重点 {len(focus)} 篇、关注 {len(watch)} 篇。"
+            (_report_category_text('本次完整检索七个 arXiv 分类，共获得 ') + f"{ledger['retrieved_count']}" + ' 条公告记录，去重后 ' + f"{ledger['unique_count']}" + ' 篇；本地预筛后由模型复核 ' + f'{len(decisions)}' + ' 篇，推荐重点 ' + f'{len(focus)}' + ' 篇、关注 ' + f'{len(watch)}' + ' 篇。')
         ),
         "reading_order": [],
         "focus_papers": focus,
@@ -5094,7 +5094,7 @@ def _cv_summary_page_values(
 ) -> tuple[list[dict[str, Any]], int]:
     if len(records) > MAX_CV_SUMMARY_RECORDS:
         raise DigestValidationError(
-            f"{_report_category_text('cs.CV summary record safety limit exceeded: ')}{len(records)} > {MAX_CV_SUMMARY_RECORDS}"
+            (_report_category_text('cs.CV summary record safety limit exceeded: ') + f'{len(records)}' + ' > ' + f'{MAX_CV_SUMMARY_RECORDS}')
         )
     pending = [record for record in records if not record.get("existing_translation")]
     if not pending:
@@ -5153,7 +5153,7 @@ def _cv_summary_page_values(
         ):
             return pages, source_limit
     raise DigestValidationError(
-        f"{_report_category_text('cs.CV translation input cannot fit the configured dynamic page budget: max_pages=')}{max_pages}, page_max_bytes={page_max_bytes}"
+        (_report_category_text('cs.CV translation input cannot fit the configured dynamic page budget: max_pages=') + f'{max_pages}' + ', page_max_bytes=' + f'{page_max_bytes}')
     )
 
 
@@ -5169,7 +5169,7 @@ def prepare_cv_summary(
         raise DigestValidationError(_report_category_text('cs.CV summary page maximum must be 8000..30000 bytes'))
     if not 1 <= max_pages <= MAX_CV_SUMMARY_PAGES:
         raise DigestValidationError(
-            f"{_report_category_text('cs.CV summary supports 1..')}{MAX_CV_SUMMARY_PAGES} pages"
+            (_report_category_text('cs.CV summary supports 1..') + f'{MAX_CV_SUMMARY_PAGES}' + ' pages')
         )
     root = root.resolve()
     with _exclusive_gate_state_lock(root / "digest-transaction.lock"):
@@ -5340,17 +5340,17 @@ def _load_cv_summary_state(
     for expected, record in enumerate(page_manifest, start=1):
         path = Path(str(record.get("path") or ""))
         if record.get("page") != expected or not path.is_file():
-            raise DigestValidationError(f"{_report_category_text('missing v4 cs.CV summary page ')}{expected}")
+            raise DigestValidationError((_report_category_text('missing v4 cs.CV summary page ') + f'{expected}'))
         if hashlib.sha256(path.read_bytes()).hexdigest() != record.get("sha256"):
-            raise DigestValidationError(f"{_report_category_text('v4 cs.CV summary page ')}{expected} hash mismatch")
+            raise DigestValidationError((_report_category_text('v4 cs.CV summary page ') + f'{expected}' + ' hash mismatch'))
         page = read_json(path)
         payload_bytes = len(_json_bytes(page))
         if payload_bytes > page_max_bytes:
-            raise DigestValidationError(f"{_report_category_text('v4 cs.CV summary page ')}{expected} exceeds byte budget")
+            raise DigestValidationError((_report_category_text('v4 cs.CV summary page ') + f'{expected}' + ' exceeds byte budget'))
         if record.get("bytes") != payload_bytes or record.get("count") != len(page.get("items", [])):
-            raise DigestValidationError(f"{_report_category_text('v4 cs.CV summary page ')}{expected} metadata mismatch")
+            raise DigestValidationError((_report_category_text('v4 cs.CV summary page ') + f'{expected}' + ' metadata mismatch'))
         if page.get("schema_version") != SCHEMA_VERSION or page.get("run_id") != run_id or page.get("page") != expected:
-            raise DigestValidationError(f"{_report_category_text('v4 cs.CV summary page ')}{expected} identity mismatch")
+            raise DigestValidationError((_report_category_text('v4 cs.CV summary page ') + f'{expected}' + ' identity mismatch'))
         page_arxiv_ids.extend(str(item[0]) for item in page.get("items", []))
         pages.append((record, page))
     if len(pages) > max_pages or len(pages) > MAX_CV_SUMMARY_PAGES:
@@ -5482,7 +5482,7 @@ def finalize_digest(root: Path, run_id: str) -> dict[str, Any]:
     for record, page in cv_pages:
         path = run_dir / f"cv-summary-decision-{record['page']:03d}.json"
         if not path.exists():
-            raise DigestValidationError(f"{_report_category_text('cs.CV translation is incomplete; missing page ')}{record['page']}")
+            raise DigestValidationError((_report_category_text('cs.CV translation is incomplete; missing page ') + f"{record['page']}"))
         value = _validate_cv_translation(run_id, record, page, read_json(path))
         translations.update({str(item["arxiv_id"]): item for item in value["translations"]})
     source_by_id, focus_decisions, watch_decisions = _select_review_results(ledger, decisions)
@@ -5493,7 +5493,7 @@ def finalize_digest(root: Path, run_id: str) -> dict[str, Any]:
         paper = copy.deepcopy(record["paper"])
         translated = record.get("existing_translation") or translations.get(record["arxiv_id"])
         if not isinstance(translated, dict):
-            raise DigestValidationError(f"{_report_category_text('missing cs.CV translation for ')}{record['arxiv_id']}")
+            raise DigestValidationError((_report_category_text('missing cs.CV translation for ') + f"{record['arxiv_id']}"))
         paper["relevance_score"] = int(record["model_score"] if type(record.get("model_score")) is int else record["prefilter_score"])
         if record["summary_kind"] == "detailed":
             for field in CV_SUMMARY_PROSE_LIMITS:
@@ -5553,7 +5553,7 @@ def finalize_digest(root: Path, run_id: str) -> dict[str, Any]:
             "cv_summary_page_count": len(cv_manifest["pages"]),
             "cv_summary_visible_bytes": sum(record["bytes"] for record in cv_manifest["pages"]),
         },
-        "overview": f"{_report_category_text('本次完整检索七个 arXiv 分类，共获得 ')}{ledger['retrieved_count']} 条公告记录，去重后 {ledger['unique_count']} 篇；模型复核 {len(decisions)} 篇，推荐重点 {len(focus)} 篇、关注 {len(watch)}{_report_category_text(' 篇，并整理其余 cs.CV ')}{len(detailed) + len(compact)} 篇。",
+        "overview": (_report_category_text('本次完整检索七个 arXiv 分类，共获得 ') + f"{ledger['retrieved_count']}" + ' 条公告记录，去重后 ' + f"{ledger['unique_count']}" + ' 篇；模型复核 ' + f'{len(decisions)}' + ' 篇，推荐重点 ' + f'{len(focus)}' + ' 篇、关注 ' + f'{len(watch)}' + _report_category_text(' 篇，并整理其余 cs.CV ') + f'{len(detailed) + len(compact)}' + ' 篇。'),
         "reading_order": [paper["title"] for paper in focus[:3]],
         "focus_papers": focus, "watch_papers": watch,
         "trends": trends, "actionable_insights": insights,
@@ -7434,7 +7434,7 @@ def validate_digest(digest: dict[str, Any]) -> None:
                 if collection_name == "detailed" and REPORT_CATEGORY not in paper.get(
                     "categories", []
                 ):
-                    errors.append(f"{label}{_report_category_text('.categories must include cs.CV')}")
+                    errors.append((f'{label}' + _report_category_text('.categories must include cs.CV')))
                 try:
                     base_id, parsed_version = normalize_arxiv_id(
                         str(paper.get("arxiv_id", "")),
@@ -8008,7 +8008,7 @@ def render_html_v4(digest: dict[str, Any]) -> str:
             "<meta name='daily-arxiv-delivery-format' content='html-pdf-single-v4'>",
             f"<style>{style}</style></head><body><main><!--DAILY_ARXIV_BODY_BEGIN-->",
             f"<header><h1>arXiv Daily · {emphasized(digest['date'])}</h1><div class='muted'>单封完整日报 · abstract 证据</div></header>",
-            f"<section class='panel'><h2>每日总览</h2><p>{emphasized(digest['overview'])}</p><p class='stats muted'>检索 {digest['stats']['retrieved']} 去重 {digest['stats']['unique']} 模型复核 {digest['stats']['model_reviewed']} 重点 {digest['stats']['focus']} 潜在 {digest['stats']['watch']}{_report_category_text(' cs.CV ')}{digest['stats']['cv_remainder']}</p></section>",
+            ("<section class='panel'><h2>每日总览</h2><p>" + f"{emphasized(digest['overview'])}" + "</p><p class='stats muted'>检索 " + f"{digest['stats']['retrieved']}" + ' 去重 ' + f"{digest['stats']['unique']}" + ' 模型复核 ' + f"{digest['stats']['model_reviewed']}" + ' 重点 ' + f"{digest['stats']['focus']}" + ' 潜在 ' + f"{digest['stats']['watch']}" + _report_category_text(' cs.CV ') + f"{digest['stats']['cv_remainder']}" + '</p></section>'),
             f"<section class='panel'><h2>今日优先阅读顺序</h2><ol>{html_list(digest['reading_order'])}</ol></section>",
         ]
         for heading, collection, group_by_topic in (
@@ -8102,7 +8102,7 @@ def render_html(digest: dict[str, Any]) -> str:
         )
         for entry in digest["retrieval_coverage"]
     )
-    return f"""<!doctype html>\n<html lang="zh-CN">\n<head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>\n<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;color:#1e293b">\n<main style="max-width:820px;margin:0 auto;padding:24px">\n  <header style="background:#0f172a;color:#fff;border-radius:14px;padding:22px">\n    <h1 style="margin:0 0 8px">arXiv Daily · {emphasized(digest['date'])}</h1>\n    <div style="color:#cbd5e1">检索范围：{emphasized(window['from'])} — {emphasized(window['to'])}</div>\n  </header>\n  <section style="background:#fff;border-radius:12px;padding:18px;margin:16px 0">\n    <h2 style="margin-top:0">每日总览</h2>\n    <p style="line-height:1.75">{emphasized(digest['overview'])}</p>\n    <p style="color:#475569">检索 {stats['retrieved']} · 去重 {stats['unique']} · 候选 {stats['candidates']} · 重点 {stats['focus']} · 潜在 {stats['watch']}{_report_category_text(' · cs.CV 余项 ')}{stats['cv_remainder']}</p>\n  </section>\n  <section style="background:#fff;border-radius:12px;padding:18px;margin:16px 0">\n    <h2 style="margin-top:0">今日优先阅读顺序</h2><ol>{html_list(digest['reading_order'])}</ol>\n  </section>\n  <h2>重点推荐论文</h2>{focus}\n  <h2>潜在关注论文</h2>{watch}\n  <section style="background:#fff;border-radius:12px;padding:18px;margin:16px 0">\n    <h2 style="margin-top:0">今日研究趋势</h2><ul>{html_list(digest['trends'])}</ul>\n  </section>\n  <section style="background:#fff;border-radius:12px;padding:18px;margin:16px 0">\n    <h2 style="margin-top:0">对当前研究的可执行启发</h2><ul>{html_list(digest['actionable_insights'])}{_report_category_text('</ul>\n  </section>\n  <h2>当日其它 cs.CV 更新</h2>\n  <p style="color:#64748b">按相关性降序；前 50 篇展示四项摘要，其余使用紧凑格式。共 ')}{remainder['total']} 篇。</p>\n  {cv_remainder}\n  <section style="color:#64748b;font-size:13px;line-height:1.7">\n    <div>检索和筛选统计：retrieved={stats['retrieved']}, unique={stats['unique']}, candidates={stats['candidates']}, focus={stats['focus']}, watch={stats['watch']}, cv_remainder={stats['cv_remainder']}, excluded_hidden={stats['excluded_hidden']}{_report_category_text('</div>\n    <div>七类完整覆盖：')}{emphasized(coverage)}</div>\n    <div>本次使用的 arXiv 检索工具：{emphasized(', '.join(digest['arxiv_tools']))}</div>\n  </section>\n</main>\n</body>\n</html>\n"""
+    return ('<!doctype html>\n<html lang="zh-CN">\n<head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>\n<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Arial,sans-serif;color:#1e293b">\n<main style="max-width:820px;margin:0 auto;padding:24px">\n  <header style="background:#0f172a;color:#fff;border-radius:14px;padding:22px">\n    <h1 style="margin:0 0 8px">arXiv Daily · ' + f"{emphasized(digest['date'])}" + '</h1>\n    <div style="color:#cbd5e1">检索范围：' + f"{emphasized(window['from'])}" + ' — ' + f"{emphasized(window['to'])}" + '</div>\n  </header>\n  <section style="background:#fff;border-radius:12px;padding:18px;margin:16px 0">\n    <h2 style="margin-top:0">每日总览</h2>\n    <p style="line-height:1.75">' + f"{emphasized(digest['overview'])}" + '</p>\n    <p style="color:#475569">检索 ' + f"{stats['retrieved']}" + ' · 去重 ' + f"{stats['unique']}" + ' · 候选 ' + f"{stats['candidates']}" + ' · 重点 ' + f"{stats['focus']}" + ' · 潜在 ' + f"{stats['watch']}" + _report_category_text(' · cs.CV 余项 ') + f"{stats['cv_remainder']}" + '</p>\n  </section>\n  <section style="background:#fff;border-radius:12px;padding:18px;margin:16px 0">\n    <h2 style="margin-top:0">今日优先阅读顺序</h2><ol>' + f"{html_list(digest['reading_order'])}" + '</ol>\n  </section>\n  <h2>重点推荐论文</h2>' + f'{focus}' + '\n  <h2>潜在关注论文</h2>' + f'{watch}' + '\n  <section style="background:#fff;border-radius:12px;padding:18px;margin:16px 0">\n    <h2 style="margin-top:0">今日研究趋势</h2><ul>' + f"{html_list(digest['trends'])}" + '</ul>\n  </section>\n  <section style="background:#fff;border-radius:12px;padding:18px;margin:16px 0">\n    <h2 style="margin-top:0">对当前研究的可执行启发</h2><ul>' + f"{html_list(digest['actionable_insights'])}" + _report_category_text('</ul>\n  </section>\n  <h2>当日其它 cs.CV 更新</h2>\n  <p style="color:#64748b">按相关性降序；前 50 篇展示四项摘要，其余使用紧凑格式。共 ') + f"{remainder['total']}" + ' 篇。</p>\n  ' + f'{cv_remainder}' + '\n  <section style="color:#64748b;font-size:13px;line-height:1.7">\n    <div>检索和筛选统计：retrieved=' + f"{stats['retrieved']}" + ', unique=' + f"{stats['unique']}" + ', candidates=' + f"{stats['candidates']}" + ', focus=' + f"{stats['focus']}" + ', watch=' + f"{stats['watch']}" + ', cv_remainder=' + f"{stats['cv_remainder']}" + ', excluded_hidden=' + f"{stats['excluded_hidden']}" + _report_category_text('</div>\n    <div>七类完整覆盖：') + f'{emphasized(coverage)}' + '</div>\n    <div>本次使用的 arXiv 检索工具：' + f"{emphasized(', '.join(digest['arxiv_tools']))}" + '</div>\n  </section>\n</main>\n</body>\n</html>\n')
 
 
 def markdown_paper(paper: dict[str, Any], index: int) -> str:
@@ -8284,7 +8284,7 @@ def render_markdown(digest: dict[str, Any]) -> str:
         for entry in digest["retrieval_coverage"]
     )
     tools = ", ".join(digest["arxiv_tools"])
-    return f"# arXiv Daily — {digest['date']}\n\n检索范围：{window['from']} — {window['to']}\n\n## 每日总览\n\n{digest['overview']}\n\n检索 {stats['retrieved']} 篇，去重后 {stats['unique']} 篇，初筛候选 {stats['candidates']} 篇，重点 {stats['focus']} 篇，潜在关注 {stats['watch']}{_report_category_text(' 篇，cs.CV 余项 ')}{stats['cv_remainder']} 篇。\n\n## 今日优先阅读顺序\n\n{reading or '本次无优先阅读项。'}\n\n## 重点推荐论文\n\n{focus}## 潜在关注论文\n\n{watch}## 今日研究趋势\n\n{trends or '- 本次更新没有形成可靠的新趋势判断。'}\n\n## 对当前研究的可执行启发\n\n{insights or '- 本次更新没有新增可执行启发。'}{_report_category_text('\n\n## 当日其它 cs.CV 更新\n\n按相关性降序；前 50 篇展示四项摘要，其余使用紧凑格式。共 ')}{remainder['total']} 篇。\n\n{cv_remainder}{_report_category_text('\n\n## 七类检索覆盖\n\n')}{coverage}\n\n## 检索和筛选统计\n\n- retrieved: {stats['retrieved']}\n- unique: {stats['unique']}\n- candidates: {stats['candidates']}\n- focus: {stats['focus']}\n- watch: {stats['watch']}\n- cv_remainder: {stats['cv_remainder']}\n- excluded_hidden: {stats['excluded_hidden']}\n- arXiv retrieval tools: {tools}\n"
+    return ('# arXiv Daily — ' + f"{digest['date']}" + '\n\n检索范围：' + f"{window['from']}" + ' — ' + f"{window['to']}" + '\n\n## 每日总览\n\n' + f"{digest['overview']}" + '\n\n检索 ' + f"{stats['retrieved']}" + ' 篇，去重后 ' + f"{stats['unique']}" + ' 篇，初筛候选 ' + f"{stats['candidates']}" + ' 篇，重点 ' + f"{stats['focus']}" + ' 篇，潜在关注 ' + f"{stats['watch']}" + _report_category_text(' 篇，cs.CV 余项 ') + f"{stats['cv_remainder']}" + ' 篇。\n\n## 今日优先阅读顺序\n\n' + f"{reading or '本次无优先阅读项。'}" + '\n\n## 重点推荐论文\n\n' + f'{focus}' + '## 潜在关注论文\n\n' + f'{watch}' + '## 今日研究趋势\n\n' + f"{trends or '- 本次更新没有形成可靠的新趋势判断。'}" + '\n\n## 对当前研究的可执行启发\n\n' + f"{insights or '- 本次更新没有新增可执行启发。'}" + _report_category_text('\n\n## 当日其它 cs.CV 更新\n\n按相关性降序；前 50 篇展示四项摘要，其余使用紧凑格式。共 ') + f"{remainder['total']}" + ' 篇。\n\n' + f'{cv_remainder}' + _report_category_text('\n\n## 七类检索覆盖\n\n') + f'{coverage}' + '\n\n## 检索和筛选统计\n\n- retrieved: ' + f"{stats['retrieved']}" + '\n- unique: ' + f"{stats['unique']}" + '\n- candidates: ' + f"{stats['candidates']}" + '\n- focus: ' + f"{stats['focus']}" + '\n- watch: ' + f"{stats['watch']}" + '\n- cv_remainder: ' + f"{stats['cv_remainder']}" + '\n- excluded_hidden: ' + f"{stats['excluded_hidden']}" + '\n- arXiv retrieval tools: ' + f'{tools}' + '\n')
 
 
 def render_reports(root: Path, digest: dict[str, Any]) -> dict[str, Path]:

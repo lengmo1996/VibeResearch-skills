@@ -3,6 +3,14 @@
 
   const ERROR_TEXT = /^(?:error\b|tool error\b|mcp .*error\b|exception\b|failed\b|failure\b|unauthorized\b|forbidden\b|permission denied\b|invalid request\b|rate limit(?:ed)?\b|internal server error\b)/i;
   const PYTHON_OUTPUT_TOKENS = 4000;
+  // 24,000 source bytes produce 32,000 base64 characters.  Keep attachment
+  // transport budgets separate from the small receipt/attestation JSON budget.
+  const MIME_CHUNK_BYTES = 24000;
+  const MIME_CHUNK_OUTPUT_TOKENS = Object.freeze([12000, 24000, 48000]);
+  const HTML_MAX_BYTES = 90000;
+  const PDF_MAX_BYTES = 10 * 1024 * 1024;
+  const MIME_OUTPUT_TRUNCATION =
+    /\b(?:\d+\s+(?:tokens?|characters?|chars?|bytes?|lines?)\s+(?:truncated|omitted)|(?:output|content)\s+(?:was\s+)?truncated|truncated\s+(?:output|content)|(?:output|content)\s+omitted)\b/i;
   const MAX_SEND_ATTEMPTS = 2;
   const SEND_OBSERVATION_DELAYS_MS = Object.freeze([0, 2000, 5000]);
   // Connector throws are safe to retry only for side-effect-free reads.
@@ -1589,6 +1597,232 @@
     return `'${String(value).replaceAll("'", "''")}'`;
   }
 
+  function mimePreparationError(failureCode, detail, stage = "mime_prepare") {
+    const error = new GmailBridgeError(failureCode, detail);
+    error.failureStage = stage;
+    return error;
+  }
+
+  function validateMimePreparationContext(context) {
+    const reject = () => {
+      throw mimePreparationError(
+        "local_mime_manifest_invalid",
+        "MIME preparation requires a validated single HTML and PDF delivery manifest",
+      );
+    };
+    if (!context || typeof context !== "object") reject();
+    for (const field of ["pythonExe", "scriptPath", "workdir"]) {
+      if (!nonEmptyString(context[field]) || /[\x00\r\n]/.test(context[field])) {
+        reject();
+      }
+    }
+    if (context.publicConfigPath !== undefined && (
+      !nonEmptyString(context.publicConfigPath) || /[\x00\r\n]/.test(context.publicConfigPath)
+    )) reject();
+    const manifest = context.manifest;
+    if (
+      !manifest || typeof manifest !== "object" || Array.isArray(manifest) ||
+      manifest.validated !== true ||
+      manifest.delivery_format !== "html_pdf_single" ||
+      manifest.message_count !== 1 || manifest.attachment_count !== 1 ||
+      manifest.mime_chunk_bytes !== MIME_CHUNK_BYTES ||
+      !nonEmptyString(manifest.pdf_filename) ||
+      /[\x00-\x1f\x7f/\\]/.test(manifest.pdf_filename) ||
+      manifest.pdf_filename === "." || manifest.pdf_filename === ".."
+    ) reject();
+    for (const [kind, limit] of [["html", HTML_MAX_BYTES], ["pdf", PDF_MAX_BYTES]]) {
+      if (
+        !nonEmptyString(manifest[`${kind}_path`]) ||
+        /[\x00\r\n]/.test(manifest[`${kind}_path`]) ||
+        !Number.isSafeInteger(manifest[`${kind}_bytes`]) ||
+        manifest[`${kind}_bytes`] <= 0 || manifest[`${kind}_bytes`] > limit ||
+        typeof manifest[`${kind}_sha256`] !== "string" ||
+        !/^[0-9a-f]{64}$/.test(manifest[`${kind}_sha256`])
+      ) reject();
+    }
+    if (manifest.pdf_path.split(/[\\/]/).at(-1) !== manifest.pdf_filename) reject();
+    // Snapshot only validated scalar inputs before the first asynchronous read.
+    return Object.freeze({
+      pythonExe: context.pythonExe,
+      scriptPath: context.scriptPath,
+      workdir: context.workdir,
+      publicConfigPath: context.publicConfigPath,
+      manifest: Object.freeze({
+        html_path: manifest.html_path,
+        html_bytes: manifest.html_bytes,
+        html_sha256: manifest.html_sha256,
+        pdf_path: manifest.pdf_path,
+        pdf_bytes: manifest.pdf_bytes,
+        pdf_sha256: manifest.pdf_sha256,
+        pdf_filename: manifest.pdf_filename,
+      }),
+    });
+  }
+
+  function validMimeChunkBase64(value, byteCount) {
+    if (
+      typeof value !== "string" ||
+      value.length !== 4 * Math.ceil(byteCount / 3) ||
+      !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value)
+    ) return false;
+    const remainder = byteCount % 3;
+    const padding = remainder === 0 ? 0 : 3 - remainder;
+    if (
+      (padding === 0 && value.endsWith("=")) ||
+      (padding === 1 && (!value.endsWith("=") || value.endsWith("=="))) ||
+      (padding === 2 && !value.endsWith("=="))
+    ) return false;
+    // Require canonical pad bits as well as alphabet, size and padding count.
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    if (padding > 0) {
+      const last = alphabet.indexOf(value[value.length - padding - 1]);
+      if ((last & (padding === 2 ? 15 : 3)) !== 0) return false;
+    }
+    return true;
+  }
+
+  async function runMimeChunkRead(context, kind, offset, outputTokens) {
+    const {pythonExe, scriptPath, workdir, publicConfigPath, manifest} = context;
+    const shellCommand =
+      `& ${quotePowerShell(pythonExe)} -B ${quotePowerShell(scriptPath)}` +
+      (publicConfigPath === undefined ? "" : ` --public-config ${quotePowerShell(publicConfigPath)}`) +
+      ` mime-chunk --path ${quotePowerShell(manifest[`${kind}_path`])}` +
+      ` --expected-size ${manifest[`${kind}_bytes`]}` +
+      ` --expected-sha256 ${quotePowerShell(manifest[`${kind}_sha256`])}` +
+      ` --offset ${offset} --max-bytes ${MIME_CHUNK_BYTES}` +
+      "; exit $LASTEXITCODE";
+    const processError = () => mimePreparationError(
+      "local_mime_chunk_process_error",
+      "Attested MIME chunk reader did not complete successfully",
+      "mime_chunk_read",
+    );
+    let current;
+    let output = "";
+    let truncated = false;
+    let sessionId;
+    const collect = result => {
+      if (
+        !result || typeof result !== "object" ||
+        typeof result.output !== "string" || failureOf(result) !== null
+      ) throw processError();
+      if (result.session_id !== undefined) {
+        if (
+          !Number.isSafeInteger(result.session_id) || result.session_id <= 0 ||
+          (sessionId !== undefined && sessionId !== result.session_id)
+        ) throw processError();
+        sessionId = result.session_id;
+      }
+      output += result.output;
+      truncated ||= result.truncated === true || result.output_truncated === true ||
+        MIME_OUTPUT_TRUNCATION.test(result.output);
+      return result;
+    };
+    try {
+      current = collect(await tools.exec_command({
+        cmd: shellCommand,
+        workdir,
+        shell: "powershell",
+        login: false,
+        tty: false,
+        yield_time_ms: 30000,
+        max_output_tokens: outputTokens,
+      }));
+      // Drain this exact process before considering a fresh read.  An unfinished
+      // session, connector/tool exception, or nonzero exit is never a retry cue.
+      for (let poll = 0; current.exit_code === undefined && poll < 15; poll += 1) {
+        if (sessionId === undefined) throw processError();
+        current = collect(await tools.write_stdin({
+          session_id: sessionId,
+          chars: "",
+          yield_time_ms: 10000,
+          max_output_tokens: outputTokens,
+        }));
+      }
+    } catch {
+      throw processError();
+    }
+    if (current.exit_code !== 0) throw processError();
+    return {output, truncated: truncated || MIME_OUTPUT_TRUNCATION.test(output)};
+  }
+
+  async function readMimeArtifact(context, kind) {
+    const expectedSize = context.manifest[`${kind}_bytes`];
+    const chunks = [];
+    let offset = 0;
+    while (offset < expectedSize) {
+      let result;
+      for (const outputTokens of MIME_CHUNK_OUTPUT_TOKENS) {
+        result = await runMimeChunkRead(context, kind, offset, outputTokens);
+        if (!result.truncated) break;
+      }
+      if (result.truncated) {
+        throw mimePreparationError(
+          "local_mime_chunk_output_truncated",
+          "Attested MIME chunk output remained truncated after bounded read-only recovery",
+          "mime_chunk_read",
+        );
+      }
+      const invalid = () => mimePreparationError(
+        "local_mime_chunk_invalid",
+        "Attested MIME chunk failed JSON, offset, length, EOF or base64 validation",
+        "mime_chunk_read",
+      );
+      let chunk;
+      try {
+        // Never salvage a JSON-looking substring from terminal noise or errors.
+        chunk = JSON.parse(result.output);
+      } catch {
+        throw invalid();
+      }
+      const expectedBytes = Math.min(MIME_CHUNK_BYTES, expectedSize - offset);
+      if (
+        !chunk || typeof chunk !== "object" || Array.isArray(chunk) ||
+        Object.keys(chunk).sort().join(",") !== "base64,bytes,eof,next_offset,offset" ||
+        chunk.offset !== offset || chunk.bytes !== expectedBytes ||
+        chunk.next_offset !== offset + expectedBytes ||
+        chunk.eof !== (offset + expectedBytes === expectedSize) ||
+        !validMimeChunkBase64(chunk.base64, expectedBytes)
+      ) throw invalid();
+      chunks.push(chunk.base64);
+      offset = chunk.next_offset;
+    }
+    // All nonfinal reads have a size divisible by three, so concatenation never
+    // places base64 padding inside the payload.  Each source was SHA-256 checked
+    // by the Python reader on every read, including any truncation recovery.
+    const encoded = chunks.join("");
+    if (offset !== expectedSize || encoded.length !== 4 * Math.ceil(expectedSize / 3)) {
+      throw mimePreparationError(
+        "local_mime_chunk_invalid",
+        "Attested MIME artifact total length does not match its manifest",
+        "mime_chunk_read",
+      );
+    }
+    return encoded.replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
+  }
+
+  async function prepareMimePayload(input) {
+    const context = validateMimePreparationContext(input);
+    const html = await readMimeArtifact(context, "html");
+    const pdf = await readMimeArtifact(context, "pdf");
+    return {
+      mime_type: "multipart/mixed",
+      parts: [
+        {
+          mime_type: "text/html",
+          charset: "utf-8",
+          content_disposition: "inline",
+          body: {base64_url_content: html},
+        },
+        {
+          mime_type: "application/pdf",
+          filename: context.manifest.pdf_filename,
+          content_disposition: "attachment",
+          body: {base64_url_content: pdf},
+        },
+      ],
+    };
+  }
+
   function asciiJson(value) {
     return JSON.stringify(value).replace(
       /[^\x00-\x7f]/g,
@@ -2297,11 +2531,15 @@
       if (nonEmptyString(error.receiptStage)) {
         result.receipt_stage = error.receiptStage;
       }
+      if (["mime_prepare", "mime_chunk_read"].includes(error.failureStage)) {
+        result.failure_stage = error.failureStage;
+      }
       return result;
     }
     return {
-      failure_code: "gmail_connector_call_error",
-      failure_detail: "Gmail orchestration failed without a verified connector result",
+      failure_code: "local_orchestration_error",
+      failure_detail: "Local delivery orchestration failed without a classified result",
+      failure_stage: "orchestration",
     };
   }
 
@@ -2310,6 +2548,7 @@
     requireToolSuccess,
     callGmail,
     getProfile,
+    prepareMimePayload,
     createDraft,
     updateDraft,
     requireDraftBinding,

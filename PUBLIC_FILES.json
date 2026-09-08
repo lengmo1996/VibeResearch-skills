@@ -689,6 +689,7 @@
     "tests/skills/test_tool_zotero_pdf_ingestion.py",
     "tests/skills/test_visual_research_artifact_generation.py",
     "tests/skills/test_visual_spec_completion.py",
+    "tests/test_daily_digest_mime_preparation.py",
     "tests/test_daily_digest_public.py",
     "tests/test_public_distribution.py",
     "tests/test_public_provenance.py"

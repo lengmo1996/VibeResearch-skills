@@ -1,6 +1,7 @@
 """Offline checks against the actual configurable public Daily Digest runtime."""
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 import shutil
@@ -707,6 +708,95 @@ else:
                                  str(self.scripts / "daily_digest_gmail_bridge.js")],
                                 cwd=self.directory, capture_output=True, text=True, timeout=30)
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+
+    def test_mime_bridge_passes_configuration_to_real_public_chunk_reader(self):
+        root = self.state_root("state's $config")
+        config_path = self.write_config(root, self.config(root, categories=["math.PR"]))
+        initialized = self.cli("daily_digest_runtime.py", "init", "--root", str(root))
+        self.assertEqual(0, initialized.returncode, initialized.stdout + initialized.stderr)
+        html = "<html>合成离线附件测试</html>".encode("utf-8")
+        pdf = b"%PDF-1.4\n% Synthetic MIME fixture\n" + bytes(range(251)) * 195
+        html_path, pdf_path = root / "body.html", root / "arxiv-daily-fixture.pdf"
+        html_path.write_bytes(html)
+        pdf_path.write_bytes(pdf)
+        manifest = {
+            "validated": True, "delivery_format": "html_pdf_single",
+            "message_count": 1, "attachment_count": 1, "mime_chunk_bytes": 24000,
+            "html_path": str(html_path), "html_bytes": len(html),
+            "html_sha256": hashlib.sha256(html).hexdigest(),
+            "pdf_path": str(pdf_path), "pdf_bytes": len(pdf),
+            "pdf_sha256": hashlib.sha256(pdf).hexdigest(), "pdf_filename": pdf_path.name,
+        }
+        fixture = {
+            "pythonExe": sys.executable,
+            "scriptPath": str(self.scripts / "daily_digest_delivery.py"),
+            "workdir": str(self.directory), "publicConfigPath": str(config_path),
+            "manifest": manifest,
+        }
+        (self.directory / "mime-input.json").write_text(json.dumps(fixture), encoding="utf-8")
+        self.node(r"""
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const {spawnSync} = require('node:child_process');
+const fixture = JSON.parse(fs.readFileSync('mime-input.json', 'utf8'));
+const launcher = [
+  'import pathlib,runpy,socket,sys,urllib.request',
+  "def denied(*args, **kwargs): raise AssertionError('Live network is forbidden in MIME preparation tests')",
+  'socket.create_connection = denied',
+  'urllib.request.urlopen = denied',
+  'script = sys.argv.pop(1)',
+  'sys.path.insert(0, str(pathlib.Path(script).parent))',
+  "runpy.run_path(script, run_name='__main__')",
+].join('\n');
+let reads = 0;
+global.tools = {
+  async exec_command(input) {
+    // Decode only the checked helper's quoted command shape; CI needs no PowerShell.
+    const suffix = '; exit $LASTEXITCODE';
+    assert.ok(input.cmd.startsWith('& ') && input.cmd.endsWith(suffix));
+    const command = input.cmd.slice(2, -suffix.length);
+    const tokens = command.match(/'(?:[^']|'')*'|[^\s]+/g).map(value =>
+      value.startsWith("'") ? value.slice(1, -1).replaceAll("''", "'") : value);
+    assert.equal(tokens[0], fixture.pythonExe);
+    assert.equal(tokens[1], '-B');
+    assert.equal(tokens[2], fixture.scriptPath);
+    assert.deepEqual(tokens.slice(3, 6), ['--public-config', fixture.publicConfigPath, 'mime-chunk']);
+    assert.equal(input.workdir, fixture.workdir);
+    assert.ok(input.max_output_tokens >= 12000);
+    const run = args => spawnSync(tokens[0], ['-I', '-B', '-X', 'utf8', '-c', launcher, ...args], {
+      cwd: input.workdir, encoding: 'utf8', timeout: 10000, maxBuffer: 1024 * 1024,
+    });
+    if (reads === 0) {
+      const denied = run([tokens[2], ...tokens.slice(5)]);
+      assert.ifError(denied.error);
+      assert.notEqual(denied.status, 0, 'Rootless public reader accepted missing configuration');
+      assert.match(denied.stdout + denied.stderr, /public_digest_not_configured/);
+    }
+    reads++;
+    const result = run(tokens.slice(2));
+    assert.ifError(result.error);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    return {exit_code: result.status, output: result.stdout};
+  },
+};
+const readChunk = global.tools.exec_command;
+global.tools.exec_command = async input => {
+  try { return await readChunk(input); }
+  catch (error) { console.error(error); throw error; }
+};
+// No Gmail tools exist in this process: MIME preparation must use only local reads.
+const bridge = eval(fs.readFileSync(process.argv[1], 'utf8'));
+(async () => {
+  const payload = await bridge.prepareMimePayload(fixture);
+  assert.equal(payload.mime_type, 'multipart/mixed');
+  assert.equal(payload.parts.length, 2);
+  for (const [index, kind] of ['html', 'pdf'].entries()) {
+    assert.deepEqual(Buffer.from(payload.parts[index].body.base64_url_content, 'base64url'),
+                     fs.readFileSync(fixture.manifest[kind + '_path']));
+  }
+  assert.equal(reads, 4, 'Fixture must exercise a complete multi-chunk attachment');
+})().catch(error => { console.error(error); process.exitCode = 1; });
+""")
 
     def test_direct_send_is_inert_without_the_verified_transaction_path(self):
         self.node("""

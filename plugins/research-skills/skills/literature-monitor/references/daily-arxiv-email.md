@@ -285,7 +285,8 @@ Start both Gmail phases with
 returns `Script running with cell ID ...`, repeatedly collect that same cell with
 `functions.wait` until it completes; a yielded cell is not a delivery failure and is
 never a reason to abandon the transaction. Never print body, PDF, MIME, or connector
-payload data.
+payload data. This 4,000-token allowance is only for the outer compact summary; it
+must never be reused as the output budget of an inner base64-reading command.
 
 Load `scripts/daily_digest_gmail_bridge.js` and never call a Gmail connector outside
 the returned `bridge` object. Its gate rejects every connector result whose top-level
@@ -293,9 +294,48 @@ the returned `bridge` object. Its gate rejects every connector result whose top-
 used. `bridge.callGmail` always requires operation-specific success validation; use
 the typed `bridge.createDraft`, `bridge.updateDraft`, and recovery send methods so
 Draft IDs, underlying message IDs, and SENT IDs cannot be mixed. Use
-`daily_digest_delivery.py mime-chunk` only inside the preparation phase to read
-attested 24,000-byte chunks and assemble the connector's structured multipart MIME
-tree in memory.
+`bridge.prepareMimePayload({pythonExe: DigestPython, scriptPath, workdir, manifest,
+publicConfigPath: ConfigPath})` as the sole MIME preparation entry point, inside the
+first phase and only after exact-subject SENT reconciliation permits Draft creation
+or repair. Here `scriptPath` is the installed `daily_digest_delivery.py`, `manifest`
+is the validated delivery manifest object, and `ConfigPath` is the actual user's
+unchanged configuration bound to this state root. The public runtime requires
+`publicConfigPath` so every rootless chunk command receives `--public-config` before
+the subcommand. The helper reads and validates the attested HTML/PDF chunks and
+returns the connector's structured multipart MIME payload in memory. Never print
+its return value, call `mime-chunk` directly from a delivery wrapper, or improvise a
+`JSON.parse`/base64 assembly loop.
+
+The helper owns 24,000-byte chunk reads and the inner `tools.exec_command` output
+budgets: start at 12,000 tokens, and on detected output truncation automatically reread
+the same source part and offset at 24,000, then 48,000 tokens. A truncated attempt must
+not append bytes or advance the offset. Successful recovery continues the same
+preparation phase through Draft attestation and proof preparation; do not stop the
+transaction or ask for a rerun after a recoverable local output-limit failure. These
+are bounded read-only local retries, independent of Gmail retries or send attempts.
+Source/hash drift, invalid manifest/chunk fields, and other integrity failures remain
+fail-closed; increasing an output budget cannot repair them. If recovery is exhausted,
+report the specific local MIME failure and preserve pending state. Never relabel a
+local command, parse, or MIME-integrity error as `gmail_connector_call_error`.
+
+For the new-Draft branch, after exact SENT has been ruled out and the authenticated
+profile checked, use this local fragment within phase one:
+
+```javascript
+const payload = await bridge.prepareMimePayload({
+  pythonExe: DigestPython, scriptPath, workdir, manifest,
+  publicConfigPath: ConfigPath,
+});
+const draft = await bridge.createDraft({
+  to: profile.email, subject: manifest.subject, payload,
+});
+```
+
+Continue with `bridge.attestRaw`, `bridge.recordReceipt`, and
+`bridge.prepareVerifiedDraftSend` under the existing gates; only the final compact
+proof may reach `text()`. A recorded Draft is recovered and attested first, and only
+a validated content-transfer mismatch permits preparing a payload to update that
+same Draft once.
 
 The checked bridge gives public read-only Gmail operations three attempts total when
 the connector throws before returning a result, with 2/5-second delays after the
@@ -601,8 +641,23 @@ Use two bounded functions.exec delivery phases per announcement date. Prefix eac
 phase with `// @exec: {"yield_time_ms": 120000, "max_output_tokens": 4000}`; if it
 yields a running cell, call functions.wait on that same cell until completion instead
 of stopping. In phase one, load daily_digest_gmail_bridge.js, perform exact-subject
-SENT reconciliation, create
-or recover the Draft, run bridge.attestRaw, persist the live draft_verified receipt,
+SENT reconciliation, then create or recover the Draft. For creation or a permitted
+content-transfer repair, obtain the in-memory payload only through
+bridge.prepareMimePayload({pythonExe: DigestPython, scriptPath, workdir, manifest,
+publicConfigPath: ConfigPath}), where manifest is the validated delivery manifest
+object, scriptPath points to daily_digest_delivery.py, and ConfigPath is the actual
+user's unchanged configuration bound to this state root. The publicConfigPath binding
+supplies --public-config before every rootless mime-chunk subcommand. Use
+bridge.createDraft({to: profile.email, subject: manifest.subject, payload}) for a new
+Draft. Never print that payload or write an ad hoc mime-chunk/JSON.parse/base64
+assembler. The helper owns 24,000-byte chunk reads and inner tools.exec_command
+budgets of 12,000, 24,000, then 48,000 tokens; on detected output truncation it
+automatically rereads the same chunk before advancing. The outer phase's 4,000-token
+compact-output limit never applies to those inner reads. A recovered read continues
+this same phase without asking for a rerun or consuming any send attempt.
+Integrity/manifest/hash failures remain fail-closed; exhausted local MIME recovery
+reports its own failure, never gmail_connector_call_error. Run bridge.attestRaw,
+persist the live draft_verified receipt,
 then call bridge.prepareVerifiedDraftSend with authorization scope
 daily_arxiv_email_to_authenticated_self. Output only its compact proof, including the
 literal authenticated destination, exact subject, Draft/message IDs, HTML/PDF sizes
