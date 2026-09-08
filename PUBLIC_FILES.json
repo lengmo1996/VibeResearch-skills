@@ -1,5 +1,6 @@
 {
   "files": [
+    ".gitattributes",
     ".github/workflows/validate.yml",
     ".gitignore",
     "AGENTS.md",
