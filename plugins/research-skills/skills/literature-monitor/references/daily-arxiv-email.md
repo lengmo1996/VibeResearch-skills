@@ -115,6 +115,14 @@ preflight stops before Gmail, transaction-state, or cursor mutation. This gate m
 construct `ZoneInfo("America/New_York")`; finding a package name or passing
 `--version` alone is insufficient.
 
+For a recurring task, the user may explicitly authorize the
+`runtime_expected_listing_date` rule documented in `daily-run-template.md`.
+After initial preflights and before the first status call, resolve that rule once
+using this runtime's `expected_announcement_date()`; do not infer authorization
+from the example or recompute the bound during this invocation. A single-invocation
+recovery retains its original horizon. This does not change availability, recovery,
+receipt, send-authorization or commit rules.
+
 Use the actual user's authorized arXiv listing-date upper bound (`YYYY-MM-DD`) as
 the immutable backlog horizon and requested run key. Fix that horizon before the
 first transaction-status call; it is not an arbitrary timezone's local "today".

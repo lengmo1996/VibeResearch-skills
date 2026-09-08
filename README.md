@@ -72,6 +72,11 @@ under your own private digest root. The included
 [run prompt](skills/global/literature-monitor/references/daily-run-template.md)
 binds your paths, categories, report category, interests, Python, MCP capabilities and actual authorization; it
 requires the [complete transaction protocol](skills/global/literature-monitor/references/daily-arxiv-email.md).
+For Windows Codex App users, the setup guide walks through fixed directories,
+dependencies, a complete example configuration, Codex MCP TOML, a no-send check,
+a first manual run, and Scheduled setup. The run template includes a separate
+Chinese daily Scheduled prompt with an explicitly selectable runtime-based date
+rule; fill its private bindings before submitting it as your task instruction.
 Copying the prompt or setting `configured: true` is not authorization to send.
 
 You supply these components:
