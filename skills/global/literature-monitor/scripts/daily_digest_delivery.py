@@ -4012,7 +4012,7 @@ def main() -> int:
     runtime.configure_public_cli(args)
     if args.command == "preflight":
         result = delivery_preflight()
-        print(json.dumps(result, ensure_ascii=False))
+        print(json.dumps(result, ensure_ascii=True, separators=(",", ":")))
         return 0 if result["ready"] else 3
     if args.command == "mime-chunk":
         result = read_attested_chunk(args.path, expected_size=args.expected_size, expected_sha256=args.expected_sha256, offset=args.offset, max_bytes=args.max_bytes)
@@ -4021,7 +4021,10 @@ def main() -> int:
         result = attest_gmail_raw_stream(
             args.root, args.manifest, args.stage, sys.stdin.buffer
         )
-        print(json.dumps(result, ensure_ascii=False))
+        # This is a machine protocol, including when carried over a Windows
+        # PTY. Literal wide characters can acquire padding at terminal wraps;
+        # ASCII JSON escapes preserve their exact value after JSON decoding.
+        print(json.dumps(result, ensure_ascii=True, separators=(",", ":")))
         return 0 if result["ok"] else 4
     elif args.command == "record-receipt-stdin":
         prepare_framed_stdin()

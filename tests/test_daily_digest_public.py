@@ -228,7 +228,7 @@ import daily_digest_config as config
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
         return result.stdout
 
-    def cli(self, filename, *arguments):
+    def cli(self, filename, *arguments, stdin_text=None):
         launcher = (
             "import runpy,sys; directory=sys.argv.pop(1); filename=sys.argv.pop(1); "
             "sys.path.insert(0,directory); runpy.run_path(directory+'/'+filename,run_name='__main__')"
@@ -236,7 +236,8 @@ import daily_digest_config as config
         return subprocess.run(
             [sys.executable, "-I", "-B", "-X", "utf8", "-c", launcher,
              str(self.scripts), filename, *arguments],
-            cwd=self.directory, capture_output=True, text=True, timeout=45,
+            cwd=self.directory, input=stdin_text, capture_output=True, text=True,
+            encoding="utf-8", timeout=45,
         )
 
     def test_packaged_runtime_uses_its_own_shared_client(self):
@@ -326,6 +327,86 @@ assert not list(Path(data['root']).iterdir())
         self.assertIn(checked.returncode, {0, 3}, checked.stdout + checked.stderr)
         self.assertIsInstance(json.loads(checked.stdout)["ready"], bool)
         self.assertEqual({CONFIG_NAME}, {path.name for path in root.iterdir()})
+
+    def test_raw_attestation_cli_preserves_unicode_subject_through_public_receipt(self):
+        import base64
+        import email.policy
+        from email.message import EmailMessage
+
+        root = self.state_root("unicode-receipt")
+        self.write_config(root, self.config(root, categories=["math.PR"]))
+        initialized = self.cli("daily_digest_runtime.py", "init", "--root", str(root))
+        self.assertEqual(0, initialized.returncode, initialized.stdout + initialized.stderr)
+        directory = root / "deliveries"
+        directory.mkdir(exist_ok=True)
+        html, pdf = "<html>合成主题往返测试</html>".encode("utf-8"), b"%PDF-1.4\nSynthetic fixture\n"
+        html_path, pdf_path = directory / "body.html", directory / "fixture.pdf"
+        html_path.write_bytes(html)
+        pdf_path.write_bytes(pdf)
+        subject = "[arXiv Daily] 中文  双空格\u00a0保留\u3000间距"
+        manifest = {
+            "schema_version": 4, "coverage_policy": "configured-categories-summary-pdf-v4",
+            "delivery_format": "html_pdf_single", "message_count": 1,
+            "attachment_count": 1, "validated": True, "subject": subject,
+            "pdf_filename": pdf_path.name, "html_path": str(html_path), "pdf_path": str(pdf_path),
+            "html_bytes": len(html), "pdf_bytes": len(pdf),
+            "html_sha256": hashlib.sha256(html).hexdigest(),
+            "pdf_sha256": hashlib.sha256(pdf).hexdigest(),
+            "expected_html_ids": [], "expected_pdf_ids": [], "selected_field_labels": [],
+        }
+        manifest_path = directory / "arxiv-daily-2026-07-28-delivery.json"
+        manifest_path.write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
+        message = EmailMessage()
+        message["Subject"], message["From"], message["To"] = subject, "reader@example.org", "reader@example.org"
+        message.make_mixed()
+        for content_type, disposition, content in (
+            ('text/html; charset="utf-8"', "inline", html),
+            ("application/pdf", 'attachment; filename="fixture.pdf"', pdf),
+        ):
+            part = EmailMessage()
+            part["Content-Type"], part["Content-Disposition"] = content_type, disposition
+            part["Content-Transfer-Encoding"] = "base64"
+            part.set_payload(base64.b64encode(content).decode("ascii"))
+            message.attach(part)
+        raw = base64.urlsafe_b64encode(message.as_bytes(policy=email.policy.SMTP)).decode("ascii").rstrip("=")
+        metadata = json.dumps({
+            "message_id": "synthetic-message", "expected_message_id": "synthetic-message",
+            "draft_id": "synthetic-draft", "label_ids": ["DRAFT"], "profile_email": "reader@example.org",
+        }, ensure_ascii=True, separators=(",", ":"))
+        frame = f"DAXGMR2 {len(metadata)} {len(raw)} 8192;\n{metadata}\n{raw}\n"
+        arguments = ("--root", str(root), "--manifest", str(manifest_path))
+        attested = self.cli("daily_digest_delivery.py", "attest-gmail-raw", *arguments,
+                            "--stage", "draft", stdin_text=frame)
+        self.assertEqual(0, attested.returncode, attested.stdout + attested.stderr)
+        self.assertTrue(attested.stdout.isascii(), "Framed CLI output exposed Unicode to terminal decoding")
+        output = attested.stdout.splitlines()[-1]
+        value = json.loads(output)
+        self.assertEqual(output, json.dumps(value, ensure_ascii=True, separators=(",", ":")))
+        self.assertEqual(subject, value["subject"])
+        self.assertEqual("draft_verified", value["stage"])
+
+        def record(receipt_value):
+            payload = json.dumps(receipt_value, ensure_ascii=True, separators=(",", ":"))
+            return self.cli("daily_digest_delivery.py", "record-receipt-stdin", *arguments,
+                            stdin_text=f"DAXRCP1 {len(payload)};\n{payload}\n")
+
+        recorded = record(value)
+        self.assertEqual(0, recorded.returncode, recorded.stdout + recorded.stderr)
+        self.assertTrue(recorded.stdout.isascii())
+        receipt = json.loads(recorded.stdout.splitlines()[-1])
+        self.assertEqual(subject, receipt["subject"])
+        for key in ("html_sha256", "pdf_sha256", "gmail_draft_id", "gmail_draft_message_id"):
+            self.assertEqual(value[key], receipt[key])
+        receipt_path = Path(receipt["receipt"])
+        receipt_bytes = receipt_path.read_bytes()
+        self.assertEqual(subject, json.loads(receipt_bytes)["subject"])
+        for changed_subject in (subject.replace("中文", "??"), subject.replace("  ", " "),
+                                subject.replace("\u00a0", " "), subject.replace("\u3000", " ")):
+            with self.subTest(changed_subject=changed_subject):
+                denied = record({**value, "subject": changed_subject})
+                self.assertNotEqual(0, denied.returncode)
+                self.assertIn("delivery receipt identity mismatch: subject", denied.stdout + denied.stderr)
+                self.assertEqual(receipt_bytes, receipt_path.read_bytes())
 
     def test_configuration_alone_cannot_mint_a_send_proof(self):
         root = self.state_root()
