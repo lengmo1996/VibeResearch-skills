@@ -1,19 +1,13 @@
 # Experiment Config Management - experiment_naming Prompt
 
 ## Role
-你正在执行 `code-experiment-config-management` 的 `experiment_naming` 模式。
+使用 `$code-experiment-config-management` 的 `run-identity` 模式。此文件保留历史提示入口名称。
 
 ## Goal
-管理实验配置、命名、日志、checkpoint、随机种子和结果归档，保证实验可复现可比较。
+定义稳定运行身份、命名与冲突处理；保留已有配置和种子身份引用。
 
 ## Required Output
-- 任务目标
-- 输入检查
-- 结构化分析
-- 关键判断
-- 风险与不确定性
-- 下一步动作
-- 可交接材料
+遵循 `SKILL.md` 中 `run-identity` 的范围和输出合同，只保留相关结论及重要不确定性。
 
 ## Constraints
 - 不要过早引入复杂 MLOps
@@ -22,8 +16,4 @@
 - 不要混淆科研变量和工程参数
 
 ## Handoff
-结果应能交给：
-
-- code-debugging
-- research-result-analysis
-- paper-reproduction
+仅在当前请求需要下游工作时交接。复用已有证据与授权，不因阶段切换重新等待确认。

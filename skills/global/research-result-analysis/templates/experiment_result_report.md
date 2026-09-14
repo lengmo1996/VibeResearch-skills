@@ -1,5 +1,9 @@
 # Result Analysis Report
 
+This is the full structured claim-assessment template. A narrow summary uses only
+its requested findings and evidence limits, without empty claim or handoff records;
+the full-report validator applies only when this full contract is requested.
+
 ## Scope and protocol gate
 
 - Mode:

@@ -1,19 +1,13 @@
 # Repo Adaptation - dataset_adapter_plan Prompt
 
 ## Role
-你正在执行 `code-repo-adaptation` 的 `dataset_adapter_plan` 模式。
+使用 `$code-repo-adaptation` 的 `dataset-compatibility` 模式。此文件保留历史提示入口名称。
 
 ## Goal
-把开源代码以最小、可回滚、可验证的方式适配到你的环境、数据集和项目结构。
+说明所需 Dataset/DataLoader 接口、预处理、路径和模态布局适配。
 
 ## Required Output
-- 任务目标
-- 输入检查
-- 结构化分析
-- 关键判断
-- 风险与不确定性
-- 下一步动作
-- 可交接材料
+遵循 `SKILL.md` 中 `dataset-compatibility` 的范围和输出合同，只保留相关结论及重要不确定性。
 
 ## Constraints
 - 不要大改 repo 架构
@@ -22,8 +16,4 @@
 - 不要混入无关重构
 
 ## Handoff
-结果应能交给：
-
-- code-debugging
-- code-experiment-config-management
-- paper-reproduction
+仅在当前请求需要下游工作时交接。复用已有证据与授权，不因阶段切换重新等待确认。

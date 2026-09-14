@@ -37,6 +37,21 @@
       ],
       "mode_contracts": {
         "*": {
+          "output_sections": [
+            "Mode Analysis",
+            "Sources and Material Uncertainty"
+          ],
+          "rag_policy": "optional",
+          "side_effect_class": "read_only"
+        },
+        "full": {
+          "output_sections": [
+            "Scope and Input Quality",
+            "Mode Analysis",
+            "Evidence Ledger",
+            "Limitations and Uncertainty",
+            "Relevant Open Questions"
+          ],
           "rag_policy": "optional",
           "side_effect_class": "read_only"
         }
@@ -65,10 +80,9 @@
         "existing evidence ledger"
       ],
       "outputs": [
-        "mode-specific analysis",
-        "shared evidence ledger",
-        "limitations and uncertainty",
-        "open questions"
+        "mode-specific analysis with source locations",
+        "material limitations and uncertainty",
+        "structured evidence ledger for full reports or actual handoffs"
       ],
       "path": "skills/paper-deep-read/SKILL.md",
       "physical_group": "global",
@@ -111,7 +125,7 @@
       "workflow_steps": [
         "identify artifact quality",
         "select narrowest mode",
-        "reuse one evidence ledger",
+        "retain source locations and reuse evidence; structure a ledger only when needed",
         "separate facts from inference",
         "degrade unsupported conclusions"
       ]
@@ -350,10 +364,10 @@
       ],
       "status": "active",
       "stop_conditions": [
-        "requested mapping or candidate implementation is complete",
+        "requested mapping is complete or candidate-only request has its implementation and handoff",
         "write authorization is absent",
         "paper-to-code ambiguity blocks safe implementation",
-        "verification handoff is complete"
+        "implementation stage is complete; continue code-debugging when validation is included in the current request"
       ],
       "tools": [
         "document_reader",
@@ -1621,8 +1635,8 @@
           "prior systematic-review ledger"
         ],
         "required": [
-          "review question, scope, eligibility criteria, and declared sources",
-          "supplied corpus or authorized read-only retrieval path"
+          "review question and enough scope for a protocol draft",
+          "for executed stages, relevant protocol fields and source artifacts or authorized retrieval"
         ]
       },
       "mcp_tools": [
@@ -1640,6 +1654,10 @@
           "side_effect_class": "read_only"
         },
         "protocol": {
+          "output_sections": [
+            "Proposed Protocol",
+            "Assumptions and Unresolved Decisions"
+          ],
           "rag_policy": "optional",
           "side_effect_class": "read_only"
         }
@@ -1698,8 +1716,8 @@
       ],
       "replacement": null,
       "required_inputs": [
-        "review question, scope, eligibility criteria, and declared sources",
-        "supplied corpus or authorized read-only retrieval path"
+        "review question and enough scope for a protocol draft",
+        "for executed stages, relevant protocol fields and source artifacts or authorized retrieval"
       ],
       "role": "analysis",
       "side_effect_class": "read_only",
@@ -1725,6 +1743,7 @@
       ],
       "version": "1.1.0",
       "workflow_steps": [
+        "for protocol-only planning propose missing criteria and sources; do not invent executed review stages",
         "freeze protocol and amendments",
         "record complete source/query/date search batches",
         "deduplicate with unresolved conflicts preserved",
@@ -2538,6 +2557,32 @@
         ]
       },
       "mcp_tools": [],
+      "mode_contracts": {
+        "*": {
+          "output_sections": [
+            "Mode Findings",
+            "Evidence Limits"
+          ],
+          "rag_policy": "never",
+          "side_effect_class": "read_only"
+        },
+        "next-step": {
+          "output_sections": [
+            "Prioritized Checks",
+            "Evidence and Decision Criteria"
+          ],
+          "rag_policy": "never",
+          "side_effect_class": "read_only"
+        },
+        "summary": {
+          "output_sections": [
+            "Observed Patterns",
+            "Anomalies and Material Limits"
+          ],
+          "rag_policy": "never",
+          "side_effect_class": "read_only"
+        }
+      },
       "modes": [
         "summary",
         "claim-check",
@@ -2564,7 +2609,7 @@
       "outputs": [
         "finding summary",
         "claim support assessment",
-        "structured claim-evidence patch",
+        "claim-evidence patch for assessed upstream claims or a requested structured handoff",
         "statistical-validity and reproducibility report",
         "failure hypotheses",
         "comparability warnings",
@@ -2617,8 +2662,8 @@
         "separate observation from explanation",
         "test claim support",
         "audit statistical assumptions, multiplicity, selection, and run coverage when requested",
-        "link findings to upstream identities and project them into the shared claim-evidence contract",
-        "prioritize next checks"
+        "preserve upstream identities; project assessed upstream claims into the shared contract only when present",
+        "prioritize next checks when requested or needed to explain a blocker"
       ]
     },
     {
@@ -2882,7 +2927,7 @@
       "dependencies": [],
       "expected_cost": "medium",
       "expected_latency": "medium",
-      "failure_behavior": "Return blocked when required reproduction or assertions are unavailable; hand compatibility causes to code-repo-adaptation and verify the returned patch later.",
+      "failure_behavior": "Return blocked when required reproduction or assertions are unavailable; hand compatibility causes to code-repo-adaptation and verify the returned patch in the same task when migration and validation are authorized.",
       "handoff_to": [
         "code-repo-adaptation"
       ],
@@ -2900,6 +2945,26 @@
         ]
       },
       "mcp_tools": [],
+      "mode_contracts": {
+        "*": {
+          "output_sections": [
+            "Requested Analysis",
+            "Evidence and Uncertainty"
+          ],
+          "rag_policy": "never",
+          "side_effect_class": "authorized_workspace_write"
+        },
+        "patch-verification": {
+          "output_sections": [
+            "Target Execution",
+            "Tests and Invariant Results",
+            "Verification Verdict",
+            "Residual Risks"
+          ],
+          "rag_policy": "never",
+          "side_effect_class": "authorized_workspace_write"
+        }
+      },
       "modes": [
         "minimal-reproduction",
         "traceback",
@@ -2923,8 +2988,8 @@
         "write authorization"
       ],
       "outputs": [
-        "minimal reproduction",
-        "evidence-backed root cause",
+        "defect reproduction or candidate target execution when required",
+        "evidence-backed root cause only for diagnostic claims",
         "minimal authorized fix",
         "tests and invariant matrix",
         "verified failed or blocked verdict",
@@ -2956,10 +3021,10 @@
       ],
       "status": "active",
       "stop_conditions": [
-        "verification verdict is supported",
+        "requested diagnosis, reproduction, repair, or verification is complete",
         "fix authorization is absent",
-        "reproduction is blocked",
-        "proven cause requires compatibility migration"
+        "required target execution or defect reproduction is blocked",
+        "proven cause requires compatibility migration; continue that stage only within existing authorization"
       ],
       "tools": [
         "filesystem_read",
@@ -2978,13 +3043,12 @@
       ],
       "version": "2.0.2",
       "workflow_steps": [
-        "normalize failure or handoff",
-        "reproduce and minimize",
-        "test discriminating hypotheses",
-        "prove root cause",
-        "apply minimal authorized fix",
-        "run focused regression",
-        "issue verdict"
+        "normalize the requested diagnosis or candidate verification",
+        "for defects reproduce and minimize; for new candidates exercise target inputs",
+        "test discriminating hypotheses only for diagnosis or root-cause claims",
+        "apply minimal fix only within existing authorization",
+        "run required target and regression assertions without duplicate checks",
+        "return the requested analysis or verification verdict"
       ]
     },
     {
@@ -3015,6 +3079,79 @@
         ]
       },
       "mcp_tools": [],
+      "mode_contracts": {
+        "archive": {
+          "output_sections": [
+            "Directory and Archive Layout",
+            "Material Risks and Missing Inputs"
+          ],
+          "rag_policy": "never",
+          "side_effect_class": "authorized_workspace_write"
+        },
+        "checkpoint-resume": {
+          "output_sections": [
+            "Checkpoint and Resume Contract",
+            "Material Risks and Missing Inputs"
+          ],
+          "rag_policy": "never",
+          "side_effect_class": "authorized_workspace_write"
+        },
+        "config-tree": {
+          "output_sections": [
+            "Configuration Tree and Override Rules",
+            "Material Risks and Missing Inputs"
+          ],
+          "rag_policy": "never",
+          "side_effect_class": "authorized_workspace_write"
+        },
+        "full": {
+          "output_sections": [
+            "Configuration Tree and Override Rules",
+            "Seed and Determinism Policy",
+            "Run Naming and Identity Contract",
+            "Checkpoint and Resume Contract",
+            "Logging and Result Registry",
+            "Directory and Archive Layout",
+            "Material Risks and Missing Inputs"
+          ],
+          "rag_policy": "never",
+          "side_effect_class": "authorized_workspace_write"
+        },
+        "result-registry": {
+          "output_sections": [
+            "Logging and Result Registry",
+            "Material Risks and Missing Inputs"
+          ],
+          "rag_policy": "never",
+          "side_effect_class": "authorized_workspace_write"
+        },
+        "run-identity": {
+          "output_sections": [
+            "Run Naming and Identity Contract",
+            "Material Risks and Missing Inputs"
+          ],
+          "rag_policy": "never",
+          "side_effect_class": "authorized_workspace_write"
+        },
+        "run-lifecycle": {
+          "output_sections": [
+            "Validated Start Manifest",
+            "State Events and Artifact Inventory",
+            "Protocol Acceptance",
+            "Material Risks and Missing Inputs"
+          ],
+          "rag_policy": "never",
+          "side_effect_class": "authorized_workspace_write"
+        },
+        "seed-policy": {
+          "output_sections": [
+            "Seed and Determinism Policy",
+            "Material Risks and Missing Inputs"
+          ],
+          "rag_policy": "never",
+          "side_effect_class": "authorized_workspace_write"
+        }
+      },
       "modes": [
         "config-tree",
         "seed-policy",
@@ -3100,6 +3237,7 @@
       ],
       "version": "2.2.0",
       "workflow_steps": [
+        "execute only the selected mode steps and reuse existing lifecycle decisions",
         "separate variable classes",
         "define config precedence",
         "define seeds and run identity",
@@ -3135,6 +3273,24 @@
         ]
       },
       "mcp_tools": [],
+      "mode_contracts": {
+        "*": {
+          "output_sections": [
+            "Compatibility Findings",
+            "Material Risks"
+          ],
+          "rag_policy": "never",
+          "side_effect_class": "authorized_workspace_write"
+        },
+        "repo-understanding": {
+          "output_sections": [
+            "Relevant Repository Surfaces",
+            "Compatibility Risks"
+          ],
+          "rag_policy": "never",
+          "side_effect_class": "read_only"
+        }
+      },
       "modes": [
         "repo-understanding",
         "environment-compatibility",
@@ -3193,7 +3349,7 @@
       ],
       "status": "active",
       "stop_conditions": [
-        "candidate migration and verification handoff are complete",
+        "migration stage is complete; return for candidate-only requests or continue authorized code-debugging validation",
         "authorization is absent",
         "root cause is unrelated to compatibility"
       ],
@@ -3213,12 +3369,13 @@
       ],
       "version": "2.0.2",
       "workflow_steps": [
+        "select only the requested mode steps; produce patches and handoffs only when needed",
         "record source and target contracts",
         "map migration surfaces",
         "build compatibility matrix",
         "apply minimal authorized migration",
         "document risks and rollback",
-        "handoff verification without executing it"
+        "handoff to code-debugging and continue authorized validation in the same task"
       ]
     },
     {

@@ -61,8 +61,10 @@ and open questions, then hand off method implementation to `paper-reproduction`.
 
 1. Identify the exact supplied artifact, selected mode, readable regions, and missing
    context.
-2. Read [mode analysis protocol](references/mode-analysis-protocol.md). Create or
-   reuse one evidence ledger for the entire task; assign stable `CLM-*` IDs.
+2. Read the relevant parts of [mode analysis protocol](references/mode-analysis-protocol.md).
+   Track source locations and evidence strength. Create or reuse a structured ledger
+   and stable `CLM-*` IDs for a full report or an actual downstream handoff; a narrow
+   question may cite the source directly without a separate ledger.
 3. Extract claims, equations, labels, values, captions, and page/section anchors
    without silently normalizing them.
 4. Separate `paper states`, `supported interpretation`, and `unconfirmed inference`.
@@ -73,7 +75,7 @@ and open questions, then hand off method implementation to `paper-reproduction`.
 
 ## Evidence ledger
 
-Each material claim records:
+When a structured ledger is needed, each material claim records:
 
 ```yaml
 evidence:
@@ -93,10 +95,12 @@ their existing claim IDs instead of silently replacing the earlier interpretatio
 
 ## Output contract
 
-Every mode includes Scope and Input Quality, Mode Analysis, Evidence Ledger,
-Limitations and Uncertainty, and Open Questions. `full` additionally includes paper
-identity, problem, contributions, method flow, equations, experiments, results, and
-limitations when present in the supplied material.
+For a narrow question, return the requested analysis with source locations and
+material uncertainty, inline when sufficient. Do not manufacture open questions,
+empty ledger fields, or a handoff. `full` includes Scope and Input Quality, Mode
+Analysis, Evidence Ledger, Limitations and Uncertainty, and relevant Open Questions,
+covering paper identity, problem, contributions, method, equations, experiments, and
+results only when present in the supplied material.
 
 ## Boundaries and handoff
 

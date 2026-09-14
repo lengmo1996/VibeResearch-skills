@@ -48,21 +48,27 @@ Record omitted panels and preprocessing. Never reconstruct missing measurements.
 
 ## Compare candidates with the same content
 
-The recommender supplies two to four candidates using deck type, domain, and tone.
-Its implementation does not assess the actual audience, viewing distance, template,
-or rendered typography; those require author judgment. It also treats catalog
+Reuse a supplied template or approved direction. Otherwise choose a suitable
+conservative direction and proceed, recording material assumptions. Compare
+alternatives only when requested or when a consequential unresolved choice needs
+user input.
+
+When useful, the recommender supplies two to four candidates using deck type,
+domain, and tone. Its implementation does not assess the actual audience, viewing
+distance, template, or rendered typography; those require author judgment. It also treats catalog
 order as a tie-breaker. Record any override of the top candidate and the constraint
 that motivated it.
 
-Use the same representative content in previews: a difficult evidence slide, a
-method or explanation slide, and a navigation or summary slide are useful choices.
+When comparing alternatives, use the same representative content in previews:
+a difficult evidence slide, a method or explanation slide, and a navigation or
+summary slide are useful choices.
 This three-view selection is a local review heuristic, not a required slide count.
 Compare evidence size, annotation placement, bilingual line breaks, and reading
 order. Merely recoloring identical pages does not demonstrate distinct treatments.
 
-Choose a direction under the existing user instruction or recorded preview waiver.
-Do not invent a new approval requirement here. If a preview is due under the Skill
-workflow, make it concrete before requesting the final selection.
+Request preview selection only when the user asks for alternatives or an unresolved
+consequential choice prevents completion. Render the representative previews before
+requesting a selection; ordinary deck work needs no separate preview waiver.
 
 ## Freeze a small set of decisions
 

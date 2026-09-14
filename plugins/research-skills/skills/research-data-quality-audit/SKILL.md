@@ -1,6 +1,6 @@
 ---
 name: research-data-quality-audit
-description: "Use when profiling or auditing supplied datasets for schema violations, missingness, duplicates, identifier collisions, invalid ranges or categories, label defects, temporal inconsistencies, drift, lineage gaps, privacy-sensitive fields, or fitness for a stated research use. Produces bounded evidence, stable DQ findings, rule coverage, severity, affected scope, remediation options, and a fit/conditional/not-fit verdict without changing source data. Do not use to design future splits or metrics, perform general result interpretation, clean data automatically, or claim a sampled scan is exhaustive."
+description: "Audit supplied datasets for structural, record, label, or distribution defects and fitness for a stated research use. Return evidence, coverage limits, and remediation options without changing source data. Future split or metric design belongs to research-dataset-metric-protocols."
 ---
 
 # Research Data Quality Audit

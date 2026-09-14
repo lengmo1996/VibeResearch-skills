@@ -1,5 +1,9 @@
 # Repository Compatibility Migration
 
+Use only sections needed for the selected mode. A repository-understanding answer
+does not require implementation decisions, changed paths, or a verification request.
+Include patch/handoff sections for actual changes or an explicitly requested plan.
+
 ## Scope decision
 
 - Mode:

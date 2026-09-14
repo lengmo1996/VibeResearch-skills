@@ -1,6 +1,6 @@
 ---
 name: writing-manuscript-audit
-description: "Use when reverse-outlining, diagnosing, independently panel-reviewing, or re-auditing an academic manuscript or scoped section for argument structure, paragraph roles, language, templated prose signatures, authoring-artifact leakage, logic, terminology, formulas, table-text consistency, citation support, reviewer-facing scientific risks, or verified closure of existing audit findings. Produces an evidence-bound reverse-outline, severity-ranked audit, reviewer-panel synthesis, prose-quality diagnostic, or finding-closure ledger. Do not use when forward outlining, direct rewriting, received-review triage, AI-authorship probability or detector-evasion advice, raw-result interpretation, or submission-package compliance is primary."
+description: "Audit an academic manuscript or section for structural, language, consistency, or evidence defects; return located findings or verify prior findings. Use for diagnosis and reviewer-panel analysis, not direct rewriting or received-review triage."
 ---
 
 # Manuscript Audit

@@ -89,9 +89,10 @@ render, and visual gate; staged reading never waives a gate or authorizes a writ
    for motion, links, export, adaptation, or accessibility.
 6. Build the visual-design brief. Use `scripts/recommend_visual_system.py` when
    deterministic candidates help, and keep candidate preview content identical.
-7. Ask for a direction before a full deck unless the user waived preview or requested
-   uninterrupted execution. Under a waiver, choose the top conservative candidate
-   and record the assumption.
+7. Reuse a supplied template or approved direction. Otherwise choose a suitable
+   conservative direction and proceed, recording material assumptions. Request
+   preview selection only when the user asks for alternatives or an unresolved
+   consequential choice prevents completion.
 8. Validate the selected plan with `scripts/validate_visual_plan.py`. A valid plan is
    not proof of PPTX, PDF, font, projector, or accessibility behavior.
 

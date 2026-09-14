@@ -146,8 +146,9 @@ forwarding rules.
 
 - Do not migrate environments, dependencies, frameworks, datasets, training pipelines,
   or checkpoints; hand those to `code-repo-adaptation`.
-- Do not create a minimal reproduction, run regression tests, or issue a final pass
-  verdict; hand those to `code-debugging`.
+- Minimal reproductions, regression tests, and final pass verdicts belong to the
+  `$code-debugging` stage. Continue that stage within the same task when requested
+  implementation and validation are already authorized.
 - Do not own seed, run naming, checkpoint/resume policy, or experiment archives; hand
   those to `code-experiment-config-management`.
 - Do not claim official metric reproduction or paper equivalence from a runnable
@@ -155,5 +156,7 @@ forwarding rules.
 
 Stop when the selected analysis/discovery/map/specification is complete. Missing write
 authorization blocks only requested implementation; it does not block read-only
-analysis. For a produced candidate, stop at its verification handoff. Never claim
-the blocked remainder of a `full` request was completed.
+analysis. A produced candidate ends this stage at its verification handoff; continue
+with `$code-debugging` when the current request includes validation. A candidate-only
+request ends at the handoff. Never claim the blocked remainder of a `full` request
+was completed.

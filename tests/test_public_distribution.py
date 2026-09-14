@@ -6,7 +6,9 @@ import importlib.util
 import itertools
 import json
 from pathlib import Path
+import sys
 import unittest
+from unittest.mock import patch
 
 import jsonschema
 
@@ -23,6 +25,22 @@ def load_module(path, name):
 
 
 class PublicDistributionContracts(unittest.TestCase):
+    def test_public_routers_allow_unmatched_tasks_and_reject_excluded_skills(self):
+        validator = load_module(ROOT / "scripts/validate_public.py", "_distribution_validator")
+        for index, base in enumerate((ROOT, PLUGIN)):
+            with self.subTest(root=base.name), patch.dict(sys.modules):
+                validator._load_module(base / "scripts/skills/common.py", "common")
+                router = validator._load_module(base / "scripts/skills/router.py", f"_distribution_router_{index}")
+                entries = json.loads((base / "skills/registry.yaml").read_text(encoding="utf-8"))["skills"]
+                decision = router.route("你好", entries)
+                self.assertIsNone(decision.primary_skill)
+                self.assertEqual("", decision.mode)
+                self.assertEqual("never", decision.rag_policy)
+                self.assertEqual([], decision.mcp_calls)
+                self.assertEqual([], decision.required_tools)
+                with self.assertRaisesRegex(ValueError, "not included in this public profile: project-skill-usage-evolution"):
+                    router.route("$project-skill-usage-evolution 重新评估各类 skills 的实现和优化空间", entries)
+
     def test_upstream_license_bytes_and_attributed_files_survive_packaging(self):
         expected = {
             "LICENSES/Apache-2.0.txt": "c0cfc8f0c446c128ddb9bcd1455b45926e5fb8ba4f1230c47b14721351148328",

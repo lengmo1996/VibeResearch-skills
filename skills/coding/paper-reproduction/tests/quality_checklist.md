@@ -8,8 +8,9 @@
 - [ ] No-official-code work distinguishes facts, inferences, and engineering choices.
 - [ ] Non-paper-fixed choices use `DEC-*` IDs with alternatives and invariants.
 - [ ] Writes occurred only for requested implementation with explicit authorization, including optional no-official-code implementation.
-- [ ] Any produced patch is labeled `candidate implementation`.
+- [ ] A patch leaves this reproduction stage labeled `candidate implementation`.
 - [ ] A complete unified verification request is present only when a patch was produced.
 - [ ] A produced verification request cites the affected mapping and decision IDs.
 - [ ] Missing write authorization does not prevent a requested read-only deliverable from completing.
-- [ ] No environment migration, smoke/acceptance run, or final verdict is performed.
+- [ ] Migration and final verification remain separate Skill stages; already-authorized
+      validation continues in the same task instead of stopping at the handoff.

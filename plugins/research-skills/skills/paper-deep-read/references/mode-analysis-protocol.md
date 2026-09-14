@@ -5,11 +5,12 @@
 For every mode:
 
 1. transcribe the observable source element without correction;
-2. assign a stable `CLM-*` ID and exact artifact location;
+2. retain the exact artifact location; assign stable `CLM-*` IDs when a full report
+   or actual handoff needs a structured ledger;
 3. classify the statement as `paper states`, `supported interpretation`, or
    `unconfirmed inference`;
 4. test whether missing context changes the conclusion;
-5. record contradictions as links between claim IDs.
+5. preserve contradictions, linking existing claim IDs when available.
 
 ## Mode-specific extraction
 

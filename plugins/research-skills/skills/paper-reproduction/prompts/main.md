@@ -12,5 +12,6 @@ Use the narrowest `paper-reproduction` mode.
 7. Only after code changed, produce the unified verification handoff to `code-debugging`.
    Analysis or discovery alone never requires a full implementation report.
 
-Do not migrate environments or frameworks, run final verification, or claim paper
-equivalence without verified official evidence.
+This reproduction stage does not own migration or final verification. Continue an
+already-authorized implementation and validation request through `$code-debugging`
+in the same task. Never claim paper equivalence without verified official evidence.

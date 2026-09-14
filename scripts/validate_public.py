@@ -208,7 +208,7 @@ def validate(root: Path) -> dict[str, Any]:
             frontmatter = source.split("---", 2)[1] if source.startswith("---\n") or source.startswith("---\r\n") else ""
             if not NAME_RE.fullmatch(name) or name != entry.get("name") or PurePosixPath(path).parent.name != name or _scalar(frontmatter, "name") != name:
                 fail(path, "skill_name", "Canonical prefix, directory, registry, and frontmatter must agree")
-            if not _scalar(frontmatter, "description").startswith("Use when "):
+            if not _scalar(frontmatter, "description").strip():
                 fail(path, "description", "Description must identify the main trigger")
             ui_path = str(PurePosixPath(path).parent / "agents/openai.yaml")
             ui = text.get(ui_path, "")

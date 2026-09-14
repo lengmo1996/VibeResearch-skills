@@ -13,7 +13,7 @@ repository compatibility, failure diagnosis, or scientific interpretation.
 
 ## Inputs
 
-Provide the experiment variables, configuration system, dataset/model identifiers,
+Provide the subset relevant to the selected mode: experiment variables, configuration system, dataset/model identifiers,
 training settings, output root, seed policy, logging needs, checkpoint/resume
 requirements, and any existing run directory convention. `run-lifecycle` additionally
 requires frozen `EXP-*`, `CLM-*`, protocol and metric IDs, acceptance criteria, a
@@ -41,8 +41,11 @@ Legacy prompt modes such as `hydra_config_tree`, `experiment_naming`, and
 
 ## Workflow
 
+Use only steps needed by the selected mode; reuse existing policies and manifests.
+Do not design checkpoint, archive, or execution contracts for a seed-only question.
+
 1. Separate scientific variables from infrastructure and bookkeeping parameters.
-2. Read [experiment lifecycle protocol](references/experiment-lifecycle-protocol.md).
+2. Read only relevant sections of [experiment lifecycle protocol](references/experiment-lifecycle-protocol.md).
    Define the configuration tree, defaults, override precedence, materialized config,
    and schema checks.
 3. Define seed/determinism policy and record unavoidable nondeterminism.
@@ -61,11 +64,15 @@ Legacy prompt modes such as `hydra_config_tree`, `experiment_naming`, and
    command; append state events; collect artifact metadata with
    `scripts/collect_run_artifacts.py`; then evaluate only the frozen protocol
    acceptance criteria.
-8. Produce a handoff that existing training/inference code can consume. Route a
+8. Produce a handoff only when an actual downstream integration needs it. Route a
    concrete failure to `code-debugging` and valid completed artifacts to
    `research-result-analysis`.
 
 ## Output contract
+
+For a narrow mode, return its named contract plus material risks or missing inputs;
+do not emit unrelated sections or empty manifests. The following is a section source
+for `full`, not a mandatory checklist for every request:
 
 1. Configuration Tree and Override Rules
 2. Seed and Determinism Policy

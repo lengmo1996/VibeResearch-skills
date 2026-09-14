@@ -16,7 +16,7 @@ from common import flatten_strings, tokens
 
 @dataclass
 class RouteDecision:
-    primary_skill: str
+    primary_skill: str | None
     mode: str
     supporting_skills: list[str]
     rag_policy: str
@@ -184,7 +184,11 @@ def _generic_trigger_route(prompt: str, entries: list[dict[str, Any]]) -> str | 
         trigger_tokens = tokens(trigger_values)
         if not trigger_tokens:
             continue
-        exact = sum(1 for value in trigger_values if value.casefold().strip() in prompt)
+        # Single English identifiers such as NaN must not match inside banana.
+        exact = sum(
+            value in prompt_tokens if re.fullmatch(r"[a-z0-9_]+", value) else value in prompt
+            for value in (raw.casefold().strip() for raw in trigger_values)
+        )
         coverage = len(prompt_tokens & trigger_tokens) / max(1, len(trigger_tokens))
         score = exact * 2.0 + coverage
         if score > 0.30:
@@ -195,7 +199,7 @@ def _generic_trigger_route(prompt: str, entries: list[dict[str, Any]]) -> str | 
     return candidates[0][1]
 
 
-def _policy_primary(prompt: str, entries: list[dict[str, Any]]) -> tuple[str, str]:
+def _policy_primary(prompt: str, entries: list[dict[str, Any]]) -> tuple[str | None, str]:
     explicit, reason = _explicit_skill(prompt, entries)
     if explicit:
         return explicit, reason or "explicit invocation"
@@ -401,7 +405,6 @@ def _policy_primary(prompt: str, entries: list[dict[str, Any]]) -> tuple[str, st
         "traceback",
         "报错",
         "错误栈",
-        "nan",
         "oom",
         "failed test",
         "测试失败",
@@ -413,7 +416,7 @@ def _policy_primary(prompt: str, entries: list[dict[str, Any]]) -> tuple[str, st
         "验证这个 patch",
         "patch verification",
         "回归测试",
-    ):
+    ) or re.search(r"(?<![a-z0-9_])nan(?![a-z0-9_])", prompt):
         return "code-debugging", "concrete failure or verification"
     if _contains(
         prompt,
@@ -656,7 +659,12 @@ def _policy_primary(prompt: str, entries: list[dict[str, Any]]) -> tuple[str, st
         return "writing-academic", "whole-paper narrative planning"
     if _contains(prompt, "值得读", "快速筛选", "论文初筛", "阅读优先级", "go/no-go"):
         return "paper-triage", "paper triage"
-    if _contains(prompt, "技术文档", "knowledgehub 文档", "快速了解", "是什么", "概念入门") and not _contains(
+    domain_explanation = _contains(prompt, "explain", "解释", "介绍", "概念") and any(
+        entry.get("activation") == "supporting_only"
+        and re.search(r"\$" + re.escape(entry["id"]) + r"(?![a-z0-9-])", prompt)
+        for entry in entries
+    )
+    if (domain_explanation or _contains(prompt, "技术文档", "knowledgehub 文档", "快速了解", "是什么", "概念入门")) and not _contains(
         prompt, "论文中", "这篇论文"
     ):
         return "research-concept-primer", "technical concept primer"
@@ -679,7 +687,7 @@ def _policy_primary(prompt: str, entries: list[dict[str, Any]]) -> tuple[str, st
         return "paper-deep-read", "single-paper analysis"
 
     generic = _generic_trigger_route(prompt, entries)
-    return (generic, "registry positive trigger") if generic else ("research-concept-primer", "safe informational fallback")
+    return (generic, "registry positive trigger") if generic else (None, "no matching Skill")
 
 
 def _mode(primary: str, prompt: str) -> str:
@@ -1366,22 +1374,28 @@ def route(prompt: str, entries: list[dict[str, Any]]) -> RouteDecision:
     known = set(by_id)
     primary, matched_by = _policy_primary(normalized, entries)
     entry = by_id.get(primary)
-    if entry is None:
+    if primary is not None and entry is None:
         raise ValueError(f"Skill is not included in this public profile: {primary}")
     if entry and entry.get("activation") == "supporting_only":
-        primary = "research-concept-primer"
+        primary = None
         matched_by = f"supporting-only guard for {entry.get('id')}"
-        entry = by_id.get(primary)
+        entry = None
 
     # If a policy-selected Skill is absent from a synthetic registry, preserve
     # the decision so evaluator fixtures can still diagnose the missing entry.
-    mode = _literal_mode(normalized, entry) or _mode(primary, normalized.replace(primary, ""))
-    registered_modes = entry.get("modes", []) if entry else []
-    if registered_modes and mode not in registered_modes:
-        mode = "full" if "full" in registered_modes else registered_modes[0]
-    supporting = _supporting(primary, normalized, known)
-    rag_policy = _rag_policy(primary, mode, normalized, entry)
-    side_effect_class, required_tools = _execution_contract(mode, entry)
+    if primary is None:
+        # No Skill owns this task. Continue through the shared safety checks below
+        # without inventing a mode, supporting Skill, or retrieval/tool plan.
+        mode, supporting, rag_policy = "", [], "never"
+        side_effect_class, required_tools = "read_only", []
+    else:
+        mode = _literal_mode(normalized, entry) or _mode(primary, normalized.replace(primary, ""))
+        registered_modes = entry.get("modes", []) if entry else []
+        if registered_modes and mode not in registered_modes:
+            mode = "full" if "full" in registered_modes else registered_modes[0]
+        supporting = _supporting(primary, normalized, known)
+        rag_policy = _rag_policy(primary, mode, normalized, entry)
+        side_effect_class, required_tools = _execution_contract(mode, entry)
 
     calls: list[str] = []
     failure_behavior: str | None = None

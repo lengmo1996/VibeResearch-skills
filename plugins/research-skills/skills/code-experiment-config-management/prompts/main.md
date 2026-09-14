@@ -1,6 +1,7 @@
 # Experiment Config Management Prompt
 
-Produce only the run/configuration lifecycle contract:
+Produce only the selected mode's contract. The list below supplies sections for
+`full`; omit unrelated items and empty artifacts in a narrow mode:
 
 - configuration tree and override precedence;
 - seed and determinism policy;

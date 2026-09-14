@@ -1,6 +1,6 @@
 ---
 name: writing-academic
-description: "Use when outlining a paper or section story, drafting, rewriting, polishing, restructuring, compressing, expanding, clarifying, translating, de-templating, matching an author-owned voice, composing reviewer responses, or preparing a hash-bound revision patch for academic manuscript prose. Produces a section plan, revised evidence-aware text, or reviewable fail-closed patch with protected scientific content and optional preservation evidence. Do not use when diagnosis, reverse-outline audit, defect finding, code patching, AI-authorship probability, detector-evasion, evidence verdict, or non-academic imitation is the primary deliverable."
+description: "Use when outlining, drafting, or revising academic manuscript prose or reviewer responses. Return a scoped plan, revised text, or requested revision patch while preserving scientific content. Diagnosis-only audits belong to writing-manuscript-audit."
 ---
 
 # Academic Writing

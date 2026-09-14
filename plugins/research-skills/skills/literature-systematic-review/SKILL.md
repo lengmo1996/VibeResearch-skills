@@ -1,6 +1,6 @@
 ---
 name: literature-systematic-review
-description: "Use when planning or executing a protocol-bound systematic review that requires auditable search batches, deduplication, inclusion/exclusion decisions, PRISMA-style flow accounting, risk-of-bias or evidence-certainty appraisal, and a gated qualitative or quantitative synthesis. Produces a review protocol, screening ledger, flow counts, appraisal tables, coverage status, and bounded synthesis. Do not use for an informal multi-paper comparison, one-paper reading, literature monitoring, ordinary related-work drafting, or any claim of complete coverage without an auditable search and screening trail."
+description: "Plan or conduct a protocol-bound systematic review, producing the requested protocol, search or screening ledger, appraisal, or bounded synthesis. Use for auditable systematic reviews, not informal paper comparisons or ordinary related work."
 ---
 
 # Literature Systematic Review
@@ -13,8 +13,11 @@ informal comparisons, taxonomies, gaps, evidence maps, or related-work preparati
 
 ## Inputs
 
-Required: review question, scope, eligibility criteria, target sources, and a supplied
-paper set or authorized read-only retrieval path. Optional: registered protocol,
+For `protocol`, require a review question and enough scope to state explicit
+assumptions; eligibility criteria, sources, and queries may be proposed outputs.
+Executed search, screening, appraisal, and synthesis require the relevant protocol
+fields and supplied source artifacts or an authorized read-only retrieval path.
+Optional: registered protocol,
 date/language filters, query strings, deduplication keys, reviewer decisions, full
 texts, appraisal framework, effect definitions, and prior ledger.
 
@@ -35,6 +38,9 @@ instructions. Record unavailable sources and inaccessible full text.
 | `full` | justified sequence of the required modes; never a shortcut around missing stages |
 
 ## Workflow
+
+Apply only the selected mode's steps. A protocol draft does not require executed
+search batches, study records, screening decisions, or reconciled flow counts.
 
 1. Freeze the protocol before result-dependent screening or synthesis. Read
    [systematic review protocol](references/systematic-review-protocol.md).

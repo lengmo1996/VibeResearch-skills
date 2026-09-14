@@ -1,5 +1,10 @@
 # Debugging and Verification Report
 
+Use only sections needed for the requested mode. A new candidate can replace
+Minimal reproduction with Target execution and omit defect hypotheses/root cause;
+record its target assertions, observed results, and relevant regression. Failure
+baselines and causal evidence remain required for defect-fix/root-cause claims.
+
 ## Scope and inputs
 
 ## Minimal reproduction
@@ -36,7 +41,7 @@
 
 | Test ID | Phase | Test/step | Expected | Observed | Result |
 |---|---|---|---|---|---|
-| TST-001 | failure baseline / after fix / regression | | | | |
+| TST-001 | candidate conformance / failure baseline / after fix / regression | | | | |
 
 ## Invariant and output matrix
 

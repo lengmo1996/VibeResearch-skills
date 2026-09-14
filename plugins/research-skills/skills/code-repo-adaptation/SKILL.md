@@ -49,6 +49,11 @@ licenses, prior paper-reproduction handoff, and immutable target constraints.
 
 ## Workflow
 
+Execute only steps needed by the selected mode and request. `repo-understanding`
+returns relevant surfaces and compatibility risks; it does not require a patch,
+implementation decision ledger, or verification handoff. Create a handoff only for
+an actual candidate patch or an explicitly requested downstream plan.
+
 1. Record the source repository/revision, target compatibility contract, hard
    constraints, and known unknowns.
 2. In `repo-understanding`, map only the surfaces needed for the migration.
@@ -58,11 +63,14 @@ licenses, prior paper-reproduction handoff, and immutable target constraints.
    risk, invariant, and rollback.
 4. Select the narrowest compatibility mode and isolate compatibility axes when
    feasible; do not combine unrelated cleanup or hide a second migration.
-5. Before writes, list exact paths and obtain explicit authorization.
+5. Before writes, identify the affected paths and check the existing request/session
+   authorization. Record its basis and apply covered minimal reversible changes
+   directly. Ask only for scope or controlled actions not already authorized.
 6. Apply a minimal reversible patch and document every compatibility deviation,
    affected decision IDs, and hard-constraint exception.
-7. Do not run acceptance tests or state that the migration works. Produce a
-   `Verification Handoff` for `code-debugging`.
+7. Produce a `Verification Handoff` for `$code-debugging`; the patch remains a
+   candidate until verified. If the current request includes implementation and
+   validation, continue with `patch-verification` in the same task and context.
 
 ## Allowed work
 
@@ -79,7 +87,8 @@ licenses, prior paper-reproduction handoff, and immutable target constraints.
 
 - Do not construct a minimal reproduction for a failure.
 - Do not diagnose or fix an ordinary bug unrelated to compatibility migration.
-- Do not run regression tests or issue a final pass/fail verdict.
+- Regression tests and final pass/fail judgments belong to the `$code-debugging`
+  stage; a handoff does not require another user turn when that work is authorized.
 - Do not absorb paper-method implementation.
 - Do not claim that a candidate compatibility patch is verified.
 
@@ -88,6 +97,9 @@ environment, dependency, API, data-layout, pipeline, or checkpoint incompatibili
 hand off evidence to `code-debugging` without applying an unrelated fix.
 
 ## Output contract
+
+Use these sections only as needed for the selected mode. A narrow answer may combine
+them in prose; omit absent patches and handoffs rather than manufacturing artifacts.
 
 1. Scope Decision
 2. Repository Compatibility Map
@@ -110,6 +122,8 @@ source/target versions match the task. Otherwise treat them as search hints and 
 the target contract from authoritative documentation; never silently transplant a
 dated stack profile.
 
-Stop when the migration patch and handoff are complete, authorization is missing, a
-hard target constraint conflicts with the requested migration, or the root cause is
-outside compatibility ownership.
+This stage ends when the migration patch and handoff are complete. Return at that
+point only for a candidate-only request; continue authorized validation through
+`$code-debugging` until the requested task is complete. Missing authorization or a
+hard target conflict blocks only the affected action. Route causes outside
+compatibility ownership with the existing evidence and authorization scope.

@@ -1,5 +1,8 @@
 # Experiment Configuration and Run Contract
 
+Use only the sections required by the selected mode. `full` combines the contracts;
+narrow requests omit unrelated sections and do not create empty manifests.
+
 ## Configuration tree and override rules
 
 ## Seed and determinism policy

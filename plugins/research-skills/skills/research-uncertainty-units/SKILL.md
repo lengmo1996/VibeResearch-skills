@@ -1,6 +1,6 @@
 ---
 name: research-uncertainty-units
-description: "Use when auditing or planning physical units, dimensional consistency, measurement models, Type A or Type B uncertainty, uncertainty budgets, correlated propagation, Monte Carlo propagation, coverage factors, significant figures, or plausibility of measured quantities. Produces an auditable uncertainty-and-units record with provenance, propagation metadata, reporting rules, and a ready/conditional/blocked verdict. Do not use for statistical power, dataset-quality auditing, general result interpretation, instrument operation, or unsupported conversion from model uncertainty to measurement uncertainty."
+description: "Audit or plan physical units, measurement models, and uncertainty budgets or propagation. Return traceable calculations and reporting limits. Use for measurement uncertainty, not statistical power or unsupported conversion of model uncertainty."
 ---
 
 # Research Uncertainty Units

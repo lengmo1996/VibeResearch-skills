@@ -43,11 +43,17 @@ do not authorize repository migration.
 
 ## Workflow
 
+Execute only steps needed for the requested analysis, repair, or verification.
+A traceback explanation or minimal-reproduction request does not authorize a fix
+or require a full patch-verification report.
+
 1. Normalize the failure or `verification_request`; mark missing fields
    `not provided / unclear`.
-2. Reproduce before diagnosing whenever feasible. Record commands, inputs, observed
-   outputs, determinism, and environment facts.
-3. Minimize the reproduction without changing the failure mechanism.
+2. For a defect, reproduce before diagnosing whenever feasible. For a new candidate,
+   exercise the declared target inputs and assertions. Record commands, inputs,
+   observed outputs, determinism, and relevant environment facts.
+3. Minimize a failing reproduction without changing the failure mechanism. A new
+   candidate with no original defect does not require a manufactured failure baseline.
 4. Read [debugging protocol](references/debugging-protocol.md). Assign stable
    `HYP-*`, `EV-*`, and `TST-*` IDs; rank hypotheses and run checks that distinguish
    them rather than merely collect compatible observations.
@@ -55,8 +61,11 @@ do not authorize repository migration.
    discriminating or counterfactual check. Otherwise mark it unconfirmed.
 6. If authorized, apply the smallest fix that addresses the proven cause; avoid
    opportunistic refactoring.
-7. Run the original reproduction before/after, focused tests, then the smallest
-   relevant regression suite. Separate diagnostic changes from the final patch.
+7. For defect fixes, compare the original reproduction before/after. For new
+   candidates, check target behavior and declared invariants/outputs. Run the
+   smallest relevant regression checks; reuse completed checks that cover the same
+   assertions instead of repeating them under another label. Separate diagnostics
+   from the final patch.
 8. For a handoff, compare actual behavior with every expected invariant/output and
    return `verified`, `failed`, or `blocked`.
 
@@ -92,6 +101,10 @@ invariants, or environment prerequisites are unavailable.
 
 ## Output contract
 
+Use the following as section sources for the requested scope. Narrow explanations
+may use concise prose with evidence and uncertainty; patch verification includes the
+tests, invariant results, and verdict. Omit unrelated or nonexistent sections.
+
 1. Failure or Verification Scope
 2. Inputs and Environment Checked
 3. Minimal Reproduction
@@ -105,10 +118,12 @@ invariants, or environment prerequisites are unavailable.
 11. Compatibility Handoff — only when migration is required
 
 A successful command alone is not verification, and a passing patched run alone does
-not prove the stated root cause. The verdict must cover the original failure
-baseline, target behavior, invariants, expected outputs, and relevant regression
-surface.
+not prove a stated root cause. Verification covers target behavior, invariants,
+expected outputs, and relevant regression. An original failure baseline and causal
+evidence are required for defect-fix/root-cause claims, not for a new candidate with
+no original defect. `reproduction_steps` may describe how to exercise that candidate.
 
-Stop when the verdict is supported, authorization is absent for a necessary fix,
-reproduction is impossible from available material, or the proven cause belongs to
-compatibility migration.
+Stop when the requested diagnosis, reproduction, or verification is complete.
+Missing authorization or required evidence blocks only the dependent action.
+Compatibility causes move to `$code-repo-adaptation`; when migration and validation
+are already authorized, continue those stages and verify the returned patch.
