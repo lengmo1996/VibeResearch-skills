@@ -25,7 +25,9 @@ import copy
 root = Path(data['root'])
 runtime.initialize_runtime(root)
 initial_success_bytes = (root / 'last-successful-run.json').read_bytes()
-run_id = '2026-07-28-public-offline'
+announcement_day = data.get('announcement_date', '2026-07-28')
+run_id = data.get('run_id', '2026-07-28-public-offline')
+cursor = data.get('cursor')
 run_dir = root / 'runs' / run_id
 categories = tuple(data['categories'])
 assert tuple(runtime.TRACKED_CATEGORIES) == categories
@@ -43,7 +45,7 @@ for category_index, category in enumerate(categories):
     papers = []
     count = 3 if data.get('known_paper') and category_index == 0 else 2
     for index in range(count):
-        arxiv_id = f'2607.{category_index * 10 + index + 1:05d}'
+        arxiv_id = f"2607.{data.get('id_offset', 0) + category_index * 10 + index + 1:05d}"
         papers.append({
             'title': (f'Synthetic probability study {category_index}-{index}: cs.CV seven Seven'
                       if index == 0 else f'Synthetic background study {category_index}-{index}: cs.CV seven Seven'),
@@ -51,21 +53,23 @@ for category_index, category in enumerate(categories):
             'abstract': ('Synthetic probability methods mentioning cs.CV seven Seven in source text.'
                          if index == 0 else 'A synthetic background study mentioning cs.CV seven Seven.'),
             'categories': [category], 'query_sources': [category],
-            'submitted_or_updated': '2026-07-28T01:00:00Z',
+            'submitted_or_updated': announcement_day + 'T01:00:00Z',
             'arxiv_url': f'https://arxiv.org/abs/{arxiv_id}',
             'pdf_url': f'https://arxiv.org/pdf/{arxiv_id}v1',
-            'announcement_date': '2026-07-28', 'announcement_types': ['new'],
+            'announcement_date': announcement_day, 'announcement_types': ['new'],
             'announcement_type': 'new', 'source': 'arxiv_announcement',
         })
     batch = {
         'schema_version': runtime.SCHEMA_VERSION, 'category': category,
-        'announcement_date': '2026-07-28',
+        'announcement_date': announcement_day,
         'listing_url': runtime.announcement_listing_url(category),
         'source': 'arxiv_announcement',
         'counts': {'new_submissions': len(papers), 'cross_lists': 0,
                    'replacements': 0, 'total': len(papers)},
         'papers': papers, 'complete': True, 'inventory_validated': True,
-        'requested_cursor_date': None, 'cursor_action': 'process_migration_batch',
+        'requested_cursor_date': cursor,
+        'cursor_action': runtime.announcement_cursor_action(
+            cursor, announcement_day, enforce_current=False),
     }
     batch['coverage'] = runtime.announcement_batch_coverage(batch)
     runtime.atomic_write_json(runtime.announcement_batch_output_path(root, run_id, category), batch)
@@ -146,6 +150,51 @@ assert all(data['report_category'] in row['query_sources'] for row in report['de
 assert (root / 'last-successful-run.json').read_bytes() == initial_success_bytes, 'Rendering must not commit delivery'
 assert (root / 'sent-papers.json').read_bytes() == initial_sent_bytes
 '''
+
+
+PUBLIC_FETCH_FIXTURE = r"""
+from datetime import datetime, timezone
+from types import SimpleNamespace
+from unittest import mock
+root = Path(data['root'])
+runtime.initialize_runtime(root)
+assert tuple(runtime.TRACKED_CATEGORIES) == tuple(data['categories'])
+category = data['categories'][0]
+observed = datetime(2026, 7, 28, 12, tzinfo=timezone.utc)
+
+def page(day, category, *, total=1, abstract=True):
+    heading = datetime.fromisoformat(day).strftime('%A, %d %B %Y')
+    summary = '<p class="mathjax">A synthetic probability methods abstract.</p>' if abstract else ''
+    body = f'''
+<h3>Showing new listings for {heading}</h3><div>Total of {total} entries</div>
+<dl><h3>New submissions (showing 1 of 1 entries)</h3>
+<dt><a href="/abs/2607.00001">arXiv:2607.00001</a>
+<a href="/pdf/2607.00001v1">pdf</a></dt>
+<dd><div class="meta"><div class="list-title mathjax">Title: Synthetic probability study</div>
+<div class="list-authors"><a>Synthetic Author</a></div>
+<div class="list-subjects"><span class="primary-subject">Synthetic subject ({category})</span></div>
+{summary}</div></dd></dl>
+'''
+    return SimpleNamespace(status=200, body=body.encode(), headers={})
+
+def rejected():
+    return runtime.OfficialArxivFetchError('permanent_request', 'synthetic HTTP 406', http_status=406)
+
+def set_cursor(day):
+    state = runtime.read_json(root / 'last-successful-run.json')
+    state.update(report_date=day, announcement_cursors={name: day for name in data['categories']})
+    runtime.atomic_write_json(root / 'last-successful-run.json', state)
+
+class SessionGate:
+    def __init__(self):
+        self.begun = []
+        self.ended = []
+    def begin_digest_session(self, run_id, **kwargs):
+        self.begun.append(run_id)
+        return {'run_id': run_id, 'session_token': 'synthetic-session', 'resumed': False}
+    def end_digest_session(self, token):
+        self.ended.append(token)
+"""
 
 
 class DailyDigestPublicTests(unittest.TestCase):
@@ -239,6 +288,174 @@ import daily_digest_config as config
             cwd=self.directory, input=stdin_text, capture_output=True, text=True,
             encoding="utf-8", timeout=45,
         )
+
+    def run_public_fetch_case(self, code):
+        root = self.state_root()
+        categories = ["math.PR", "quant-ph"]
+        self.write_config(root, self.config(root, categories=categories, report_category=categories[0]))
+        return self.python(PUBLIC_FETCH_FIXTURE + "\n" + textwrap.dedent(code),
+                           root=str(root), categories=categories)
+
+    def test_historical_406_uses_exact_export_route_for_selected_categories(self):
+        self.run_public_fetch_case(r"""
+for category in data['categories']:
+    for target in ('2026-07-23', '2026-07-27'):
+        primary = runtime.announcement_listing_url(category, target)
+        export = primary.replace('https://arxiv.org/', 'https://export.arxiv.org/', 1)
+        with mock.patch.object(runtime, '_central_arxiv_get', side_effect=[rejected(), page(target, category)]) as get:
+            batch = runtime.fetch_announcement_listing_once(category, target_date=target, observed_at=observed)
+        assert [call.args[0] for call in get.call_args_list] == [primary, export]
+        assert batch['announcement_date'] == target and batch['listing_url'] == export
+        assert batch['papers'][0]['abstract'] and batch['counts']['total'] == 1
+        assert batch['_retrieval']['listing_mode'] == 'catchup'
+        assert all(call.kwargs['use_cache'] is False for call in get.call_args_list)
+        for invalid in (page('2026-07-28', category), page(target, category, total=2),
+                        page(target, category, abstract=False)):
+            with mock.patch.object(runtime, '_central_arxiv_get', side_effect=[rejected(), invalid]):
+                try:
+                    runtime.fetch_announcement_listing_once(category, target_date=target, observed_at=observed)
+                except runtime.OfficialArxivFetchError as error:
+                    assert error.kind == 'response_integrity'
+                else:
+                    raise AssertionError('Historical fallback accepted a wrong date or incomplete inventory')
+""")
+
+    def test_current_406_stale_fallback_revalidates_once_and_preserves_cursors(self):
+        self.run_public_fetch_case(r"""
+set_cursor('2026-07-27')
+success_before = (root / 'last-successful-run.json').read_bytes()
+ledger_before = (root / 'sent-papers.json').read_bytes()
+with mock.patch.object(runtime, 'acquire_arxiv_request_gate', return_value={}), \
+     mock.patch.object(runtime, 'release_arxiv_request_gate'):
+    delays = []
+    responses = [rejected(), page('2026-07-27', category), rejected(), page('2026-07-28', category)]
+    with mock.patch.object(runtime, '_central_arxiv_get', side_effect=responses) as get:
+        batch = runtime.fetch_announcement_batch(root, category, cursor_date='2026-07-27',
+            target_date='2026-07-28', observed_at=observed, opener=mock.Mock(), sleep=delays.append)
+    assert get.call_count == 4 and delays == [15]
+    assert batch['announcement_date'] == '2026-07-28'
+    assert batch['_retrieval']['attempts'][0]['kind'] == 'stale_announcement'
+    delays.clear()
+    responses = [rejected(), page('2026-07-27', category), rejected(), page('2026-07-27', category)]
+    with mock.patch.object(runtime, '_central_arxiv_get', side_effect=responses) as get:
+        try:
+            runtime.fetch_announcement_batch(root, category, cursor_date='2026-07-27',
+                target_date='2026-07-28', observed_at=observed, opener=mock.Mock(), sleep=delays.append)
+        except runtime.OfficialArxivFetchError as error:
+            assert error.kind == 'stale_announcement'
+        else:
+            raise AssertionError('Repeated stale pages escaped bounded revalidation')
+    assert get.call_count == 4 and delays == [15]
+assert (root / 'last-successful-run.json').read_bytes() == success_before
+assert (root / 'sent-papers.json').read_bytes() == ledger_before
+""")
+
+    def test_fallback_checkpoints_resume_immutably_for_configured_categories(self):
+        self.run_public_fetch_case(r"""
+set_cursor('2026-07-27')
+run_id = 'public-digest-20260728'
+gate = SessionGate()
+first, second = data['categories']
+calls = []
+fail_second = True
+success_before = (root / 'last-successful-run.json').read_bytes()
+ledger_before = (root / 'sent-papers.json').read_bytes()
+def fetch(_root, category, **kwargs):
+    calls.append(category)
+    if category == second and fail_second:
+        raise runtime.OfficialArxivFetchError('transient_transport', 'synthetic interruption')
+    responses = ([rejected(), rejected(), page('2026-07-28', category)] if category == first
+                 else [rejected(), rejected(), rejected(), page('2026-07-28', category)])
+    with mock.patch.object(runtime, '_central_arxiv_get', side_effect=responses):
+        return runtime.fetch_announcement_batch(_root, category, observed_at=observed,
+            opener=mock.Mock(), sleep=lambda delay: None, **kwargs)
+with mock.patch.object(runtime, 'expected_announcement_date', return_value='2026-07-28'), \
+     mock.patch.object(runtime, 'acquire_arxiv_request_gate', return_value={}), \
+     mock.patch.object(runtime, 'release_arxiv_request_gate'):
+    try:
+        runtime.fetch_announcement_phase(root, run_id, gate=gate, fetcher=fetch)
+    except runtime.OfficialArxivFetchError:
+        pass
+    else:
+        raise AssertionError('Synthetic phase interruption was not propagated')
+    first_path = runtime.announcement_batch_output_path(root, run_id, first)
+    frozen = first_path.read_bytes()
+    first_batch = runtime.read_json(first_path)
+    assert first_batch['listing_url'] == f'https://arxiv.org/list/{first}/new'
+    status = runtime.announcement_phase_status(root, run_id)
+    assert status['valid_categories'] == [first] and status['needed_categories'] == [second]
+    fail_second = False
+    status = runtime.fetch_announcement_phase(root, run_id, gate=gate, fetcher=fetch)
+    assert status['announcement_complete'] and calls == [first, second, second]
+    assert first_path.read_bytes() == frozen
+    second_batch = runtime.read_json(runtime.announcement_batch_output_path(root, run_id, second))
+    assert second_batch['listing_url'].startswith('https://export.arxiv.org/catchup/')
+    replayed = runtime.fetch_announcement_phase(root, run_id, gate=gate, fetcher=fetch)
+    assert replayed['reused'] and calls == [first, second, second]
+assert len(gate.begun) == len(gate.ended) == 2
+assert (root / 'last-successful-run.json').read_bytes() == success_before
+assert (root / 'sent-papers.json').read_bytes() == ledger_before
+""")
+
+    def run_public_backlog(self, dates, cursor, horizon):
+        root = self.state_root()
+        categories = ["math.PR", "quant-ph"]
+        self.write_config(root, self.config(root, term="probability", categories=categories,
+                                           report_category=categories[0]))
+        self.python(r"""
+root = Path(data['root'])
+runtime.initialize_runtime(root)
+dates = data['dates']
+horizon_id = 'public-digest-' + data['horizon'].replace('-', '')
+previous = data['cursor']
+state = runtime.read_json(root / 'last-successful-run.json')
+state.update(report_date=previous, announcement_cursors={category: previous for category in data['categories']})
+runtime.atomic_write_json(root / 'last-successful-run.json', state)
+runtime.expected_announcement_date = lambda observed_at=None: dates[-1]
+selected = []
+for turn, day in enumerate(dates):
+    status = runtime.transaction_status(root, horizon_id)
+    assert status['pending_announcement_dates'] == dates[turn:]
+    assert status['selected_announcement_date'] == day
+    selected.append(day)
+    data.update(announcement_date=day, run_id=status['run_id'], cursor=previous, id_offset=turn * 100)
+    exec(data['pipeline'])
+    runtime.render_reports(root, digest)
+    pending = runtime.transaction_status(root, horizon_id)
+    assert pending['action'] == 'resume_delivery' and pending['run_id'] == data['run_id']
+    assert runtime.read_json(root / 'last-successful-run.json')['announcement_cursors'] == {
+        category: previous for category in data['categories']}
+    committed = runtime.commit_success(root, 'synthetic-gmail-' + day, day + 'T12:00:00Z',
+                                       backlog_horizon_run_id=horizon_id)
+    assert committed['delivery_status'] == 'committed'
+    assert runtime.read_json(root / 'last-successful-run.json')['announcement_cursors'] == {
+        category: day for category in data['categories']}
+    drain = committed['backlog_drain']
+    assert drain['horizon_run_id'] == horizon_id
+    assert drain['drain_complete'] == (turn == len(dates) - 1)
+    if turn < len(dates) - 1:
+        assert drain['status'] == 'continue'
+        assert drain['next_transaction']['selected_announcement_date'] == dates[turn + 1]
+    else:
+        assert drain['status'] == 'complete'
+        assert drain['next_transaction']['action'] == 'no_announcement_due'
+    previous = day
+assert selected == dates
+ledger = (root / 'sent-papers.json').read_bytes()
+replayed = runtime.commit_success(root, 'synthetic-gmail-' + dates[-1], backlog_horizon_run_id=horizon_id)
+assert replayed['backlog_drain']['drain_complete']
+assert (root / 'sent-papers.json').read_bytes() == ledger
+""", root=str(root), categories=categories, report_category=categories[0],
+                    dates=dates, cursor=cursor, horizon=horizon, pipeline=OFFLINE_PIPELINE)
+
+    def test_three_day_backlog_commits_oldest_first_with_public_profile(self):
+        self.run_public_backlog(["2026-07-27", "2026-07-28", "2026-07-29"],
+                                "2026-07-24", "2026-07-29")
+
+    def test_five_day_backlog_skips_weekend_and_preserves_sunday_horizon(self):
+        self.run_public_backlog(
+            ["2026-07-27", "2026-07-28", "2026-07-29", "2026-07-30", "2026-07-31"],
+            "2026-07-24", "2026-08-02")
 
     def test_packaged_runtime_uses_its_own_shared_client(self):
         self.python("""

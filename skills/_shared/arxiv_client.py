@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Any, Callable, Iterator, Mapping
 
 ARXIV_API_URL = "https://export.arxiv.org/api/query"
+ARXIV_EXPORT_BASE_URL = "https://export.arxiv.org"
 ARXIV_USER_AGENT = "VibeResearch-ArxivClient/1.0"
 ARXIV_STATE_ENV = "VIBE_RESEARCH_ARXIV_STATE_DIR"
 

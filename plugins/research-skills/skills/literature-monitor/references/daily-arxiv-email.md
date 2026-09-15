@@ -193,8 +193,30 @@ When a resumed run already contains a valid category checkpoint, the phase pins 
 checkpoint's announcement date and retrieves every missing category from arXiv's
 official exact-date `/catchup` listing. The runtime must require the requested date,
 all New/Cross/Replacement section totals, the page total, and the parsed inventory to
-agree before writing. It must never substitute `/pastweek`, the search API, or the
-current `/new` page for a pinned historical date. Valid checkpoints are immutable;
+agree before writing. It must never substitute `/pastweek`, the search API, or a
+current `/new` page with a different date for a pinned historical date. On HTTP 406,
+a target equal to the currently available announcement date may use a complete
+`/new` listing (with or without `show`); an older cached `/new` response follows the
+existing single 15-second `stale_announcement` revalidation. A newer or otherwise
+incorrect date remains an integrity failure. Requests remain serialized and bounded.
+
+For historical dates, HTTP 406 falls back to the same exact-date `/catchup` path
+on the fixed official `export.arxiv.org` host, preserving `abs=True&page=1`.
+The response must pass the same category, date, section-total, inventory and abstract
+checks before checkpointing. Never accept a parameterless historical inventory that
+omits abstracts or replace a historical batch with today's `/new` inventory. Both
+hosts use the same central throttle, request lease and bounded retry policy; only
+406 selects another route. The checkpoint retains the actual source URL. If both
+official historical routes fail, keep that date pending and retain all validated
+checkpoints for the next invocation.
+
+A three-to-five-day outage uses the existing oldest-first backlog plan: finish the
+pending delivery first, then process one announcement date at a time through the
+immutable horizon, skipping weekend non-announcement days. Advance every configured category cursor
+only after verified delivery and commit for that day. Resume partial days using their
+existing category checkpoints, and never mark the horizon complete after only one day.
+
+Valid checkpoints are immutable;
 an explicit repair may replace an invalid checkpoint only before downstream review,
 summary, or digest artifacts exist. Catchup older than arXiv's supported window must
 fail closed without sending or advancing cursors.

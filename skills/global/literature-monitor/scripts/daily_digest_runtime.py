@@ -1568,7 +1568,7 @@ def parse_announcement_listing(
         raise DigestValidationError("arXiv announcement page is missing its batch date")
     if listing_url:
         catchup_url_match = re.fullmatch(
-            r"https://arxiv\.org/catchup/([^/?#]+)/"
+            r"https://(?:export\.)?arxiv\.org/catchup/([^/?#]+)/"
             r"(\d{4}-\d{2}-\d{2})\?abs=True&page=1",
             listing_url,
         )
@@ -2271,62 +2271,85 @@ def fetch_announcement_listing_once(
     target_date: str | None = None,
     timeout_seconds: int = OFFICIAL_ARXIV_API_TIMEOUT_SECONDS,
     opener: Any = urlopen,
+    observed_at: datetime | None = None,
 ) -> dict[str, Any]:
-    """Fetch one current or exact-date official announcement batch."""
+    """Fetch a complete current or historical batch using bounded official routes."""
 
     normalized = normalize_categories([category])[0]
     if not isinstance(timeout_seconds, int) or timeout_seconds <= 0:
-        raise DigestValidationError(
-            "arXiv announcement timeout must be a positive integer"
-        )
-    url = announcement_listing_url(normalized, target_date)
-    response = _central_arxiv_get(
-        url,
-        headers={
-            "User-Agent": OFFICIAL_ARXIV_API_USER_AGENT,
-            "Accept": "text/html,application/xhtml+xml",
-            "Cache-Control": "no-cache, no-store, max-age=0",
-            "Pragma": "no-cache",
-        },
-        timeout_seconds=timeout_seconds,
-        opener=opener,
-        use_cache=False,
-    )
-    status = response.status
-    payload = response.body
-    fetched_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-    response_headers = {
-        header_name: header_value
-        for header_name, header_value in response.headers.items()
-        if header_name
-        in {
-            "date",
-            "age",
-            "etag",
-            "last-modified",
-            "cache-control",
-            "via",
-            "x-cache",
-        }
+        raise DigestValidationError("arXiv announcement timeout must be a positive integer")
+    primary_url = announcement_listing_url(normalized, target_date)
+    current_url = announcement_listing_url(normalized)
+    current_target = target_date == expected_announcement_date(observed_at)
+    urls = [primary_url]
+    if target_date is not None:
+        if current_target:
+            urls.extend([current_url, current_url.split("?", 1)[0]])
+        # The official export host serves the same exact-date catchup route,
+        # including full abstracts, when the main host rejects a query with 406.
+        urls.append(primary_url.replace("https://arxiv.org/", f"{_CENTRAL_ARXIV.ARXIV_EXPORT_BASE_URL}/", 1))
+    headers = {
+        "User-Agent": OFFICIAL_ARXIV_API_USER_AGENT,
+        "Accept": "text/html,application/xhtml+xml",
+        "Cache-Control": "no-cache, no-store, max-age=0",
+        "Pragma": "no-cache",
     }
-    try:
-        batch = parse_announcement_listing(payload, normalized, listing_url=url)
+    rejected_urls: list[str] = []
+    for index, url in enumerate(urls):
+        try:
+            response = _central_arxiv_get(
+                url, headers=headers, timeout_seconds=timeout_seconds,
+                opener=opener, use_cache=False,
+            )
+        except OfficialArxivFetchError as exc:
+            if exc.http_status != 406 or index == len(urls) - 1:
+                raise
+            rejected_urls.append(url)
+            continue
+        try:
+            batch = parse_announcement_listing(response.body, normalized, listing_url=url)
+            if target_date is not None and batch["announcement_date"] != target_date:
+                if (
+                    url.startswith("https://arxiv.org/list/")
+                    and current_target and batch["announcement_date"] < target_date
+                ):
+                    raise OfficialArxivFetchError(
+                        "stale_announcement",
+                        f"stale arXiv current fallback: expected {target_date}, "
+                        f"received {batch['announcement_date']}",
+                    )
+                raise DigestValidationError(
+                    f"arXiv announcement page date {batch['announcement_date']} "
+                    f"does not match requested date {target_date}"
+                )
+        except OfficialArxivFetchError:
+            raise
+        except DigestValidationError as exc:
+            raise OfficialArxivFetchError(
+                "response_integrity", str(exc), exception_type=type(exc).__name__,
+            ) from exc
         batch["_retrieval"] = {
             "source": "arxiv_announcement",
-            "listing_mode": "catchup" if target_date is not None else "current",
+            "listing_mode": "catchup" if "/catchup/" in url else "current",
             "response": {
-                "status": status,
-                "fetched_at": fetched_at,
-                "headers": response_headers,
+                "status": response.status,
+                "fetched_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                "headers": {
+                    key: value for key, value in response.headers.items()
+                    if key in {"date", "age", "etag", "last-modified", "cache-control", "via", "x-cache"}
+                },
             },
         }
+        if rejected_urls:
+            fallback = {
+                "from_url": primary_url, "http_status": 406,
+                "rejected_urls": rejected_urls,
+            }
+            if current_url in rejected_urls:
+                fallback["rejected_current_url"] = current_url
+            batch["_retrieval"]["fallback"] = fallback
         return batch
-    except DigestValidationError as exc:
-        raise OfficialArxivFetchError(
-            "response_integrity",
-            str(exc),
-            exception_type=type(exc).__name__,
-        ) from exc
+    raise AssertionError("announcement request candidates must not be empty")
 
 
 def parse_arxiv_abstract_version(
@@ -2517,6 +2540,7 @@ def fetch_announcement_batch(
                 target_date=target_date,
                 timeout_seconds=timeout_seconds,
                 opener=opener,
+                observed_at=observed_at,
             )
         except OfficialArxivFetchError as exc:
             failure = exc
@@ -3230,7 +3254,11 @@ def _validate_screening_checkpoint(
     listing_url = batch.get("listing_url")
     valid_listing_urls = {
         announcement_listing_url(category),
+        announcement_listing_url(category).split("?", 1)[0],
         announcement_listing_url(category, announcement_date),
+        announcement_listing_url(category, announcement_date).replace(
+            "https://arxiv.org/", f"{_CENTRAL_ARXIV.ARXIV_EXPORT_BASE_URL}/", 1,
+        ),
     }
     if listing_url not in valid_listing_urls:
         raise DigestValidationError(
