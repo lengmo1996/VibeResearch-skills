@@ -296,6 +296,74 @@ import daily_digest_config as config
         return self.python(PUBLIC_FETCH_FIXTURE + "\n" + textwrap.dedent(code),
                            root=str(root), categories=categories)
 
+    def test_independent_archive_and_authorized_deferral_for_configured_categories(self):
+        self.run_public_fetch_case(r"""
+set_cursor('2026-07-24')
+protected = {name: (root / name).read_bytes() for name in
+             ('last-successful-run.json', 'sent-papers.json', 'pending-run.json')
+             if (root / name).exists()}
+def fetch(_root, name, **kwargs):
+    with mock.patch.object(runtime, '_central_arxiv_get', return_value=page('2026-07-28', name)):
+        return runtime.fetch_announcement_batch(
+            _root, name, cursor_date=None, target_date='2026-07-28',
+            opener=object(), sleep=lambda _: None, observed_at=observed)
+result = runtime.capture_current_announcements(root, observed_at=observed, gate=SessionGate(), fetcher=fetch)
+assert result['capture_complete'] and result['valid_categories'] == data['categories']
+with mock.patch.object(runtime, 'expected_announcement_date', return_value='2026-07-28'):
+    assert runtime.transaction_status(root, 'public-digest-20260728')['selected_announcement_date'] == '2026-07-27'
+    runtime.defer_announcement(root, '2026-07-27', reason='Synthetic unavailable inventory',
+                               authorization='Synthetic explicit operator authorization')
+    assert runtime.deferred_announcement_dates(root) == ('2026-07-27',)
+    network = mock.Mock(side_effect=AssertionError('archive must replay offline'))
+    phase = runtime.fetch_announcement_phase(root, 'public-digest-20260728', gate=SessionGate(), fetcher=network)
+    assert phase['announcement_complete']
+    assert phase['restored_categories'] == data['categories'] and phase['fetched_categories'] == []
+    network.assert_not_called()
+    status = runtime.transaction_status(root, 'public-digest-20260728')
+    assert status['next_action'] == 'prepare_review'
+    assert status['deferred_announcement_dates'] == ['2026-07-27']
+    assert not status['historical_coverage_complete']
+    runtime.prepare_review(root, 'public-digest-20260728')
+for name, original in protected.items():
+    assert (root / name).read_bytes() == original
+set_cursor('2026-07-28')
+drain = runtime._backlog_drain_after_commit(root, 'public-digest-20260728')
+assert drain['status'] == 'complete_with_deferred'
+assert not drain['drain_complete'] and not drain['continuation_required']
+""")
+
+    def test_archive_integrity_and_pending_delivery_still_block_deferral(self):
+        self.run_public_fetch_case(r"""
+set_cursor('2026-07-24')
+with mock.patch.object(runtime, '_central_arxiv_get', return_value=page('2026-07-28', category)):
+    batch = runtime.fetch_announcement_batch(root, category, target_date='2026-07-28',
+        opener=object(), sleep=lambda _: None, observed_at=observed)
+runtime.store_announcement_archive(root, batch)
+try:
+    runtime.load_announcement_archive(root, '2026-07-28', category, '2026-07-24')
+except runtime.DigestValidationError:
+    pass
+else:
+    raise AssertionError('an unapproved gap must fail')
+path = runtime.announcement_archive_path(root, '2026-07-28', category)
+value = runtime.read_json(path); value['batch']['papers'][0]['abstract'] = ''
+runtime.atomic_write_json(path, value)
+try:
+    runtime.load_announcement_archive(root, '2026-07-28', category)
+except runtime.DigestValidationError:
+    pass
+else:
+    raise AssertionError('corrupt archive must fail')
+runtime.atomic_write_json(root / 'pending-run.json', {'delivery_status': 'pending'})
+try:
+    runtime.defer_announcement(root, '2026-07-27', reason='Synthetic failure', authorization='Synthetic authorization')
+except runtime.DigestValidationError:
+    pass
+else:
+    raise AssertionError('unresolved delivery must block deferral')
+assert not (root / runtime.DEFERRED_ANNOUNCEMENTS_FILENAME).exists()
+""")
+
     def test_historical_406_uses_exact_export_route_for_selected_categories(self):
         self.run_public_fetch_case(r"""
 for category in data['categories']:

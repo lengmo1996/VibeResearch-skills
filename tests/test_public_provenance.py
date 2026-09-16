@@ -86,7 +86,7 @@ def adapter_namespace(role):
         "UPSTREAM_TOOL_BINDINGS", "UPSTREAM_TOOLS", "HANDLERS", "RATE_LIMIT_PATTERN",
         "DIGEST_SESSION_TOKEN_ARGUMENT", "DIGEST_SESSION_TOKEN_SCHEMA", "_digest_tool", "DIGEST_TOOLS",
         "BEGIN_DIGEST_TOOL", "END_DIGEST_TOOL", "STATUS_TOOL", "FETCH_ANNOUNCEMENT_BATCH_TOOL",
-        "FETCH_ANNOUNCEMENT_PHASE_TOOL", "handle_list_tools", "handle_call_tool", "_json_content",
+        "CAPTURE_CURRENT_ANNOUNCEMENTS_TOOL", "FETCH_ANNOUNCEMENT_PHASE_TOOL", "handle_list_tools", "handle_call_tool", "_json_content",
         "initialization_options", "main",
     }
     text = WRAPPER_SOURCE if WRAPPER_SOURCE is not None else WRAPPER_PATH.read_text(encoding="utf-8")
@@ -119,7 +119,7 @@ class PublicMcpAdapterContracts(unittest.IsolatedAsyncioTestCase):
                 names = [tool.name for tool in tools]
                 expected = [entry[0] for entry in UPSTREAM_API]
                 if role == "digest":
-                    expected += ["fetch_announcement_phase", "fetch_announcement_batch",
+                    expected += ["capture_current_announcements", "fetch_announcement_phase", "fetch_announcement_batch",
                                  "begin_digest_session", "end_digest_session"]
                 self.assertEqual(expected + ["get_priority_status"], names)
                 self.assertEqual(len(names), len(set(names)))
@@ -130,7 +130,7 @@ class PublicMcpAdapterContracts(unittest.IsolatedAsyncioTestCase):
                     for tool in tools[:len(UPSTREAM_API)]:
                         self.assertIn("digest_session_token", tool.inputSchema["required"])
                         self.assertIn("query", tool.inputSchema["required"])
-                    category_schema = tools[len(UPSTREAM_API) + 1].inputSchema["properties"]["category"]
+                    category_schema = tools[len(UPSTREAM_API) + 2].inputSchema["properties"]["category"]
                     self.assertEqual(["astro-ph.GA", "math.PR"], category_schema["enum"])
                 tools.clear()
                 self.assertEqual(names, [tool.name for tool in await ns["handle_list_tools"]()])
@@ -156,7 +156,7 @@ class PublicMcpAdapterContracts(unittest.IsolatedAsyncioTestCase):
 
     async def test_unknown_and_unauthorized_calls_do_not_acquire_a_lease(self):
         ns = adapter_namespace("normal")
-        for name in ("begin_digest_session", "end_digest_session", "fetch_announcement_batch", "fetch_announcement_phase"):
+        for name in ("capture_current_announcements", "begin_digest_session", "end_digest_session", "fetch_announcement_batch", "fetch_announcement_phase"):
             with self.subTest(name=name), self.assertRaises(PriorityGateError):
                 await ns["handle_call_tool"](name, {})
         with self.assertRaises(ValueError):

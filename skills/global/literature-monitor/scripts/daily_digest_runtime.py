@@ -374,6 +374,7 @@ class OfficialArxivFetchError(DigestValidationError):
         http_status: int | None = None,
         exception_type: str | None = None,
         attempts: list[dict[str, Any]] | None = None,
+        request_chain: list[dict[str, Any]] | None = None,
     ) -> None:
         if kind not in ARXIV_FAILURE_KINDS:
             raise DigestValidationError(f"unsupported arXiv failure kind: {kind}")
@@ -384,6 +385,14 @@ class OfficialArxivFetchError(DigestValidationError):
         self.http_status = http_status
         self.exception_type = exception_type or self.__class__.__name__
         self.attempts = list(attempts or [])
+        self.request_chain = list(request_chain or [])
+
+    def __str__(self) -> str:
+        # MCP transports exception text, not custom exception attributes. Keep
+        # every route and retry visible there without changing retry classification.
+        if self.request_chain:
+            return json.dumps(self.as_record(), ensure_ascii=False)
+        return self.detail
 
     def as_record(self) -> dict[str, Any]:
         return {
@@ -392,6 +401,8 @@ class OfficialArxivFetchError(DigestValidationError):
             "exception_type": self.exception_type,
             "detail": self.detail,
             "attempts": copy.deepcopy(self.attempts),
+            **({"request_chain": copy.deepcopy(self.request_chain)}
+               if self.request_chain else {}),
         }
 
 
@@ -1254,12 +1265,84 @@ def runtime_environment_preflight() -> dict[str, Any]:
     }
 
 
+DEFERRED_ANNOUNCEMENTS_FILENAME = "deferred-announcements-v1.json"
+
+
+def deferred_announcement_dates(root: Path) -> tuple[str, ...]:
+    """Read explicit operator exceptions; malformed evidence fails closed."""
+    configure_public_runtime(root)
+    path = root.resolve() / DEFERRED_ANNOUNCEMENTS_FILENAME
+    if not path.exists():
+        return ()
+    value = read_json(path)
+    if not isinstance(value, dict) or value.get("schema_version") != 1:
+        raise DigestValidationError("invalid deferred announcement ledger schema")
+    entries = value.get("entries")
+    if not isinstance(entries, list):
+        raise DigestValidationError("invalid deferred announcement ledger entries")
+    days = []
+    for entry in entries:
+        if not isinstance(entry, dict):
+            raise DigestValidationError("invalid deferred announcement entry")
+        day = entry.get("date")
+        if not isinstance(day, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", day):
+            raise DigestValidationError("invalid deferred announcement date")
+        announcement_archive_path(root, day, TRACKED_CATEGORIES[0])
+        if (entry.get("status") != "missing_pending"
+                or entry.get("categories") != list(TRACKED_CATEGORIES)
+                or any(not isinstance(entry.get(k), str) or not entry[k].strip()
+                       for k in ("authorized_by", "authorization", "reason", "created_at"))):
+            raise DigestValidationError("invalid deferred announcement authorization")
+        if day in days:
+            raise DigestValidationError("duplicate deferred announcement date")
+        days.append(day)
+    return tuple(sorted(days))
+
+
+def defer_announcement(root: Path, day: str, *, reason: str, authorization: str) -> dict[str, Any]:
+    """Operator-only registration: no cursor, checkpoint or delivery mutation."""
+    configure_public_runtime(root)
+    root = root.resolve()
+    announcement_archive_path(root, day, TRACKED_CATEGORIES[0])
+    if not reason.strip() or not authorization.strip():
+        raise DigestValidationError("explicit authorization and reason are required")
+    with _exclusive_gate_state_lock(root / "announcement-phase.lock"):
+        with _exclusive_gate_state_lock(root / "digest-transaction.lock"):
+            pending_path = root / "pending-run.json"
+            if pending_path.exists():
+                pending = read_json(pending_path)
+                if pending and pending.get("delivery_status") != "committed":
+                    raise DigestValidationError("cannot defer while a delivery is unresolved")
+            path = root / DEFERRED_ANNOUNCEMENTS_FILENAME
+            existing = deferred_announcement_dates(root)
+            if day in existing:
+                return read_json(path)
+            if any((root / "deliveries").glob(f"arxiv-daily-{day}-*.json")):
+                raise DigestValidationError("cannot defer a date with delivery artifacts")
+            cursors = _committed_announcement_cursors(root)
+            if (len(set(cursors.values())) != 1 or None in cursors.values()
+                    or day <= str(next(iter(cursors.values())))
+                    or day > expected_announcement_date()):
+                raise DigestValidationError("deferred date must be available and uncommitted")
+            value = read_json(path) if path.exists() else {"schema_version": 1, "entries": []}
+            value["entries"].append({
+                "date": day, "status": "missing_pending",
+                "categories": list(TRACKED_CATEGORIES), "authorized_by": "user",
+                "authorization": authorization, "reason": reason, "created_at": utc_now(),
+                "committed_cursors_at_registration": cursors,
+            })
+            atomic_write_json(path, value)
+            deferred_announcement_dates(root)
+            return value
+
+
 def announcement_cursor_action(
     cursor_date: str | None,
     current_date: str,
     *,
     observed_at: datetime | None = None,
     enforce_current: bool = True,
+    deferred_dates: tuple[str, ...] = (),
 ) -> str:
     """Validate one announcement date against its committed category cursor."""
 
@@ -1296,7 +1379,7 @@ def announcement_cursor_action(
         if candidate.weekday() < 5:
             business_dates.append(candidate)
         candidate += timedelta(days=1)
-    if len(business_dates) > 1:
+    if any(day.isoformat() not in deferred_dates for day in business_dates[:-1]):
         raise DigestValidationError(
             f"announcement coverage gap from {cursor_date} to {current_date}; "
             "the current /new page requires an exact historical catchup batch"
@@ -2295,17 +2378,34 @@ def fetch_announcement_listing_once(
         "Pragma": "no-cache",
     }
     rejected_urls: list[str] = []
+    request_chain: list[dict[str, Any]] = []
     for index, url in enumerate(urls):
+        started = time.monotonic()
+        request_record: dict[str, Any] = {
+            "url": url, "category": normalized, "target_date": target_date,
+            "timeout_seconds": timeout_seconds,
+        }
         try:
             response = _central_arxiv_get(
                 url, headers=headers, timeout_seconds=timeout_seconds,
                 opener=opener, use_cache=False,
             )
         except OfficialArxivFetchError as exc:
+            request_record.update(
+                outcome="failure", kind=exc.kind, http_status=exc.http_status,
+                exception_type=exc.exception_type, detail=exc.detail,
+                elapsed_seconds=round(time.monotonic() - started, 3),
+            )
+            request_chain.append(request_record)
+            exc.request_chain = copy.deepcopy(request_chain)
             if exc.http_status != 406 or index == len(urls) - 1:
                 raise
             rejected_urls.append(url)
             continue
+        request_record.update(
+            http_status=response.status,
+            elapsed_seconds=round(time.monotonic() - started, 3),
+        )
         try:
             batch = parse_announcement_listing(response.body, normalized, listing_url=url)
             if target_date is not None and batch["announcement_date"] != target_date:
@@ -2322,14 +2422,26 @@ def fetch_announcement_listing_once(
                     f"arXiv announcement page date {batch['announcement_date']} "
                     f"does not match requested date {target_date}"
                 )
-        except OfficialArxivFetchError:
+        except OfficialArxivFetchError as exc:
+            request_record.update(outcome="failure", kind=exc.kind, detail=exc.detail)
+            request_chain.append(request_record)
+            exc.request_chain = copy.deepcopy(request_chain)
             raise
         except DigestValidationError as exc:
+            request_record.update(
+                outcome="failure", kind="response_integrity", detail=str(exc),
+                exception_type=type(exc).__name__,
+            )
+            request_chain.append(request_record)
             raise OfficialArxivFetchError(
                 "response_integrity", str(exc), exception_type=type(exc).__name__,
+                request_chain=request_chain,
             ) from exc
+        request_record["outcome"] = "success"
+        request_chain.append(request_record)
         batch["_retrieval"] = {
             "source": "arxiv_announcement",
+            "request_chain": request_chain,
             "listing_mode": "catchup" if "/catchup/" in url else "current",
             "response": {
                 "status": response.status,
@@ -2572,6 +2684,7 @@ def fetch_announcement_batch(
                     str(batch.get("announcement_date", "")),
                     observed_at=observed_at,
                     enforce_current=target_date is None,
+                    deferred_dates=deferred_announcement_dates(root),
                 )
             except OfficialArxivFetchError as exc:
                 failure = exc
@@ -2612,6 +2725,7 @@ def fetch_announcement_batch(
                 "exception_type": failure.exception_type,
                 "detail": failure.detail,
                 **failure_context,
+                "request_chain": copy.deepcopy(failure.request_chain),
             }
         )
         delay = 0
@@ -3228,6 +3342,7 @@ def _validate_screening_checkpoint(
     batch: dict[str, Any],
     category: str,
     expected_cursor: str | None,
+    *, root: Path | None = None,
 ) -> dict[str, Any]:
     """Validate one durable MCP announcement checkpoint for offline screening."""
 
@@ -3272,10 +3387,13 @@ def _validate_screening_checkpoint(
         expected_action = "process_next_batch"
         cursor_day = datetime.fromisoformat(expected_cursor).date()
         announcement_day = datetime.fromisoformat(announcement_date).date()
+        deferred = deferred_announcement_dates(root) if root is not None else ()
         business_days = 0
         candidate_day = cursor_day + timedelta(days=1)
         while candidate_day <= announcement_day:
-            if candidate_day.weekday() < 5:
+            if (candidate_day.weekday() < 5
+                    and (candidate_day == announcement_day
+                         or candidate_day.isoformat() not in deferred)):
                 business_days += 1
             candidate_day += timedelta(days=1)
         if business_days > 1:
@@ -3417,6 +3535,7 @@ def _announcement_backlog_plan(
     requested_run_id: str,
     *,
     observed_at: datetime | None = None,
+    deferred_dates: tuple[str, ...] = (),
 ) -> dict[str, Any] | None:
     """Plan missing weekday announcement dates from the committed cursor."""
 
@@ -3455,7 +3574,7 @@ def _announcement_backlog_plan(
     pending: list[str] = []
     candidate = committed + timedelta(days=1)
     while candidate <= through:
-        if candidate.weekday() < 5:
+        if candidate.weekday() < 5 and candidate.isoformat() not in deferred_dates:
             pending.append(candidate.isoformat())
         candidate += timedelta(days=1)
     return {
@@ -3495,6 +3614,7 @@ def _validate_announcement_target_manifest(
     value: dict[str, Any],
     run_id: str,
     cursors: dict[str, str | None],
+    *, root: Path | None = None,
 ) -> str:
     if value.get("schema_version") != ANNOUNCEMENT_TARGET_SCHEMA_VERSION:
         raise DigestValidationError("unsupported announcement target manifest schema")
@@ -3523,7 +3643,8 @@ def _validate_announcement_target_manifest(
         raise DigestValidationError("announcement target manifest created_at is missing")
     actions = {
         announcement_cursor_action(
-            cursors[category], target_date, enforce_current=False
+            cursors[category], target_date, enforce_current=False,
+            deferred_dates=deferred_announcement_dates(root) if root is not None else ()
         )
         for category in TRACKED_CATEGORIES
     }
@@ -3547,7 +3668,7 @@ def store_announcement_target_manifest(
     if path.is_file():
         existing = read_json(path)
         existing_target = _validate_announcement_target_manifest(
-            existing, run_id, cursors
+            existing, run_id, cursors, root=root,
         )
         if existing_target != target_date:
             raise DigestValidationError(
@@ -3564,10 +3685,10 @@ def store_announcement_target_manifest(
         "calendar_basis": "weekday_only",
         "created_at": utc_now(),
     }
-    _validate_announcement_target_manifest(value, run_id, cursors)
+    _validate_announcement_target_manifest(value, run_id, cursors, root=root)
     atomic_write_json(path, value)
     stored = read_json(path)
-    _validate_announcement_target_manifest(stored, run_id, cursors)
+    _validate_announcement_target_manifest(stored, run_id, cursors, root=root)
     return stored, path, False
 
 
@@ -3589,12 +3710,12 @@ def store_announcement_checkpoint(
     configure_public_runtime(root)
 
     root = root.resolve()
-    _validate_screening_checkpoint(batch, category, expected_cursor)
+    _validate_screening_checkpoint(batch, category, expected_cursor, root=root)
     output_path = announcement_batch_output_path(root, run_id, category)
     if output_path.is_file():
         try:
             existing = read_json(output_path)
-            _validate_screening_checkpoint(existing, category, expected_cursor)
+            _validate_screening_checkpoint(existing, category, expected_cursor, root=root)
         except (DigestValidationError, OSError, ValueError):
             run_dir = output_path.parent
             downstream = [
@@ -3614,7 +3735,7 @@ def store_announcement_checkpoint(
 
     atomic_write_json(output_path, batch)
     stored = read_json(output_path)
-    _validate_screening_checkpoint(stored, category, expected_cursor)
+    _validate_screening_checkpoint(stored, category, expected_cursor, root=root)
     return stored, output_path, False
 
 
@@ -3635,7 +3756,7 @@ def _run_progress_profile(
             continue
         try:
             batch = read_json(path)
-            _validate_screening_checkpoint(batch, category, cursors[category])
+            _validate_screening_checkpoint(batch, category, cursors[category], root=root)
         except (DigestValidationError, OSError, ValueError):
             continue
         valid_count += 1
@@ -3648,7 +3769,7 @@ def _run_progress_profile(
     if target_path.is_file():
         try:
             manifest_target = _validate_announcement_target_manifest(
-                read_json(target_path), run_id, cursors
+                read_json(target_path), run_id, cursors, root=root,
             )
         except (DigestValidationError, OSError, ValueError):
             pass
@@ -3745,7 +3866,7 @@ def resolve_stable_run_id(root: Path, requested_run_id: str) -> str:
     root = root.resolve()
     runs_root = root / "runs"
     cursors = _committed_announcement_cursors(root.resolve())
-    backlog = _announcement_backlog_plan(cursors, normalized)
+    backlog = _announcement_backlog_plan(cursors, normalized, deferred_dates=deferred_announcement_dates(root))
     all_candidates = (
         sorted(
             (path for path in runs_root.iterdir() if path.is_dir()),
@@ -3825,6 +3946,8 @@ def resolve_stable_run_id(root: Path, requested_run_id: str) -> str:
     older_profiles: list[tuple[str, dict[str, Any]]] = []
     for path in all_candidates:
         candidate_key = _run_date_key(path.name)
+        if candidate_key in {d.replace("-", "") for d in deferred_announcement_dates(root)}:
+            continue
         if candidate_key is None or candidate_key >= date_key:
             continue
         if committed_key is not None and candidate_key <= committed_key:
@@ -3902,7 +4025,7 @@ def announcement_phase_status(root: Path, requested_run_id: str) -> dict[str, An
         progress_times.append(path.stat().st_mtime)
         try:
             batch = read_json(path)
-            _validate_screening_checkpoint(batch, category, cursors[category])
+            _validate_screening_checkpoint(batch, category, cursors[category], root=root)
         except (DigestValidationError, OSError, ValueError) as exc:
             invalid_categories[category] = str(exc)[:300]
             continue
@@ -3918,7 +4041,7 @@ def announcement_phase_status(root: Path, requested_run_id: str) -> dict[str, An
         progress_times.append(target_path.stat().st_mtime)
         try:
             manifest_target = _validate_announcement_target_manifest(
-                read_json(target_path), run_id, cursors
+                read_json(target_path), run_id, cursors, root=root,
             )
         except (DigestValidationError, OSError, ValueError) as exc:
             target_manifest_error = str(exc)[:300]
@@ -3974,6 +4097,7 @@ def announcement_phase_status(root: Path, requested_run_id: str) -> dict[str, An
                         cursors[category],
                         candidate,
                         enforce_current=False,
+                        deferred_dates=deferred_announcement_dates(root),
                     )
                     for category in TRACKED_CATEGORIES
                 }
@@ -4061,6 +4185,127 @@ def run_resume_status(root: Path, requested_run_id: str) -> dict[str, Any]:
     return status
 
 
+def announcement_archive_path(root: Path, day: str, category: str) -> Path:
+    # Validate before incorporating either value into a filesystem path.
+    configure_public_runtime(root)
+    announcement_listing_url(category, day)
+    if datetime.fromisoformat(day).weekday() >= 5:
+        raise DigestValidationError("announcement archive date falls on a weekend")
+    return root.resolve() / "announcement-archive" / day / f"{category}.json"
+
+
+def _archive_batch(batch: dict[str, Any], day: str, category: str) -> dict[str, Any]:
+    if batch.get("announcement_date") != day:
+        raise DigestValidationError("announcement archive date mismatch")
+    value = copy.deepcopy(batch)
+    # Archive identity is independent of committed delivery state. No cursor is
+    # advanced or invented: these fields only validate the standalone inventory.
+    value["requested_cursor_date"] = None
+    value["cursor_action"] = "process_migration_batch"
+    value["coverage"] = announcement_batch_coverage(value)
+    _validate_screening_checkpoint(value, category, None)
+    for kind, key in (("new", "new_submissions"), ("cross_list", "cross_lists"),
+                      ("replacement", "replacements")):
+        if sum(p.get("announcement_type") == kind for p in value["papers"]) != value["counts"][key]:
+            raise DigestValidationError("announcement archive section inventory mismatch")
+    return value
+
+
+def load_announcement_archive(
+    root: Path, day: str, category: str, cursor: str | None = None,
+) -> dict[str, Any] | None:
+    configure_public_runtime(root)
+    path = announcement_archive_path(root, day, category)
+    if not path.is_file():
+        return None
+    record = read_json(path)
+    batch = record.get("batch")
+    if (record.get("schema_version") != 1 or record.get("date") != day
+            or record.get("category") != category or not isinstance(batch, dict)
+            or record.get("sha256") != _json_sha256(batch)):
+        raise DigestValidationError(f"invalid announcement archive identity/hash: {path}")
+    batch = _archive_batch(batch, day, category)
+    batch["requested_cursor_date"] = cursor
+    batch["cursor_action"] = announcement_cursor_action(cursor, day, enforce_current=False, deferred_dates=deferred_announcement_dates(root))
+    _validate_screening_checkpoint(batch, category, cursor, root=root)
+    batch.setdefault("_retrieval", {})["archive_sha256"] = record["sha256"]
+    return batch
+
+
+def store_announcement_archive(root: Path, batch: dict[str, Any]) -> Path:
+    configure_public_runtime(root)
+    day, category = str(batch.get("announcement_date", "")), str(batch.get("category", ""))
+    path = announcement_archive_path(root, day, category)
+    value = _archive_batch(batch, day, category)
+    if path.exists():
+        load_announcement_archive(root, day, category)
+        return path  # A validated snapshot is immutable, including its exact bytes.
+    atomic_write_json(path, {
+        "schema_version": 1, "date": day, "category": category,
+        "saved_at": utc_now(), "sha256": _json_sha256(value), "batch": value,
+    })
+    load_announcement_archive(root, day, category)
+    return path
+
+
+def capture_current_announcements(
+    root: Path, *, observed_at: datetime | None = None,
+    priority_root: Path | None = None, gate: ArxivPriorityGate | None = None,
+    fetcher: Any = None,
+) -> dict[str, Any]:
+    """Preserve the latest available inventories despite older delivery backlog."""
+    configure_public_runtime(root)
+    root = root.resolve()
+    day = expected_announcement_date(observed_at)
+    coordination_root = (priority_root or root / "priority-gate").resolve()
+    session_gate = gate or ArxivPriorityGate(coordination_root)
+    fetch_batch = fetcher or fetch_announcement_batch
+    result: dict[str, Any] = {
+        "date": day, "capture_complete": False, "valid_categories": [],
+        "fetched_categories": [], "errors": {}, "delivery_state_changed": False,
+    }
+    with _exclusive_gate_state_lock(root / "announcement-phase.lock", timeout_seconds=300):
+        missing = []
+        for category in TRACKED_CATEGORIES:
+            try:
+                cached = load_announcement_archive(root, day, category)
+                if cached is None:
+                    missing.append(category)
+                else:
+                    result["valid_categories"].append(category)
+            except (DigestValidationError, OSError, ValueError) as exc:
+                result["errors"][category] = {"detail": str(exc)}
+        if missing:
+            session = session_gate.begin_digest_session("archive-" + day, wait_timeout_seconds=300)
+            token = str(session.get("session_token", ""))
+            try:
+                if not token or session.get("run_id") != "archive-" + day:
+                    raise DigestValidationError("archive session identity mismatch")
+                for category in missing:
+                    try:
+                        batch = fetch_batch(
+                            root, category, cursor_date=None, target_date=day,
+                            observed_at=observed_at, priority_root=coordination_root,
+                            priority_gate=session_gate, digest_session_token=token,
+                        )
+                        _archive_batch(batch, day, category)
+                        store_announcement_archive(root, batch)
+                        result["valid_categories"].append(category)
+                        result["fetched_categories"].append(category)
+                    except (OfficialArxivFetchError, DigestValidationError, OSError, ValueError) as exc:
+                        result["errors"][category] = (
+                            exc.as_record() if isinstance(exc, OfficialArxivFetchError)
+                            else {"detail": str(exc)}
+                        )
+            finally:
+                if token:
+                    session_gate.end_digest_session(token)
+        result["capture_complete"] = len(result["valid_categories"]) == len(TRACKED_CATEGORIES)
+        result["checked_at"] = utc_now()
+        atomic_write_json(root / "announcement-archive" / day / "capture-status.json", result)
+    return result
+
+
 def fetch_announcement_phase(
     root: Path,
     requested_run_id: str,
@@ -4124,6 +4369,7 @@ def fetch_announcement_phase(
                 root, run_id, target_date, cursors
             )
         fetched_categories: list[str] = []
+        restored_categories: list[str] = []
         session: dict[str, Any] = {}
         session_token = ""
         session_started = False
@@ -4144,15 +4390,19 @@ def fetch_announcement_phase(
                     "priority gate returned a digest session for the wrong run"
                 )
             for category in status["needed_categories"]:
-                batch = fetch_batch(
-                    root,
-                    category,
-                    cursor_date=cursors[category],
-                    target_date=target_date,
-                    priority_root=coordination_root,
-                    priority_gate=session_gate,
-                    digest_session_token=session_token,
-                )
+                batch = (load_announcement_archive(root, target_date, category, cursors[category])
+                         if target_date is not None else None)
+                from_archive = batch is not None
+                if batch is None:
+                    batch = fetch_batch(
+                        root,
+                        category,
+                        cursor_date=cursors[category],
+                        target_date=target_date,
+                        priority_root=coordination_root,
+                        priority_gate=session_gate,
+                        digest_session_token=session_token,
+                    )
                 batch_date = str(batch.get("announcement_date", "")).strip()
                 if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", batch_date):
                     raise DigestValidationError(
@@ -4191,7 +4441,7 @@ def fetch_announcement_phase(
                     )
                 )
                 if not checkpoint_reused:
-                    fetched_categories.append(category)
+                    (restored_categories if from_archive else fetched_categories).append(category)
         except BaseException as exc:
             phase_error = exc
             raise
@@ -4213,6 +4463,7 @@ def fetch_announcement_phase(
                 "reused": False,
                 "session_resumed": bool(session.get("resumed")),
                 "fetched_categories": fetched_categories,
+                "restored_categories": restored_categories,
             }
         )
         if not result["announcement_complete"]:
@@ -4469,7 +4720,7 @@ def prepare_review(
             path = announcement_batch_output_path(root, run_id, category)
             batch = read_json(path)
             expected_cursor = cursors.get(category)
-            coverage = _validate_screening_checkpoint(batch, category, expected_cursor)
+            coverage = _validate_screening_checkpoint(batch, category, expected_cursor, root=root)
             announcement_dates.add(str(batch["announcement_date"]))
             coverages.append(coverage)
             retrieved_count += len(batch["papers"])
@@ -5675,7 +5926,7 @@ def _prepare_screening_locked(
             raise DigestValidationError(
                 f"announcement cursor for {category} must be a date string or null"
             )
-        coverage = _validate_screening_checkpoint(batch, category, expected_cursor)
+        coverage = _validate_screening_checkpoint(batch, category, expected_cursor, root=root)
         announcement_dates.add(str(batch["announcement_date"]))
         coverages.append(coverage)
         retrieved_count += len(batch["papers"])
@@ -8542,14 +8793,18 @@ def _backlog_horizon_identity(requested_run_id: str) -> dict[str, Any]:
 
 def _backlog_status_fields(root: Path, requested_run_id: str) -> dict[str, Any]:
     plan = _announcement_backlog_plan(
-        _committed_announcement_cursors(root.resolve()), requested_run_id
+        _committed_announcement_cursors(root.resolve()), requested_run_id,
+        deferred_dates=deferred_announcement_dates(root),
     )
     if plan is None:
         return {}
+    deferred = list(deferred_announcement_dates(root))
     pending = list(plan["pending_announcement_dates"])
     return {
         **_backlog_horizon_identity(requested_run_id),
         **plan,
+        "deferred_announcement_dates": deferred,
+        "historical_coverage_complete": not deferred and not pending,
         "selected_announcement_date": pending[0] if pending else None,
         "backlog_remaining_after_selected": max(0, len(pending) - 1),
         "next_backlog_announcement_date": pending[1] if len(pending) > 1 else None,
@@ -8803,8 +9058,8 @@ def _backlog_drain_after_commit(
 
     action = str(next_transaction.get("action") or "").strip()
     if action == "no_announcement_due":
-        status = "complete"
-        drain_complete = True
+        status = ("complete_with_deferred" if next_transaction.get("deferred_announcement_dates") else "complete")
+        drain_complete = not bool(next_transaction.get("deferred_announcement_dates"))
         continuation_required = False
         failure_code = None
         failure_detail = None
@@ -8832,6 +9087,7 @@ def _backlog_drain_after_commit(
         "horizon_date": identity["backlog_horizon_date"],
         "status": status,
         "drain_complete": drain_complete,
+        "deferred_announcement_dates": next_transaction.get("deferred_announcement_dates", []),
         "continuation_required": continuation_required,
         "failure_code": failure_code,
         "failure_detail": failure_detail,
@@ -9105,6 +9361,17 @@ def parse_args() -> argparse.Namespace:
     transaction_status_parser.add_argument("--root", required=True, type=Path)
     transaction_status_parser.add_argument("--run-id", required=True)
 
+    defer_parser = subparsers.add_parser("defer-announcement", help="operator-authorized missing date registration; never sends")
+    defer_parser.add_argument("--root", required=True, type=Path)
+    defer_parser.add_argument("--date", required=True)
+    defer_parser.add_argument("--reason", required=True)
+    defer_parser.add_argument("--authorization", required=True)
+
+    capture_parser = subparsers.add_parser(
+        "capture-current-announcements", help="archive current inventories without delivery or cursor changes",
+    )
+    capture_parser.add_argument("--root", required=True, type=Path)
+
     upgrade_pending_parser = subparsers.add_parser(
         "upgrade-v3-pending",
         help="archive an unsent v3 pending digest and reuse its stable checkpoints in v4",
@@ -9287,6 +9554,14 @@ def main() -> int:
         result = runtime_environment_preflight()
         print(json.dumps(result, ensure_ascii=False))
         return 0 if result["ready"] else 3
+    if args.command == "defer-announcement":
+        result = defer_announcement(args.root, args.date, reason=args.reason, authorization=args.authorization)
+        print(json.dumps(result, ensure_ascii=False))
+        return 0
+    if args.command == "capture-current-announcements":
+        result = capture_current_announcements(args.root)
+        print(json.dumps(result, ensure_ascii=False))
+        return 0 if result["capture_complete"] else 3
     if args.command == "gate-acquire":
         result = acquire_arxiv_mcp_gate(
             args.root.resolve(),

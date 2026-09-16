@@ -36,6 +36,7 @@ import daily_digest_runtime as runtime
 from daily_digest_runtime import (
     OfficialArxivFetchError,
     announcement_batch_coverage,
+    capture_current_announcements,
     fetch_announcement_phase,
     fetch_announcement_batch,
     hydrate_announcement_versions,
@@ -298,6 +299,17 @@ FETCH_ANNOUNCEMENT_PHASE_TOOL = types.Tool(
     },
 )
 
+CAPTURE_CURRENT_ANNOUNCEMENTS_TOOL = types.Tool(
+    name="capture_current_announcements",
+    description=(
+        "Independently archive the latest available seven-category announcement "
+        "inventories even when an older digest is blocked. Validate dates, counts, "
+        "abstracts and snapshot hashes; reuse valid snapshots; retain per-category "
+        "failures. Never send, render, change pending delivery, or advance cursors."
+    ),
+    inputSchema={"type": "object", "properties": {}, "additionalProperties": False},
+)
+
 HANDLERS: dict[
     str, Callable[[dict[str, Any]], Awaitable[list[types.TextContent]]]
 ] = {tool.name: handler for tool, handler in UPSTREAM_TOOL_BINDINGS}
@@ -329,6 +341,7 @@ async def handle_list_tools() -> list[types.Tool]:
     tools = list(DIGEST_TOOLS if ARGS.role == "digest" else UPSTREAM_TOOLS)
     if ARGS.role == "digest":
         tools.extend((
+            CAPTURE_CURRENT_ANNOUNCEMENTS_TOOL,
             FETCH_ANNOUNCEMENT_PHASE_TOOL,
             FETCH_ANNOUNCEMENT_BATCH_TOOL,
             BEGIN_DIGEST_TOOL,
@@ -344,6 +357,16 @@ async def handle_call_tool(
 ) -> list[types.TextContent]:
     if name == "get_priority_status":
         return _json_content(gate.status())
+    if name == "capture_current_announcements":
+        if ARGS.role != "digest" or ARGS.digest_root is None:
+            raise PriorityGateError("announcement capture requires digest role and root")
+        if arguments:
+            raise PriorityGateError("announcement capture accepts no arguments")
+        result = await asyncio.to_thread(
+            capture_current_announcements, ARGS.digest_root,
+            priority_root=ARGS.coordination_root, gate=gate,
+        )
+        return _json_content(result)
     if name == "begin_digest_session":
         if ARGS.role != "digest":
             raise PriorityGateError("begin_digest_session is available only in digest role")
