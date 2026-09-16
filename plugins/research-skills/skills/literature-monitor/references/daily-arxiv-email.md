@@ -96,6 +96,63 @@ do not select a fixed subject. The digest's `report_category` and
 
 ## 1. Recovery and preflight
 
+### Explicitly deferred missing dates
+
+Only a separate interactive request from the user can authorize
+`defer-announcement --root <digest-root> --date YYYY-MM-DD --reason <reason>
+--authorization <verbatim-user-authorization>`. The Scheduled Task must never invoke
+this command or invent additional exceptions. It records the date and all configured
+categories as `missing_pending` in `deferred-announcements-v1.json`; it does not
+change successful cursors, sent-paper history, checkpoints, or delivery receipts.
+Registration refuses an unresolved delivery or delivery artifacts for that date.
+
+The oldest-date planner excludes only dates in this validated ledger. A later
+batch still requires its exact date, complete configured-category inventories, counts,
+and abstracts. Cursor gaps are accepted only when every intermediate weekday has
+an explicit ledger entry. Malformed ledgers fail closed. Independent archives can
+then restore the later batch without network requests.
+
+Status reports expose `deferred_announcement_dates` and
+`historical_coverage_complete`; missing dates remain visible even after later dates
+are committed. `backlog_drain.status=complete_with_deferred` is terminal for the
+active queue, with `continuation_required=false` and `drain_complete=false`.
+Report the missing dates and stop; never claim all historical coverage is complete
+or repeatedly retry the deferred date. A subsequent historical recovery requires
+a separate audited backfill; do not remove ledger entries or rewind cursors merely
+because a later day succeeded.
+
+### Independent announcement archive
+
+Before delivery preflight, historical retrieval, or stopping for an older blocked
+transaction, preserve the latest available announcement once per scheduled invocation
+with `mcp__arxiv_daily__capture_current_announcements({})`. Prefer this MCP operation
+so capture uses the configured network-enabled digest service. The equivalent CLI
+below is for interactive recovery in an environment with verified network access:
+
+```text
+DigestPython daily_digest_runtime.py capture-current-announcements --root <root>
+```
+
+Run this only after runtime preflight and the initial `transaction-status`;
+`finish_commit` retains its immediate-commit priority, and `no_announcement_due`
+still terminates without network. After any immediate commit, use its returned
+next transaction to decide whether capture is still needed. This independent,
+serial phase writes only `announcement-archive/<date>/<category>.json` and its
+capture-status report, plus coordination locks. It never prepares or sends a
+digest, changes pending delivery, or advances a cursor. A failed category does not
+prevent the other categories from being saved. Reuse immutable validated snapshots;
+do not overwrite corrupt snapshots or treat partial capture as complete configured-category success.
+An incomplete capture reports its errors and does not authorize bypassing a blocked
+transaction. Do not repeat this capture command within the same scheduled invocation.
+
+Snapshots retain full paper records, source URL, exact date, category and section
+counts, and a SHA-256 of the saved batch. Revalidate the hash and all original
+identity/date/count/abstract checks when reusing them. The normal oldest-first
+announcement phase may consume an archive only when its date becomes the next
+uncommitted date; it binds that inventory to the actual committed cursor at that
+time. Archiving a later date never creates a later delivery transaction.
+
+
 Resolve one Python interpreter once for the whole scheduled invocation. Prefer an
 explicitly configured executable; otherwise resolve `py -3` on Windows, then
 `python3` or `python`, to its real absolute `sys.executable`. Do not scan project
@@ -636,7 +693,7 @@ exactly its returned verified receipt message ID with
 `backlog_drain.next_transaction`; do not stop after the
 single-date commit. For each selected transaction, use only
 transaction-status's returned canonical run_id and follow `next_action` when the
-action is resume_run. It always selects the oldest uncommitted announcement date,
+action is resume_run. It selects the oldest non-deferred uncommitted announcement date,
 including a prior date that failed before its first checkpoint. If it returns
 no_announcement_due, stop without network, render, email, or cursor mutation. If
 phase_blocked=true, record the returned inconsistency and stop without retrying the
@@ -650,6 +707,25 @@ single-call wrapper and actively collect any yielded cell with functions.wait be
 proceeding. Never stop at a waiting-only status message. Require
 announcement_complete=true before review and report capability missing only when
 both surfaces lack it.
+
+Independent capture: after runtime preflight and the initial transaction-status,
+honor finish_commit immediately and consume its next transaction first. Unless
+the resulting action is no_announcement_due, call exactly once per invocation:
+mcp__arxiv_daily__capture_current_announcements({}). Discover the direct or
+functions.exec surface and collect any yielded result before proceeding. Do not
+substitute a sandbox-blocked shell request. If the capability is absent, report
+capture unavailable and continue only the original transaction's permitted actions.
+For separately authorized interactive recovery with network access, the equivalent
+command is DigestPython daily_digest_runtime.py capture-current-announcements
+--root <DigestRoot> using the bound interpreter and repository script. Do this
+before delivery preflight, historical fetching, or stopping for a blocked older
+transaction. This capture may fetch the latest available announcement while an
+older transaction remains pending, but writes only independent inventory archives
+and coordination state. It never sends, renders, commits, or advances cursors.
+Capture failures preserve successful categories and report incomplete coverage;
+do not wrap capture in an outer retry. Afterwards follow the original transaction
+action, retaining all delivery and oldest-first rules. The normal announcement
+phase revalidates and consumes archived inventories only when their date is next.
 
 Run the bounded v4 workflow: local-classify the full inventory, model-review only
 the returned Top-30 pages, then faithfully translate each next bounded report-category
@@ -749,3 +825,8 @@ successful terminal summary is allowed only when `backlog_drain.status=complete`
 `drain_complete=true`, and its nested action is `no_announcement_due`; otherwise
 continue or report the exact blocked/failure state.
 ```
+
+When `backlog_drain.status=complete_with_deferred`, stop the active queue and
+report `deferred_announcement_dates` as missing pending backfill. This is not
+complete historical coverage. Also report missing dates on `no_announcement_due`.
+The Scheduled Task must never invoke `defer-announcement` or invent exceptions.
