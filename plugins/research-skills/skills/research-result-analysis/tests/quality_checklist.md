@@ -35,3 +35,6 @@
 <python-command> <skill-root>/scripts/validate_result_analysis.py --self-test
 <python-command> <skill-root>/scripts/validate_result_analysis.py <saved-report.md> --claim-patch <patch.json>
 ```
+- [ ] Findings cite artifact/run IDs and metric direction.
+- [ ] Next checks distinguish explanations rather than merely repeat runs.
+- [ ] A chat answer opens with the finding and states claim status in the user's language; IDs stay in structured reports.

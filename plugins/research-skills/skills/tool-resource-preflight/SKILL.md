@@ -1,6 +1,6 @@
 ---
 name: tool-resource-preflight
-description: "Use when a local or scheduled workload needs a pre-execution feasibility check across effective CPU, memory, disk, accelerator, runtime, dependencies, permissions, scheduler/container limits, wall time, or cost budget. Produces a redacted resource inventory, requirement-to-evidence matrix, bottlenecks, fallbacks, and go/conditional/no-go/not-evaluable verdict. Do not use to benchmark or stress hardware, install packages or drivers, launch jobs, provision cloud resources, or infer that visible host hardware is usable by the current process."
+description: "Check before running a workload whether CPU, memory, disk, GPU, runtime, dependencies, permissions, scheduler limits, wall time, or budget are enough (跑之前检查显存、磁盘、环境够不够). Returns a redacted inventory, bottlenecks, fallbacks, and a go/conditional/no-go/not-evaluable verdict."
 ---
 
 # Tool Resource Preflight
@@ -52,7 +52,7 @@ for effective-resource semantics, accelerator gates, privacy, and verdict rules.
 
 ## Output and validation
 
-Return workload requirements, inventory/provenance, effective constraints,
+In a chat answer, lead with go / conditional / no-go and the bottleneck that decides it, then the fallback, per [output voice](../_shared/output-voice.md). A saved preflight contains workload requirements, inventory/provenance, effective constraints,
 requirement-evidence matrix, bottlenecks, fallbacks, risks, unresolved checks, and
 verdict.
 
@@ -71,4 +71,10 @@ The validator is offline and does not probe resources.
 - `$code-repo-adaptation`: environment, dependency, framework, or platform migration.
 - `$code-debugging`: concrete runtime/resource failure after execution begins.
 
-Follow shared approval, environment, operational-boundary, and mutation policies.
+## Stop conditions
+
+Stop when every requirement has evidence or an explicit gap and the verdict follows from them. Shared rules:
+[approval](../_shared/approval-workflow.md),
+[environment](../_shared/environment-compatibility.md),
+[operational boundaries](../_shared/operational-boundaries.md),
+[file safety](../_shared/file-mutation-safety.md).

@@ -1,6 +1,6 @@
 ---
 name: visual-expression-mining
-description: "Use when figure, table, schematic, plot-layout, or visual-storytelling patterns must be extracted from supplied papers, visuals, or an authorized literature collection for a defined downstream use. Produces source-linked visual pattern cards, reusable design rules, adaptation cautions, and optional handoffs. Do not use to copy protected visuals, choose a final deck style, or generate the final artifact."
+description: "Extract reusable figure, table, schematic, plot-layout, or visual-storytelling patterns from supplied papers or an authorized collection for a stated downstream use (学习论文配图风格、图表表达方式). Returns source-linked pattern cards, design rules, and adaptation cautions."
 ---
 
 # Visual Expression Mining
@@ -36,7 +36,7 @@ analysis. Never reconstruct missing labels or visual relationships from memory.
 
 ## Workflow
 
-1. Bind source set, target use, mode, comparison scope, and reuse constraints.
+1. Pin down source set, target use, mode, comparison scope, and reuse constraints.
 2. Read [visual mining protocol](references/visual-mining-protocol.md). Assign stable
    `VIS-*` source observations and `PAT-*` pattern IDs.
 3. Record exact source identity, page/figure/table/caption, artifact quality, context,
@@ -79,6 +79,8 @@ Avoid a single unexplained “value score”.
 
 ## Output contract
 
+In a chat answer, lead with the few patterns worth reusing and why they work for the stated use, per [output voice](../../_shared/output-voice.md); the pattern cards carry source links and cautions.
+
 Use [visual-pattern-report.md](templates/visual-pattern-report.md). Return source
 inventory; observation cards; pattern taxonomy; independent assessment matrix;
 adaptation and copyright cautions; and a bounded downstream handoff.
@@ -96,19 +98,8 @@ If source quality is insufficient, return only visible layout observations and n
 context. If sources are too homogeneous for a general pattern, label the result
 `source-local`. If reuse rights are unclear, do not recommend direct reuse.
 
-## Validation checklist
+## Stop conditions
 
-- [ ] Source identity, exact visual location, caption/context, and quality are explicit.
-- [ ] Observed structure is separate from interpretation and protected content.
-- [ ] Semantic role, topology, encoding, annotation, and reading order are analyzed.
-- [ ] Patterns identify invariant/variable parts, evidence prerequisites, and counterexamples.
-- [ ] Assessment dimensions remain separate rather than one opaque score.
-- [ ] Reuse status and permission uncertainty are conservative.
-- [ ] Handoff preserves source/risks without choosing final artifact or deck style.
-
-## Shared contracts and stop conditions
-
-Follow [operational boundaries](../../_shared/operational-boundaries.md),
-[evidence](../../_shared/evidence-policy.md), and
-[failure](../../_shared/failure-policy.md). Stop when patterns are source-linked and
-adaptable without copying, or when visual source quality is insufficient.
+Stop when patterns are source-linked and
+adaptable without copying, or when visual source quality is insufficient. Shared rules: [operational boundaries](../../_shared/operational-boundaries.md),
+[evidence](../../_shared/evidence-policy.md), [failure](../../_shared/failure-policy.md).

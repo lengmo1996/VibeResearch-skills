@@ -1,6 +1,6 @@
 ---
 name: paper-reproduction
-description: "Use when identifying a paper's core innovation, locating official code, mapping method/equations/architecture to code, or implementing the core method with explicit authorization. Produces a paper-code map and candidate implementation. Do not use for environment migration, experiment-result acceptance, or final verification."
+description: "Find a paper's core innovation and official code, map its method, equations, and architecture to code, or implement the core method when authorized (复现论文、找官方代码、论文对应代码). Returns a paper-code map and a candidate implementation."
 ---
 
 # Paper Reproduction
@@ -105,7 +105,10 @@ When no official implementation can be established:
 
 ## Mode-specific output
 
-Every mode includes **Scope** (paper/repository material actually inspected). Add
+In a chat answer, lead with the answer to the mode's question (what the innovation is,
+whether official code exists, where each equation lives in code, what was implemented),
+per [output voice](../_shared/output-voice.md); `MAP-*` and `DEC-*` IDs belong in the
+saved report. Every mode includes **Scope** (paper/repository material actually inspected). Add
 only the selected row's outputs. Innovation and repository-provenance rows include
 their own unresolved interpretations or identity evidence; they do not require a
 separate paper-to-code section.

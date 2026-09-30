@@ -1,6 +1,6 @@
 ---
 name: literature-monitor
-description: "Use when monitoring recent papers, a research direction, baseline/dataset changes, a watchlist, or an explicitly authorized daily arXiv email over a defined window. Produces a source-covered deduplicated candidate queue or transactional digest. Do not use for one-time screening of a supplied list, deep reading, synthesis, or index construction."
+description: "Monitor recent papers, a research direction, baseline/dataset changes, a watchlist, or an explicitly authorized daily arXiv email over a defined window (追踪新论文、文献监测、每日 arXiv). Returns a source-covered candidate queue or transactional digest."
 ---
 
 # Literature Monitor
@@ -136,10 +136,13 @@ coverage ledger.
 
 ## Output contract
 
-For non-email modes use [monitor-report.md](templates/monitor-report.md): scope/window,
-source coverage, cursor/state basis, deduplicated changes, ranked queue, exclusions,
-uncertainty, and handoff. A KB ingest queue is a review candidate only and requires
-manual acceptance before `$literature-kb-build`.
+For non-email modes, [monitor-report.md](templates/monitor-report.md) lists what a
+report covers: scope/window, source coverage, cursor/state basis, deduplicated
+changes, ranked queue, exclusions, uncertainty, and handoff. In a chat answer, lead
+with what changed and what to read first, keep coverage to the sentence or small
+table the reader needs to trust “nothing else new”, and follow
+[output voice](../../_shared/output-voice.md). A KB ingest queue is a review
+candidate only and requires manual acceptance before `$literature-kb-build`.
 
 `daily_arxiv_email` uses the artifacts and transactional states defined in its
 reference and schema.
@@ -157,22 +160,11 @@ Report source/category/window gaps and retain prior state. Never present stale o
 partial coverage as a current complete monitor. Keep recoverable pending artifacts
 after a delivery failure and report the exact resume point.
 
-## Validation checklist
+## Stop conditions
 
-- [ ] Topic, mode, source set, window/cursor, exclusions, and output budget are explicit.
-- [ ] Coverage is recorded before “new” or “none found” claims.
-- [ ] Identity/version deduplication preserves uncertain matches.
-- [ ] Relevance uses more than title keywords.
-- [ ] New, updated, already-known, and uncertain-duplicate are distinct.
-- [ ] Candidate threats and ingest actions remain reviewable, not accomplished facts.
-- [ ] Writes or email have matching authorization and transactional evidence.
-- [ ] Daily mode loaded the complete reference and used bundled automation.
-
-## Shared contracts and stop conditions
-
-Follow [approval](../../_shared/approval-workflow.md),
+Stop when the window is covered and the queue is deduplicated, required sources are
+unavailable, or any required daily shard, runtime, authorization, or delivery
+precondition fails. Shared rules: [approval](../../_shared/approval-workflow.md),
 [file safety](../../_shared/file-mutation-safety.md),
-[operational boundaries](../../_shared/operational-boundaries.md), and
-[evidence](../../_shared/evidence-policy.md). Stop when the window is covered and the
-queue is deduplicated, required sources are unavailable, or any required daily shard,
-runtime, authorization, or delivery precondition fails.
+[operational boundaries](../../_shared/operational-boundaries.md),
+[evidence](../../_shared/evidence-policy.md).

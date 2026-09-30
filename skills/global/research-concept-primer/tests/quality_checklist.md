@@ -11,3 +11,14 @@
 - [ ] Contrasts use a consistent decision-relevant axis.
 - [ ] Reading recommendations include purpose and prerequisite.
 - [ ] No citation, consensus, priority, page, or document identity is fabricated.
+
+## Moved from SKILL.md
+
+- [ ] The selected meaning, mode, audience, depth, and source boundary are explicit.
+- [ ] Prerequisites appear before mechanisms that depend on them.
+- [ ] Facts, source-local definitions, interpretation, and unknowns are distinct.
+- [ ] The mechanism states assumptions, inputs/outputs, and failure boundaries.
+- [ ] Adjacent concepts are contrasted by a decision-relevant difference.
+- [ ] Time-sensitive and local-document claims have evidence and identity/date.
+- [ ] Reading-path entries explain why and when to read them.
+- [ ] The answer remains a primer rather than a survey or implementation plan.

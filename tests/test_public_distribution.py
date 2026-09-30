@@ -25,6 +25,21 @@ def load_module(path, name):
 
 
 class PublicDistributionContracts(unittest.TestCase):
+    def test_claude_build_keeps_flat_skills_shared_resources_and_licenses(self):
+        builder = load_module(ROOT / "scripts/build_public.py", "_claude_builder")
+        files = builder.build_claude_files(ROOT)
+        self.assertEqual(files, builder.build_claude_files(ROOT))
+        registry = json.loads(files["skills/registry.yaml"])
+        self.assertEqual(31, len(registry["skills"]))
+        for entry in registry["skills"]:
+            self.assertEqual(f"skills/{entry['id']}/SKILL.md", entry["path"])
+            self.assertIn(entry["path"], files)
+            self.assertIn(b"../_shared/output-voice.md", files[entry["path"]])
+        self.assertFalse(any("/agents/" in name or name.startswith(".codex-plugin/") for name in files))
+        for relative in ("skills/_shared/output-voice.md", "docs/external-services.md",
+                         "scripts/skills/plan_context.py", "LICENSE", "NOTICE.md", "LICENSES/Apache-2.0.txt"):
+            self.assertEqual((PLUGIN / relative).read_bytes(), files[relative])
+
     def test_public_routers_allow_unmatched_tasks_and_reject_excluded_skills(self):
         validator = load_module(ROOT / "scripts/validate_public.py", "_distribution_validator")
         for index, base in enumerate((ROOT, PLUGIN)):

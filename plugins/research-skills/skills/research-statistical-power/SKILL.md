@@ -1,6 +1,6 @@
 ---
 name: research-statistical-power
-description: "Use when calculating, planning, stress-testing, or auditing sample size, target power, minimum detectable effect, design effect, attrition adjustment, or simulation-based power for a defined study design. Produces an auditable power plan with sourced assumptions, sensitivity scenarios, reproducible calculation metadata, and a ready/conditional/blocked verdict. Do not use to design the whole experiment, choose the scientific method, define dataset splits or metrics, interpret completed results, or invent an effect size."
+description: "Calculate, plan, stress-test, or audit sample size, statistical power, minimum detectable effect, design effect, or simulation-based power for a defined study design (样本量、统计功效、需要跑几次). Returns an auditable power plan with sourced assumptions and a ready/conditional/blocked verdict."
 ---
 
 # Research Statistical Power
@@ -20,8 +20,9 @@ scientific design, dataset protocol, metric, or final claim.
 - dependence structure, attrition, clustering, repeated measures, multiplicity, and
   other design adjustments that may change effective sample size.
 
-If a required value is unknown, preserve it as unresolved. Never replace it with a
-conventional default without labeling the value as a user-approved assumption.
+If a required value is unknown, keep it unresolved. A conventional default (alpha
+0.05, power 0.8, a “medium” effect) enters only as a labeled, user-approved
+assumption, because the sample size it produces is only as good as that value.
 
 ## Modes
 
@@ -57,7 +58,9 @@ auditing an existing plan.
 
 ## Output contract
 
-Produce a power plan containing:
+In a chat answer, lead with the number the user asked for and the one or two
+assumptions it hinges on, then the sensitivity range, per
+[output voice](../_shared/output-voice.md). A saved power plan contains:
 
 - stable `PWR-*` identifier and mode;
 - frozen design and calculation target;
@@ -101,15 +104,10 @@ artifact is useful. Validate it without modifying it:
 This skill is read-only by default. It may calculate or validate supplied artifacts,
 but it does not launch experiments, change source code, or invent observations.
 
-## Completion checklist
+## Stop conditions
 
-- target and analysis unit are frozen;
-- effect-size scale and source are explicit;
-- all material adjustments are recorded;
-- uncertainty is represented by sensitivity scenarios;
-- calculation implementation and version are reproducible;
-- simulation settings are complete when simulation is used;
-- verdict matches unresolved assumptions.
-
-Follow the repository's shared evidence, approval, environment, and file-mutation
-policies under `skills/_shared/`.
+Stop when the verdict matches the unresolved assumptions and the next owner is named.
+Shared rules: [evidence](../_shared/evidence-policy.md),
+[approval](../_shared/approval-workflow.md),
+[environment](../_shared/environment-compatibility.md),
+[file safety](../_shared/file-mutation-safety.md).

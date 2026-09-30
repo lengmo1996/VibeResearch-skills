@@ -1,6 +1,6 @@
 ---
 name: research-data-quality-audit
-description: "Audit supplied datasets for structural, record, label, or distribution defects and fitness for a stated research use. Return evidence, coverage limits, and remediation options without changing source data. Future split or metric design belongs to research-dataset-metric-protocols."
+description: "Audit a supplied dataset for schema, missing, duplicate, label, consistency, drift, or lineage problems and fitness for a stated research use (数据质量检查、标注问题、数据能不能用). Returns counted findings and a fitness verdict without changing the data."
 ---
 
 # Research Data Quality Audit
@@ -49,7 +49,7 @@ coverage, privacy, finding severity, drift, and verdict rules.
 
 ## Output and validation
 
-Return scope/authorization, asset identities, coverage statement, rule registry,
+In a chat answer, lead with the fitness verdict and the findings that drive it, each with its count and denominator, per [output voice](../../_shared/output-voice.md). A saved report contains scope/authorization, asset identities, coverage statement, rule registry,
 aggregate profile, `DQ-*` findings, cross-finding risks, fitness verdict, unresolved
 items, remediation options, and handoff.
 
@@ -72,13 +72,10 @@ The validator is read-only and checks the report contract, not the data itself.
 Cleaning, imputation, filtering, relabeling, migration, or overwrite is a separate
 authorized task.
 
-## Completion checklist
+## Stop conditions
 
-- authorization, stated use, observational unit, and coverage are explicit;
-- missing-code and sensitive-field semantics are supplied or unresolved;
-- findings include denominators and never expose raw identifiers;
-- bounded or sampled checks are labeled;
-- no data were changed;
-- fitness is limited to the stated use and supported coverage.
-
-Follow shared policies under `skills/_shared/`.
+Stop when the fitness verdict is issued for the scanned coverage, or when authorization, format, or coverage makes it not evaluable. Shared rules:
+[evidence](../../_shared/evidence-policy.md),
+[approval](../../_shared/approval-workflow.md),
+[environment](../../_shared/environment-compatibility.md),
+[file safety](../../_shared/file-mutation-safety.md).

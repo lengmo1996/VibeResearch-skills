@@ -7,6 +7,8 @@
   forcing a Skill. User-provided evidence and the current request take precedence.
 - Shared contracts under [skills/_shared](skills/_shared) govern evidence, local
   files, authorization, and operational boundaries.
+- User-facing answers follow [output voice](skills/_shared/output-voice.md): lead
+  with the result, use the user's language, and keep internal IDs in structured files.
 - External services are optional user-configured capabilities. A mode that requires
   retrieval must stop retrieval-dependent claims when that capability is missing.
 - Do not persist project memory, ingest a knowledge base, or send messages merely

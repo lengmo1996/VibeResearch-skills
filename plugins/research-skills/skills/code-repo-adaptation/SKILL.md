@@ -1,6 +1,6 @@
 ---
 name: code-repo-adaptation
-description: "Use when migrating an existing repository across environments, dependencies, framework APIs, dataset layouts, training/inference pipelines, or checkpoint formats. Produces a compatibility patch and verification handoff. Do not use for minimal reproduction, ordinary bug diagnosis, testing, or final verification."
+description: "Migrate an existing repository across Python/CUDA environments, dependencies, framework APIs, dataset layouts, training or inference pipelines, or checkpoint formats (环境迁移、升级 PyTorch、适配新数据集格式、跑通旧仓库). Returns a compatibility patch and a verification handoff."
 ---
 
 # Code Repo Adaptation
@@ -83,14 +83,16 @@ an actual candidate patch or an explicitly requested downstream plan.
 - Produce a migration patch, compatibility matrix, changed-path list, risk notes, and
   rollback guidance.
 
-## Prohibited work
+## Out of scope
 
-- Do not construct a minimal reproduction for a failure.
-- Do not diagnose or fix an ordinary bug unrelated to compatibility migration.
-- Regression tests and final pass/fail judgments belong to the `$code-debugging`
-  stage; a handoff does not require another user turn when that work is authorized.
-- Do not absorb paper-method implementation.
-- Do not claim that a candidate compatibility patch is verified.
+Each of these has an owner, and mixing them into a migration hides changes from
+review:
+
+- Minimal reproductions, ordinary bugs unrelated to compatibility, regression tests,
+  and the final pass/fail judgment belong to `$code-debugging`; a handoff does not
+  need another user turn when that work is already authorized.
+- Paper-method implementation belongs to `$paper-reproduction`.
+- A compatibility patch stays a candidate until `$code-debugging` verifies it.
 
 If investigation shows the root cause is an ordinary defect rather than an
 environment, dependency, API, data-layout, pipeline, or checkpoint incompatibility,
@@ -98,7 +100,9 @@ hand off evidence to `code-debugging` without applying an unrelated fix.
 
 ## Output contract
 
-Use these sections only as needed for the selected mode. A narrow answer may combine
+In a chat answer, lead with what was changed or what blocks the migration, then the
+risks, per [output voice](../_shared/output-voice.md). Use these sections only as
+needed for the selected mode. A narrow answer may combine
 them in prose; omit absent patches and handoffs rather than manufacturing artifacts.
 
 1. Scope Decision

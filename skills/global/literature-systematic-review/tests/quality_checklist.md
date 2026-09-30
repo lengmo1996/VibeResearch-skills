@@ -35,3 +35,4 @@
 <python-command> <skill-root>/scripts/validate_systematic_review.py --self-test
 <python-command> <skill-root>/scripts/validate_systematic_review.py <systematic-review-ledger.json>
 ```
+- [ ] No missing record, statistic, reviewer decision, or source is fabricated.

@@ -10,3 +10,4 @@
 - [ ] Representative retrieval probes include positive and negative cases.
 - [ ] Failed records are quarantined and partial generations are not promoted.
 - [ ] Prior generation and rollback instructions remain available.
+- [ ] Metadata fields retain provenance and confidence; conflicts enter review instead of being chosen silently.

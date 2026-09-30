@@ -1,6 +1,6 @@
 ---
 name: code-experiment-config-management
-description: "Use when defining or maintaining experiment configuration, seeds, run identity, checkpoints, resume semantics, logs, sweeps, archives, or the authorized execution and monitoring of an already-frozen experiment plan. Produces a reproducible run contract, run-state record, artifact inventory, or protocol-acceptance report. Do not use for method implementation, compatibility migration, failure diagnosis, patch verification, or scientific result interpretation."
+description: "Define or maintain experiment configs, seeds, run IDs, checkpoints and resume rules, logs, sweeps, and archives, or run and monitor an already-frozen plan when authorized (配置管理、随机种子、断点续训、实验记录). Returns a reproducible run contract, run record, or acceptance report."
 ---
 
 # Code Experiment Config Management
@@ -18,7 +18,7 @@ training settings, output root, seed policy, logging needs, checkpoint/resume
 requirements, and any existing run directory convention. `run-lifecycle` additionally
 requires frozen `EXP-*`, `CLM-*`, protocol and metric IDs, acceptance criteria, a
 validated manifest, and an explicit user-authorized repository-native command.
-Missing values are marked `not provided / unclear`.
+Missing values are named as missing (`not provided / unclear` in manifests).
 
 ## Modes
 
@@ -70,6 +70,8 @@ Do not design checkpoint, archive, or execution contracts for a seed-only questi
 
 ## Output contract
 
+In a chat answer, lead with the decision or contract the user asked for, then the risks
+that could break reproducibility, per [output voice](../_shared/output-voice.md).
 For a narrow mode, return its named contract plus material risks or missing inputs;
 do not emit unrelated sections or empty manifests. The following is a section source
 for `full`, not a mandatory checklist for every request:

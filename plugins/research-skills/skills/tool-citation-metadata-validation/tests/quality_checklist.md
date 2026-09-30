@@ -10,3 +10,12 @@
 - Preprint and published versions remain linked but distinct.
 - Zero hit and service failure do not imply nonexistence.
 - No external library or manuscript is modified.
+
+## Moved from SKILL.md
+
+- [ ] Original and normalized identifiers are both retained.
+- [ ] Every resolved field has provenance.
+- [ ] Source conflicts and version relationships remain visible.
+- [ ] Duplicate candidates are not auto-merged.
+- [ ] Retrieval failures are classified.
+- [ ] Verdict is supported by field states and unresolved items.

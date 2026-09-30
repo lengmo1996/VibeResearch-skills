@@ -15,3 +15,14 @@
       paths, and an evidence-backed verdict.
 - [ ] Sensitive authorship/license/ethics/release changes require confirmation.
 - [ ] No upload, portal mutation, scientific acceptance claim, or fabricated rule occurs.
+
+## Moved from SKILL.md
+
+- [ ] Venue/channel, cycle, track, phase, portal, and candidate artifact set are explicit.
+- [ ] Current hard rules have official sources, effective cycle, and retrieval date.
+- [ ] Every required artifact is inventoried and mapped to applicable rules.
+- [ ] Findings cite rule IDs, artifact/location, evidence, action, and recheck.
+- [ ] Unchecked material and unresolved rules block a Ready verdict where applicable.
+- [ ] Severity and readiness follow the protocol definitions.
+- [ ] Machine-readable rule/artifact/check/finding mappings validate, and package paths remain inside the declared root.
+- [ ] No upload or acceptance guarantee occurs.

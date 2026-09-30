@@ -55,3 +55,9 @@ Run:
 <python-command> <skill-root>/scripts/validate_audit_report.py <saved-report.md> --closure-ledger <ledger.md>
 <python-command> <skill-root>/scripts/validate_audit_report.py --panel-report <review-panel-report.md>
 ```
+- [ ] Terminology/symbol tables precede consistency findings.
+- [ ] Prose checks masked non-prose spans and stated usable-sample confidence.
+- [ ] Style findings use clustered signals; literal leakage is quoted only as needed
+      and never converted into an authorship probability.
+- [ ] Chinese prose-style checks use the Chinese pattern table in `_shared/output-voice.md`, with field conventions taking precedence.
+- [ ] A chat-level audit summary leads with the most severe findings in plain language; full finding fields live in the saved report.

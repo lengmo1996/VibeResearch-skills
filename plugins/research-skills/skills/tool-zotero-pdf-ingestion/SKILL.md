@@ -1,6 +1,6 @@
 ---
 name: tool-zotero-pdf-ingestion
-description: "Use when Zotero records and a PDF source set must be inventoried, reconciled, deduplicated, exported, or prepared as safe inputs for a local literature corpus. Produces a provenance-rich reconciliation manifest, duplicate/missing-attachment report, and clean export. Do not use to build an index, analyze papers, or modify Zotero/PDFs without explicit authorization."
+description: "Inventory, reconcile, deduplicate, or export Zotero records against a local PDF set, or prepare them as clean corpus inputs (Zotero 对齐 PDF、查重、导出). Returns a provenance-rich reconciliation manifest, duplicate/missing attachment report, and clean export."
 ---
 
 # Tool Zotero PDF Ingestion
@@ -78,6 +78,8 @@ unrequested attachment contents.
 
 ## Output contract
 
+In a chat answer, lead with the counts that matter (matched, duplicate, missing attachment, conflicting) and what needs a decision, per [output voice](../_shared/output-voice.md); the manifest carries the per-record detail.
+
 Use [reconciliation-report.md](templates/reconciliation-report.md) and
 [record example](templates/reconciliation-record.example.json). Return:
 
@@ -93,21 +95,9 @@ If library metadata or PDF access fails, report which inventory is incomplete an
 not infer the missing side. If identities conflict or fuzzy candidates tie, keep them
 unresolved. A validator failure blocks export/prepare-kb completion.
 
-## Validation checklist
+## Stop conditions
 
-- [ ] Canonical mode, sources, collection/exclusions, and output policy are explicit.
-- [ ] Zotero items, attachments, and loose PDFs are inventoried separately.
-- [ ] Original and normalized identifiers retain provenance.
-- [ ] Exact, contradictory, and fuzzy evidence are distinct.
-- [ ] Fuzzy matches and ties require review.
-- [ ] Duplicates, versions, supplementary files, and one-to-many relations are preserved.
-- [ ] Manifest validation passes before export or KB handoff.
-- [ ] No Zotero or PDF mutation occurs without separate explicit authorization.
-
-## Shared contracts and stop conditions
-
-Follow [approval](../_shared/approval-workflow.md),
+Stop when records are reconciled or
+conflicts isolated, or when source access/authorization is unavailable. Shared rules: [approval](../_shared/approval-workflow.md),
 [file safety](../_shared/file-mutation-safety.md),
-[operational boundaries](../_shared/operational-boundaries.md), and
-[evidence](../_shared/evidence-policy.md). Stop when records are reconciled or
-conflicts isolated, or when source access/authorization is unavailable.
+[operational boundaries](../_shared/operational-boundaries.md), [evidence](../_shared/evidence-policy.md).

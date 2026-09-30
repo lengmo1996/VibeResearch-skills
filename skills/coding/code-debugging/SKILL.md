@@ -1,6 +1,6 @@
 ---
 name: code-debugging
-description: "Use when reproducing, diagnosing, minimally fixing, testing, or verifying a concrete code failure or candidate patch, including tracebacks, NaN/OOM, shape/dtype/device errors, deadlocks, and regressions. Produces evidence-backed root cause and a verification verdict. Do not use for repository, dependency, framework, data-layout, or pipeline migration."
+description: "Reproduce, diagnose, and verify a concrete code failure, minimally fixing it when authorized: tracebacks, NaN/OOM, shape/dtype/device errors, deadlocks, regressions, or candidate patches (报错排查、训练 NaN、显存溢出、修 bug). Returns an evidence-backed root cause and a verification verdict."
 ---
 
 # Code Debugging
@@ -47,8 +47,8 @@ Execute only steps needed for the requested analysis, repair, or verification.
 A traceback explanation or minimal-reproduction request does not authorize a fix
 or require a full patch-verification report.
 
-1. Normalize the failure or `verification_request`; mark missing fields
-   `not provided / unclear`.
+1. Normalize the failure or `verification_request` and note which fields are
+   missing.
 2. For a defect, reproduce before diagnosing whenever feasible. For a new candidate,
    exercise the declared target inputs and assertions. Record commands, inputs,
    observed outputs, determinism, and relevant environment facts.
@@ -101,7 +101,12 @@ invariants, or environment prerequisites are unavailable.
 
 ## Output contract
 
-Use the following as section sources for the requested scope. Narrow explanations
+In a chat answer, lead with the root cause (or the best-supported hypothesis, labeled
+as such) and the fix, then the evidence that confirms it, per
+[output voice](../../_shared/output-voice.md) and the
+[output examples](references/output-examples.md). `HYP-*`, `EV-*`, and `TST-*` IDs
+belong in saved reports, not in a short reply. Use the following as section sources
+for the requested scope. Narrow explanations
 may use concise prose with evidence and uncertainty; patch verification includes the
 tests, invariant results, and verdict. Omit unrelated or nonexistent sections.
 

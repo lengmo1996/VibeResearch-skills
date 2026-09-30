@@ -1,6 +1,6 @@
 ---
 name: paper-to-ppt
-description: "Use when verified paper or research content must become an academic presentation, speaker-ready deck, template adaptation, visual system, or visual audit. Produces a source-faithful story arc, slide plan, visual plan, deck artifact, notes, or QA report. Do not use for commercial pitches, manuscript prose, deep reading without a presentation request, or visual-style mining alone."
+description: "Turn a paper or verified research results into an academic talk: outline, visual system, deck, speaker notes, template adaptation, or deck audit (论文转 PPT、组会汇报、答辩幻灯片). Returns a source-faithful slide plan, deck, notes, or QA report."
 ---
 
 # Paper to PPT
@@ -23,8 +23,9 @@ duration. Optional: mode/output format, venue, language, slide budget, aspect ra
 template, style references, verified figures/data, notes, accessibility, projector,
 export constraints, and a presentation handoff.
 
-Mark unavailable sources, templates, fonts, assets, editors, or renderers
-`not provided / not checked`. Do not imply they were inspected.
+Say plainly which sources, templates, fonts, assets, editors, or renderers were not
+provided or not checked (`not provided / not checked` in plan files), so nobody
+assumes they were inspected.
 
 ## Modes
 
@@ -67,7 +68,7 @@ render, and visual gate; staged reading never waives a gate or authorizes a writ
 
 ### Gate 1: narrative and evidence
 
-1. Bind audience, venue, duration, language, slide budget, output, template, and
+1. Settle audience, venue, duration, language, slide budget, output, template, and
    accessibility/export constraints.
 2. Extract only supported problem, claim, method, result, limitation, and source
    traces. Use [deck content plan](assets/templates/deck-content-plan.md).
@@ -114,6 +115,11 @@ For `outline`, require the supported claim/purpose, source trace, order, time bu
 and blockers. Later visual-system, detailed notes, and accessibility decisions may
 remain explicitly pending; do not manufacture them merely to fill a full-deck row.
 
+Slide titles, bullets, and notes are read aloud or skimmed in seconds, so they follow
+[output voice](../../_shared/output-voice.md): a title states the finding ("Depth error
+drops 18% at night"), not a topic label or a slogan, and bullets carry facts rather
+than stock phrases.
+
 Charts preserve metric, units, baseline, run/sample context, uncertainty when
 supported, and source trace. Color cannot be the only encoding. Meaningful visuals
 need alt text or equivalent notes and logical reading order.
@@ -138,13 +144,11 @@ deck. Detailed interfaces remain in [SPEC.md](SPEC.md).
 
 ## Output and handoff
 
-Return only mode-relevant artifacts plus:
-
-- source/evidence boundary and unresolved assets;
-- content plan and visual-system decision;
-- validation commands/results and artifact views inspected;
-- visual asset manifest with reuse/source notes;
-- manual checks and limitations.
+Return only mode-relevant artifacts plus the source/evidence boundary and unresolved
+assets, the content plan and visual-system decision, validation commands and results
+with the artifact views inspected, a visual asset manifest with reuse/source notes,
+and manual checks still owed. In the chat reply, lead with what was built and what
+still needs a human check.
 
 For `outline`, return the story/slide plan, source boundary, timing, and blocked asset
 needs; no selected visual system, asset manifest, render proof, or deck file is due.
@@ -159,25 +163,15 @@ uncertainty, and visual constraints to `$visual-research-artifact-generation`.
 
 If source evidence is missing, return a bounded outline and blocked claims. If visual
 validation fails, do not build the full deck from that plan. If rendering is
-unavailable, return the validated plan and mark artifact checks not run. Never invent
-paper results or report unperformed accessibility/export checks as passed.
+unavailable, return the validated plan and mark artifact checks not run. Paper results
+come only from the source, and a check that was not run is reported as not run.
 
-## Validation checklist
+## Stop conditions
 
-- [ ] Required source, audience, duration, mode, and output are explicit.
-- [ ] One supported claim/navigation purpose and source trace exist per slide.
-- [ ] Slide/time budget supports the story arc and intended discussion.
-- [ ] Visual candidates are meaningfully different and selection/waiver is recorded.
-- [ ] Visual-plan validation passes before deck construction.
-- [ ] Rendered full-slide and thumbnail views were inspected for deck modes.
-- [ ] Charts, visuals, citations, notes, and accessibility preserve evidence and meaning.
-- [ ] Artifact-specific checks are reported only when actually performed.
-
-## Shared contracts and stop conditions
-
-Follow [approval](../../_shared/approval-workflow.md),
+RAG is `never`. Stop when the requested mode's plan, audit, or rendered artifact and
+its gates are complete, or when a required source, template, tool, authorization, or
+validation gate is unavailable. Shared rules:
+[approval](../../_shared/approval-workflow.md),
 [file safety](../../_shared/file-mutation-safety.md),
-[operational boundaries](../../_shared/operational-boundaries.md), and
-[evidence](../../_shared/evidence-policy.md). RAG is `never`. Stop when the requested
-mode's plan, audit, or rendered artifact and applicable gates are complete, or when required
-source, template, tool, authorization, or a validation gate is unavailable.
+[operational boundaries](../../_shared/operational-boundaries.md),
+[evidence](../../_shared/evidence-policy.md).

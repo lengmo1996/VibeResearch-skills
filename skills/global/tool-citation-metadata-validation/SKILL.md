@@ -1,6 +1,6 @@
 ---
 name: tool-citation-metadata-validation
-description: "Use when normalizing, resolving, cross-checking, deduplicating, or auditing citation identifiers and bibliographic metadata such as DOI, PMID, PMCID, arXiv ID, ISBN, title, authors, venue, year, volume, issue, pages, publication status, or preprint-to-version links. Produces a field-level provenance ledger, conflicts, duplicate/version groups, and verified/partial/conflict/unresolved verdicts. Do not use for literature discovery, relevance screening, scientific-content synthesis, citation-style formatting alone, or writing to Zotero or KnowledgeHub."
+description: "Check, normalize, resolve, or deduplicate citation identifiers and bibliographic metadata such as DOI, arXiv ID, PMID, title, authors, venue, year, and preprint-to-published links (核对引用信息、DOI、参考文献去重). Returns a field-level provenance ledger with a verified/partial/conflict/unresolved verdict."
 ---
 
 # Tool Citation Metadata Validation
@@ -54,7 +54,7 @@ normalized identifier or exact title when justified.
 
 ## Output and validation
 
-Return input inventory, normalized identifiers, queried-source ledger, canonical
+In a chat answer, lead with the verdict per reference and the fields that conflict or could not be resolved, per [output voice](../../_shared/output-voice.md). A saved record contains the input inventory, normalized identifiers, queried-source ledger, canonical
 record, per-field provenance, conflicts, duplicate/version groups, limitations,
 unresolved items, verdict, and next action.
 
@@ -77,13 +77,10 @@ The validator does not contact external services or modify the artifact.
 
 Do not silently rewrite BibTeX, citation keys, manuscripts, Zotero, or KnowledgeHub.
 
-## Completion checklist
+## Stop conditions
 
-- original and normalized identifiers are both retained;
-- every resolved field has provenance;
-- source conflicts and version relationships remain visible;
-- duplicate candidates are not auto-merged;
-- retrieval failures are classified;
-- verdict is supported by field states and unresolved items.
-
-Follow shared evidence, approval, operational-boundary, and file-mutation policies.
+Stop when every field has a state and the verdict follows from them, or when required sources are unavailable. Shared rules:
+[evidence](../../_shared/evidence-policy.md),
+[approval](../../_shared/approval-workflow.md),
+[operational boundaries](../../_shared/operational-boundaries.md),
+[file safety](../../_shared/file-mutation-safety.md).

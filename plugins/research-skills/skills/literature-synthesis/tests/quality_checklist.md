@@ -12,3 +12,6 @@
 - [ ] Search summaries describe actual retrieval; saturation is based on observed evidence change and bounded scope.
 - [ ] Evidence-map and related-work use the shared map as their ledger without a duplicate table.
 - [ ] No unlinked legacy asset or unsupported final prose is used.
+- [ ] Candidate and contradictory evidence remain distinguishable from verified support.
+- [ ] No completeness claim exceeds the search protocol.
+- [ ] User-facing prose follows `_shared/output-voice.md`: required sections present, IDs kept in ledgers and maps rather than prose.

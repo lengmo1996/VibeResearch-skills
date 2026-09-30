@@ -1,6 +1,6 @@
 ---
 name: visual-research-artifact-generation
-description: "Use when generating or revising a claim-linked standalone research visual from natural language, verified data, a graph specification, or an existing visualization. Produces editable Draw.io diagrams, TikZ/PGFPlots, data plots, LaTeX tables, or multi-panel artifacts with figure-role, provenance, cross-figure, preview, and validation checks. Do not use for visual-pattern mining, complete slide decks, result interpretation, manuscript drafting, or photo and illustration generation."
+description: "Create or revise one standalone research visual from a description, verified data, a graph spec, or an existing figure (画架构图、方法图、结果图、LaTeX 表格). Returns editable Draw.io diagrams, TikZ/PGFPlots, data plots, LaTeX tables, or multi-panel figures with provenance and preview checks."
 ---
 
 # Visual Research Artifact Generation
@@ -11,7 +11,7 @@ primary backend unless the user explicitly requests multiple artifact classes.
 ## Workflow
 
 1. Inspect the supplied request, data, graph, or visualization. Separate verified content from
-   inference and mark unavailable content `not provided / unclear`.
+   inference and note what is unavailable (`not provided / unclear` in the spec file).
 2. Identify the semantic artifact:
    - node/relationship, process, architecture, method, ER/UML/C4, or manually editable diagram;
    - mathematical or TeX-native schematic;
@@ -22,8 +22,9 @@ primary backend unless the user explicitly requests multiple artifact classes.
    `drawio-diagram`, `tikz-diagram`, `pgfplots`, `data-plot`, `latex-table`, or `multi-panel`.
 4. Use [artifact specification](templates/visual-artifact-spec.md). Assign stable `FIG-*`,
    optional `PAN-*`, `SRC-*`, and `ELEM-*` IDs. Preserve upstream `CLM-*` and result evidence
-   references instead of inventing new claims. Never recover hidden numerical values from pixels
-   or invent missing labels, metrics, units, uncertainty, or statistical annotations.
+   references instead of inventing new claims. Hidden numerical values are not estimated from
+   pixels, and missing labels, metrics, units, uncertainty, or statistical annotations stay
+   marked as missing, because a figure is read as a statement of fact.
 5. When the visual belongs to a paper or figure family, read
    [visual story contract](references/visual-story-contract.md). Declare its narrative role,
    companion relationships, terminology/encoding invariants, and caption boundary. For a truly
@@ -73,7 +74,9 @@ Use paths relative to this Skill directory when invoking packaged copies.
 
 ## Output contract
 
-Return the applicable items:
+Labels, legends, and axis titles use plain, specific wording (units included, no slogans);
+the chat reply leads with what was produced and what still needs a check, per
+[output voice](../../_shared/output-voice.md). Return the applicable items:
 
 - editable source artifact;
 - rendered PNG, SVG, or PDF preview when verified;
@@ -97,8 +100,11 @@ an accidental layout or label change as harmless because the file still validate
 - This Skill may consume a source-traceable handoff from an upstream Skill, but remains the single
   primary owner of the standalone visual artifact.
 
-Follow the shared [operational boundaries](../../_shared/operational-boundaries.md),
-[file mutation safety](../../_shared/file-mutation-safety.md), and
-[platform compatibility](../../_shared/platform-compatibility.md). RAG is `never` for this Skill.
-Write only user-requested artifacts inside an authorized workspace and perform no external
-publication, upload, or release.
+## Stop conditions
+
+RAG is `never` for this Skill. Write only user-requested artifacts inside an authorized workspace
+and perform no external publication, upload, or release. Stop when the artifact and its
+applicable validation layers are reported, or when missing data or runtime blocks them. Shared
+rules: [operational boundaries](../../_shared/operational-boundaries.md),
+[file mutation safety](../../_shared/file-mutation-safety.md),
+[platform compatibility](../../_shared/platform-compatibility.md).

@@ -13,3 +13,13 @@
 - Simulation includes seed, repetitions, model, decision rule, and failure policy.
 - Limitations and handoffs are actionable.
 - `ready`, `conditional`, and `blocked` verdicts agree with unresolved fields.
+
+## Moved from SKILL.md
+
+- [ ] Target and analysis unit are frozen.
+- [ ] Effect-size scale and source are explicit.
+- [ ] All material adjustments are recorded.
+- [ ] Uncertainty is represented by sensitivity scenarios.
+- [ ] Calculation implementation and version are reproducible.
+- [ ] Simulation settings are complete when simulation is used.
+- [ ] Verdict matches unresolved assumptions.

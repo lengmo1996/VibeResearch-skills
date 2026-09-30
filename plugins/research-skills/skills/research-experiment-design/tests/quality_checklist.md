@@ -36,3 +36,6 @@
 <python-command> <skill-root>/scripts/validate_experiment_plan.py --self-test
 <python-command> <skill-root>/scripts/validate_experiment_plan.py <saved-plan.md>
 ```
+- [ ] Each non-exploratory experiment names at least one upstream `CLM-*` claim.
+- [ ] The plan can hand off without silently changing the scientific protocol.
+- [ ] A chat answer leads with the discriminating experiments and the decision each one settles; record fields stay in the saved plan.

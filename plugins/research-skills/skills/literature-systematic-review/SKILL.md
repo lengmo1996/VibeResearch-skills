@@ -1,6 +1,6 @@
 ---
 name: literature-systematic-review
-description: "Plan or conduct a protocol-bound systematic review, producing the requested protocol, search or screening ledger, appraisal, or bounded synthesis. Use for auditable systematic reviews, not informal paper comparisons or ordinary related work."
+description: "Plan or run an auditable, protocol-bound systematic review: protocol, search and screening ledger, risk of bias, certainty, meta-analysis gate (系统综述、PRISMA、meta 分析). Returns the requested review artifact with an explicit coverage status."
 ---
 
 # Literature Systematic Review
@@ -47,8 +47,9 @@ search batches, study records, screening decisions, or reconciled flow counts.
 2. Assign stable `SR-*`, `SEARCH-*`, and `STUDY-*` IDs. Hash or otherwise identify
    every executed query and bind its source, date, result count, pagination/cap, and
    evidence reference.
-3. Deduplicate by declared identifiers and preserve unresolved collisions. Never
-   discard a candidate only because metadata looks similar.
+3. Deduplicate by declared identifiers and keep unresolved collisions visible; similar
+   metadata is not enough to drop a candidate, since that would silently change
+   coverage.
 4. Apply eligibility criteria in two stages. Record title/abstract and full-text
    decisions separately; require one controlled exclusion reason for every excluded
    full text. When independent screeners are not available, declare single-screened
@@ -81,23 +82,21 @@ user supplies the complete bounded corpus and all required source passages. A
 protocol-only draft may use user inputs, but it cannot claim that retrieval or
 screening occurred.
 
-Never fabricate citations, search batches, excluded records, reviewer agreement,
-effect sizes, variances, bias judgments, or certainty. A search cap, failed shard,
+Citations, search batches, excluded records, reviewer agreement, effect sizes,
+variances, bias judgments, and certainty come only from evidence; a review with
+invented entries is worse than an incomplete one. A search cap, failed shard,
 inaccessible source, incomplete pagination, or unresolved screening decision makes
 coverage `partial`.
 
 ## Output contract
 
-Return:
-
-- protocol and amendments;
-- search-batch coverage;
-- deduplication and screening ledger;
-- PRISMA-style flow counts;
-- risk-of-bias and certainty tables when requested;
-- meta-analysis eligibility and assumptions when requested;
-- qualitative or quantitative synthesis;
-- unresolved items and exact coverage status.
+A full review covers the protocol and amendments, search-batch coverage, the
+deduplication and screening ledger, PRISMA-style flow counts, risk-of-bias and
+certainty tables when requested, meta-analysis eligibility and assumptions when
+requested, the synthesis, and unresolved items. A single mode returns only its own
+part. The ledger JSON is the authority; the human report follows
+[output voice](../_shared/output-voice.md) and opens with the coverage status and
+the main finding.
 
 Use exactly one coverage status:
 
@@ -135,25 +134,12 @@ them.
 - “每周追踪这个主题的新论文。” → `$literature-monitor`.
 - “根据已有 evidence map 写 related work。” → `$writing-academic`.
 
-## Validation checklist
+## Stop conditions
 
-- [ ] Protocol, amendments, declared sources, dates, and decision rules are explicit.
-- [ ] Search batches expose caps, pagination, failures, and evidence references.
-- [ ] Deduplication preserves unresolved collisions.
-- [ ] Full-text exclusions have controlled reasons.
-- [ ] Flow counts reconcile with ledger decisions.
-- [ ] Screening independence is claimed only when reviewer contexts were isolated.
-- [ ] Bias and certainty judgments cite evidence or remain unclear.
-- [ ] Meta-analysis passed compatibility gates before pooling.
-- [ ] Coverage is protocol-only, partial, or complete without overstatement.
-- [ ] No missing record, statistic, reviewer decision, or source was fabricated.
-
-## Shared contracts and stop conditions
-
-Follow [RAG](../_shared/rag-retrieval/CAPABILITY.md),
+Stop when the requested protocol or review artifact validates, required retrieval
+fails, counts cannot be reconciled from evidence, or continuing would overstate
+coverage. Shared rules: [RAG](../_shared/rag-retrieval/CAPABILITY.md),
 [evidence](../_shared/evidence-policy.md),
 [failure](../_shared/failure-policy.md),
-[citations](../_shared/citation-format.md), and
-[operational boundaries](../_shared/operational-boundaries.md). Stop when the
-requested protocol/review artifact validates, required retrieval fails, counts cannot
-be reconciled from evidence, or continuing would overstate coverage.
+[citations](../_shared/citation-format.md),
+[operational boundaries](../_shared/operational-boundaries.md).

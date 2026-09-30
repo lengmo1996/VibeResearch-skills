@@ -35,3 +35,6 @@
 <python-command> <skill-root>/scripts/validate_evaluation_protocol.py --self-test
 <python-command> <skill-root>/scripts/validate_evaluation_protocol.py <saved-protocol.md>
 ```
+- [ ] Every metric has a stable `MET-*` ID and explicit validity conditions.
+- [ ] No protocol mismatch is hidden by a shared metric name.
+- [ ] A chat answer leads with the comparability verdict or the leakage risk that matters most; record fields stay in the saved protocol.

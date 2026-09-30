@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create a deterministic public plugin ZIP from the declared public file set."""
+"""Build a public plugin ZIP or flat Claude layout from declared public files."""
 from __future__ import annotations
 
 import argparse
@@ -44,20 +44,45 @@ def build_bytes(root: Path) -> bytes:
     return output.getvalue()
 
 
+def build_claude_files(root: Path) -> dict[str, bytes]:
+    """Retain the flat plugin layout and its dependencies without Codex metadata."""
+    with zipfile.ZipFile(io.BytesIO(build_bytes(root))) as archive:
+        files = {}
+        for name in archive.namelist():
+            parts = PurePosixPath(name).parts
+            if parts[0] == ".codex-plugin":
+                continue
+            if len(parts) >= 3 and parts[0] == "skills" and parts[2] == "agents":
+                continue
+            files[name] = archive.read(name)
+        return files
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--claude", action="store_true", help="write a flat Claude directory instead of a plugin ZIP")
     args = parser.parse_args()
     from validate_public import validate
     report = validate(args.root)
     if report["errors"]:
         raise SystemExit(json.dumps(report, ensure_ascii=False, indent=2))
-    content = build_bytes(args.root)
     output = args.output if args.output.is_absolute() else args.root / args.output
-    output.parent.mkdir(parents=True, exist_ok=True)
-    if output.exists():
+    if output.exists() or output.is_symlink():
         raise SystemExit("Output already exists; choose a new output path")
+    if args.claude:
+        files = build_claude_files(args.root)
+        output.mkdir(parents=True)
+        for relative, data in sorted(files.items()):
+            destination = output / relative
+            destination.resolve().relative_to(output.resolve())
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes(data)
+        print(json.dumps({"format": "claude", "files": len(files)}, sort_keys=True))
+        return 0
+    content = build_bytes(args.root)
+    output.parent.mkdir(parents=True, exist_ok=True)
     output.write_bytes(content)
     print(json.dumps({"sha256": hashlib.sha256(content).hexdigest(), "bytes": len(content)}, sort_keys=True))
     return 0

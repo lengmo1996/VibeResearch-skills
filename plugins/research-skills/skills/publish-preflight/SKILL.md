@@ -1,6 +1,6 @@
 ---
 name: publish-preflight
-description: "Use when submission readiness for a chosen conference, journal, camera-ready, or arXiv package must be checked for current-rule compliance, anonymity, metadata, page limits, packaging, and desk-reject risks. Produces an evidence-linked blocking checklist, machine-readable artifact manifest, validated readiness verdict, and next actions. Do not use to choose a venue, judge novelty, rewrite the manuscript, create a package without authorization, or upload."
+description: "Check submission readiness for a chosen conference, journal, camera-ready, or arXiv package against current rules: anonymity, metadata, page limits, packaging, desk-reject risks (投稿前检查、匿名、页数、打包). Returns a blocking checklist, artifact manifest, and readiness verdict."
 ---
 
 # Publish Preflight
@@ -89,6 +89,8 @@ anonymity, artifact, ethics, AI-use, license, or portal requirements.
 
 ## Output contract
 
+In a chat answer, lead with the readiness verdict and the items that block it, each with where to fix it, then what was not checked, per [output voice](../_shared/output-voice.md). The saved report and manifest carry the full ledger.
+
 Use [preflight-report.md](templates/preflight-report.md). Return scope/confidence,
 official rule ledger, artifact manifest, rule-artifact matrix, severity findings,
 readiness verdict, ordered actions, manual confirmations, checks not run, and final
@@ -116,24 +118,10 @@ Pass exact findings/locations to `$writing-manuscript-audit`,
 `$writing-academic`, or `$visual-research-artifact-generation` as appropriate. Keep
 one primary Skill and at most two supporting Skills.
 
-## Validation checklist
+## Stop conditions
 
-- [ ] Venue/channel, cycle, track, phase, portal, and candidate artifact set are explicit.
-- [ ] Current hard rules have official sources, effective cycle, and retrieval date.
-- [ ] Every required artifact is inventoried and mapped to applicable rules.
-- [ ] Findings cite rule IDs, artifact/location, evidence, action, and recheck.
-- [ ] Unchecked material and unresolved rules block a Ready verdict where applicable.
-- [ ] Severity and readiness follow the protocol definitions.
-- [ ] Machine-readable rule/artifact/check/finding mappings validate, and package
-      paths remain inside the declared root.
-- [ ] Authorship/license/ethics/release changes require confirmation.
-- [ ] No upload or acceptance guarantee occurs.
-
-## Shared contracts and stop conditions
-
-Follow [approval](../_shared/approval-workflow.md),
-[file safety](../_shared/file-mutation-safety.md),
-[operational boundaries](../_shared/operational-boundaries.md), and
-[evidence](../_shared/evidence-policy.md). Stop when all known hard constraints and
+Stop when all known hard constraints and
 artifacts are checked, or when authoritative rules or required inspection material
-are unavailable.
+are unavailable. Shared rules: [approval](../_shared/approval-workflow.md),
+[file safety](../_shared/file-mutation-safety.md),
+[operational boundaries](../_shared/operational-boundaries.md), [evidence](../_shared/evidence-policy.md).

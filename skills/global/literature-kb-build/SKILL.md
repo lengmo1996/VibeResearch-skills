@@ -1,6 +1,6 @@
 ---
 name: literature-kb-build
-description: "Use when an approved PDF corpus must be inventoried, metadata-reconciled, extracted, deterministically chunked, indexed, or verified as a reproducible local literature knowledge base. Produces versioned corpus artifacts, manifests, and a quality report. Do not use to query an existing library, reconcile Zotero alone, or synthesize papers."
+description: "Build or rebuild a local literature knowledge base from an approved PDF corpus: inventory, metadata, extraction, chunking, indexing, verification (建文献库、PDF 入库、建索引). Returns versioned corpus artifacts, manifests, and a quality report."
 ---
 
 # Literature KB Build
@@ -68,7 +68,10 @@ artifacts from its predecessors; never simulate them.
 
 ## Artifact contract
 
-Use [kb-build-report.md](templates/kb-build-report.md). A full build normally includes:
+[kb-build-report.md](templates/kb-build-report.md) lists what the report covers; the
+chat summary leads with whether the generation passed and was promoted, then what
+failed and where to resume, per [output voice](../../_shared/output-voice.md). A full
+build normally includes:
 
 - source inventory and `kb_manifest.jsonl`;
 - metadata provenance/conflict and manual-review records;
@@ -91,12 +94,14 @@ Structural checks are necessary but insufficient. Acceptance also covers:
 - representative known-item, section, and negative retrieval probes;
 - prior-generation preservation and rollback instructions.
 
-Do not describe an index as verified when only files exist or embeddings completed.
+An index is verified only after these checks pass; files existing or embeddings
+finishing is not verification.
 
 ## Side effects and recovery
 
-All derived writes occur under the approved target staging generation. Never overwrite
-source PDFs. Never delete duplicates by default. On failure, preserve sources and the
+All derived writes occur under the approved target staging generation. Source PDFs
+are never overwritten, and duplicates are reported rather than deleted, because the
+corpus is the user's record and the index can always be rebuilt from it. On failure, preserve sources and the
 prior promoted generation, quarantine failed records, and report the exact resumable
 phase. Cleanup of staging artifacts requires separate target confirmation.
 
@@ -106,23 +111,12 @@ Stop the affected phase on corrupt inputs, metadata ambiguity that changes ident
 unsafe target resolution, missing parser/index runtime, validation failure, or
 insufficient storage. Return partial artifact status without promoting it.
 
-## Validation checklist
+## Stop conditions
 
-- [ ] Source rights/scope, target, generation, policies, and acceptance thresholds are fixed.
-- [ ] Source PDFs are immutable and inventoried by hash.
-- [ ] Metadata fields retain provenance/confidence and conflicts enter review.
-- [ ] Extraction and chunks retain exact source spans and policy/tool versions.
-- [ ] Index counts reconcile with eligible papers/chunks.
-- [ ] Structural and representative retrieval validation both run.
-- [ ] Failed records are quarantined and no partial generation is promoted.
-- [ ] Prior generation and rollback path remain intact.
-
-## Shared contracts and stop conditions
-
-Follow [approval](../../_shared/approval-workflow.md),
+RAG policy is `never`: this Skill builds local artifacts and does not retrieve from or
+write to KnowledgeHub. Stop when the selected phase passes acceptance or any
+source-rights, target, runtime, storage, or validation gate fails. Shared rules:
+[approval](../../_shared/approval-workflow.md),
 [file safety](../../_shared/file-mutation-safety.md),
-[operational boundaries](../../_shared/operational-boundaries.md), and
-[evidence](../../_shared/evidence-policy.md). RAG policy is `never`: this Skill builds
-local artifacts and does not retrieve from or write to KnowledgeHub. Stop when the
-selected phase passes acceptance or any source-rights, target, runtime, storage, or
-validation gate fails.
+[operational boundaries](../../_shared/operational-boundaries.md),
+[evidence](../../_shared/evidence-policy.md).

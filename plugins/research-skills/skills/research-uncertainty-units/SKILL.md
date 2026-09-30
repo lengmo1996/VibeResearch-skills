@@ -1,6 +1,6 @@
 ---
 name: research-uncertainty-units
-description: "Audit or plan physical units, measurement models, and uncertainty budgets or propagation. Return traceable calculations and reporting limits. Use for measurement uncertainty, not statistical power or unsupported conversion of model uncertainty."
+description: "Audit or plan physical units, measurement models, and measurement-uncertainty budgets or propagation (单位换算、测量不确定度、误差传递). Returns traceable calculations, reporting precision, and a ready/conditional/blocked verdict."
 ---
 
 # Research Uncertainty Units
@@ -19,8 +19,9 @@ propagation, metrological evidence, and physical plausibility.
 - known correlations or an explicit statement that correlation is unresolved;
 - requested propagation and reporting level.
 
-Unknown values remain unresolved. Never infer a calibration uncertainty, covariance,
-coverage factor, or measurement unit from a bare number.
+Unknown values remain unresolved. A bare number does not reveal its calibration
+uncertainty, covariance, coverage factor, or unit, so none of these is inferred from
+one.
 
 ## Modes
 
@@ -59,7 +60,7 @@ for distribution conversion, covariance, propagation choice, and reporting rules
 
 ## Output contract
 
-Produce:
+In a chat answer, lead with the result and its uncertainty as it should be reported, then the component that dominates the budget and any blocking input, per [output voice](../_shared/output-voice.md). A saved analysis contains:
 
 - stable `UNC-*` identifier and mode;
 - measurand and measurement model;
@@ -92,15 +93,10 @@ This skill does not operate instruments, edit analysis code, install packages, o
 claim conformity with a metrology standard. It may perform local calculations only
 when inputs and formulas are explicit.
 
-## Completion checklist
+## Stop conditions
 
-- units remain attached or every stripping boundary names the target unit;
-- measurement model and all corrections are explicit;
-- uncertainty statements are normalized with traceable sources;
-- correlations and degrees of freedom are resolved or visibly blocked;
-- propagation choice and reproducibility metadata are justified;
-- reporting precision and coverage meaning are unambiguous;
-- verdict matches unresolved material assumptions.
-
-Follow the shared evidence, approval, environment, and file-mutation policies under
-`skills/_shared/`.
+Stop when the verdict matches the unresolved material assumptions and the next owner is named. Shared rules:
+[evidence](../_shared/evidence-policy.md),
+[approval](../_shared/approval-workflow.md),
+[environment](../_shared/environment-compatibility.md),
+[file safety](../_shared/file-mutation-safety.md).

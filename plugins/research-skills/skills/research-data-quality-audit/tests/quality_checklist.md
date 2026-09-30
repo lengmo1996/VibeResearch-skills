@@ -8,3 +8,12 @@
 - Remediation and verification remain separate.
 - No source data are modified.
 - Fitness verdict is scoped to the stated use and linked blockers.
+
+## Moved from SKILL.md
+
+- [ ] Authorization, stated use, observational unit, and coverage are explicit.
+- [ ] Missing-code and sensitive-field semantics are supplied or unresolved.
+- [ ] Findings include denominators and never expose raw identifiers.
+- [ ] Bounded or sampled checks are labeled.
+- [ ] No data were changed.
+- [ ] Fitness is limited to the stated use and supported coverage.

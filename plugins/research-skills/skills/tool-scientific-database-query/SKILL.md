@@ -1,6 +1,6 @@
 ---
 name: tool-scientific-database-query
-description: "Use when planning, executing, resuming, or auditing a reproducible read-only query against a named scientific database or documented API, including endpoint selection, identifier conversion, structured filters, field projection, pagination, batching, rate limits, count reconciliation, deduplication keys, and provenance. Produces a bounded query plan and page ledger with complete/partial/blocked/not-run status. Do not use for broad web search, literature synthesis, unsupported scraping, unrestricted bulk downloads, or claims of cross-database completeness."
+description: "Plan, run, resume, or audit a reproducible read-only query against a named scientific database or documented API, with pagination, rate limits, identifier conversion, and count reconciliation (查数据库、批量检索、API 分页). Returns a query plan and page ledger with complete/partial/blocked coverage."
 ---
 
 # Tool Scientific Database Query
@@ -55,7 +55,7 @@ resumed, credential-gated, or query-language request.
 
 ## Output and validation
 
-Return query contract, source capability/version, endpoint/method, redacted
+In a chat answer, lead with what was retrieved and whether coverage is complete, then any gap and how to resume, per [output voice](../_shared/output-voice.md). A saved ledger contains the query contract, source capability/version, endpoint/method, redacted
 parameters, server/local filters, page ledger, identifier conversions, count
 reconciliation, failure states, coverage limits, resume token or next action, and
 verdict.
@@ -76,4 +76,10 @@ The validator is offline and does not issue requests.
 - Domain or research skills receive validated records plus coverage limits, never an
   unsupported completeness claim.
 
-Follow shared evidence, approval, environment, and operational-boundary policies.
+## Stop conditions
+
+Stop when counts reconcile for the declared scope, or when a failure, limit, or missing authorization leaves coverage partial or blocked. Shared rules:
+[evidence](../_shared/evidence-policy.md),
+[approval](../_shared/approval-workflow.md),
+[environment](../_shared/environment-compatibility.md),
+[operational boundaries](../_shared/operational-boundaries.md).

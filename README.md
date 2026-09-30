@@ -38,6 +38,21 @@ python scripts/validate_public.py --test --build-check
 python scripts/build_public.py --output dist/research-skills.zip
 ```
 
+For Claude Code, build the flat Skill layout:
+
+```sh
+python scripts/build_public.py --claude --output dist/claude
+```
+
+Copy the contents of `dist/claude/` into the project's `.claude/` directory. Keep the
+shared resources, scripts, documentation, and license files with the Skill folders;
+the build omits Codex metadata and retains relative dependencies. See [CLAUDE.md](CLAUDE.md).
+Build outputs must be new paths; existing outputs are never overwritten.
+
+Answers follow the shared [output voice](skills/_shared/output-voice.md) policy.
+Use `python scripts/lint_output_voice.py OUTPUT.md` to compare wording patterns in
+real outputs; its counts are a regression aid, not a quality or authorship score.
+
 The offline tests also require Node.js. PDF regression tests use a ReportLab CID
 test font and verify the generated document and extracted text; they do not attest
 the production Windows font setup, Poppler rendering or a live Gmail connection.

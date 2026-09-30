@@ -1,6 +1,6 @@
 ---
 name: research-concept-primer
-description: "Use when an unfamiliar research concept, emerging technical term, field, or authorized local technical documentation needs a rigorous first mental model. Produces an evidence-linked primer with terminology, mechanism, boundaries, uncertainty, and a staged reading path. Do not use for one-paper deep reading, multi-paper synthesis, debugging, implementation, or final manuscript prose."
+description: "Explain an unfamiliar research concept, emerging term, field, or authorized local technical documentation from the ground up (这个概念是什么、入门讲解、术语解释). Returns an evidence-linked primer with mechanism, boundaries, and a staged reading path."
 ---
 
 # Research Concept Primer
@@ -36,7 +36,7 @@ maintenance.
 
 ## Workflow
 
-1. Bind the concept, intended use, depth, audience, source scope, and ambiguity.
+1. Pin down the concept, intended use, depth, audience, source scope, and ambiguity.
 2. Read [concept primer protocol](references/concept-primer-protocol.md). Build a
    small evidence ledger that separates sourced claims, interpretation, and unknowns.
 3. Select `overview` or `technical-docs`. Reuse supplied material; do not retrieve the
@@ -64,14 +64,13 @@ Absence from a search is not proof that a meaning or method does not exist.
 
 ## Output contract
 
-Use [concept-primer.md](templates/concept-primer.md). Return:
-
-- scope, interpretation, audience, mode, and evidence boundary;
-- prerequisite map and layered explanation;
-- mechanism with assumptions and observable consequences;
-- adjacent concepts, misconceptions, and unresolved questions;
-- claim-linked evidence notes and a staged reading path;
-- confidence and a bounded next-step handoff.
+A primer is read to understand, so it opens with a one- or two-sentence model of the
+concept in plain words, then builds up: prerequisites, the technical definition, the
+mechanism with its assumptions, where it breaks, the concepts it is most often
+confused with, and a short reading path. State the chosen interpretation only when
+the term is ambiguous, and put sources next to the claims they support rather than in
+a separate evidence section. Follow [output voice](../../_shared/output-voice.md).
+[concept-primer.md](templates/concept-primer.md) lists what a saved primer covers.
 
 ## Failure behavior
 
@@ -89,21 +88,9 @@ primer with speculative history or fabricated representative works.
 
 Use no more than two supporting Skills and preserve source identities across handoff.
 
-## Validation checklist
+## Stop conditions
 
-- [ ] The selected meaning, mode, audience, depth, and source boundary are explicit.
-- [ ] Prerequisites appear before mechanisms that depend on them.
-- [ ] Facts, source-local definitions, interpretation, and unknowns are distinct.
-- [ ] The mechanism states assumptions, inputs/outputs, and failure boundaries.
-- [ ] Adjacent concepts are contrasted by a decision-relevant difference.
-- [ ] Time-sensitive and local-document claims have evidence and identity/date.
-- [ ] Reading-path entries explain why and when to read them.
-- [ ] The answer remains a primer rather than a survey or implementation plan.
-
-## Shared contracts and stop conditions
-
-Follow [operational boundaries](../../_shared/operational-boundaries.md),
-[evidence](../../_shared/evidence-policy.md), and
-[read-only RAG](../../_shared/rag-retrieval/CAPABILITY.md). Stop when core concepts
+Stop when core concepts
 and boundaries are adequately evidenced, or when required local technical evidence
-is unavailable.
+is unavailable. Shared rules: [operational boundaries](../../_shared/operational-boundaries.md),
+[evidence](../../_shared/evidence-policy.md), [read-only RAG](../../_shared/rag-retrieval/CAPABILITY.md).

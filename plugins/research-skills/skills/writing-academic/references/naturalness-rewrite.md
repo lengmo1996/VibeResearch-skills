@@ -86,7 +86,10 @@ workflow.
 ## Language limits
 
 The categories above are most reliable for English academic prose. For Chinese or
-mixed-language text, apply only language-independent principles such as factual
+mixed-language text, apply the language-independent principles (factual
 preservation, unsupported significance, vague authority, filler, repeated
-meta-commentary, and structural monotony. Do not transplant English punctuation or
+meta-commentary, structural monotony) plus the Chinese pattern table in the shared
+[output voice](../../_shared/output-voice.md) policy. Chinese academic conventions
+win over that table: established phrasing such as “本文提出”, a conventional “进行实验”,
+or venue-required structure is not a defect. Do not transplant English punctuation or
 hyphenation rules into another language.
