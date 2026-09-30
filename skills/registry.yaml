@@ -1087,7 +1087,7 @@
                   "preflight"
                 ],
                 "required_paths": [
-                  "references/daily-arxiv-email.md#3-bounded-review-and-report-category-translation"
+                  "references/daily-arxiv-email.md#3-bounded-review"
                 ]
               },
               "send": {
@@ -1181,12 +1181,12 @@
         "priority queue",
         "change highlights",
         "next reading actions",
-        "one transport-attested HTML email with complete selected-paper cards and configured report-category Top 50",
-        "complete configured report-category PDF attachment with Chinese summaries",
+        "one transport-attested HTML email with complete selected-paper cards",
+        "PDF attachment mirroring the email body plus coverage statistics",
         "configured-category retrieval coverage",
         "grouped focus recommendations",
         "complete local inventory classification report",
-        "bounded Top-30 model review pages and dynamically paginated report-category translations",
+        "at most two Top-30 model review pages",
         "transactional single-message Draft-attested delivery state"
       ],
       "path": "skills/global/literature-monitor/SKILL.md",
@@ -1244,7 +1244,7 @@
         "preflight the real local Python runtime before acquiring the digest session",
         "inventory configured arXiv categories from validated official announcement batches",
         "deduplicate against history",
-        "locally classify the full inventory, model-review at most Top 30, and translate bounded source spans for the configured report category",
+        "locally classify the full inventory, and model-review at most Top 30",
         "update the candidate queue",
         "render reports and commit state after confirmed delivery"
       ]

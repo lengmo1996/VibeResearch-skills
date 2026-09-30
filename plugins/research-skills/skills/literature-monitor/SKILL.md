@@ -63,7 +63,7 @@ shortened replacement protocol:
 |---|---|
 | initial / `preflight` | [Public configuration and authorization boundary](references/daily-arxiv-email.md#public-configuration-and-authorization-boundary), [Fixed contract](references/daily-arxiv-email.md#fixed-contract), [Recovery and preflight](references/daily-arxiv-email.md#1-recovery-and-preflight), and [Verified commit and backlog drain](references/daily-arxiv-email.md#verified-commit-and-backlog-drain) |
 | `coverage` | initial context plus [Complete configured-category coverage](references/daily-arxiv-email.md#2-complete-configured-category-coverage) |
-| `review` | initial context plus [Bounded review and report-category translation](references/daily-arxiv-email.md#3-bounded-review-and-report-category-translation) |
+| `review` | initial context plus [Bounded review](references/daily-arxiv-email.md#3-bounded-review) |
 | `render` | initial context plus [Local rendering and delivery manifest](references/daily-arxiv-email.md#local-rendering-and-delivery-manifest) |
 | `reconcile` | initial context plus the entire [Checked Gmail reconciliation and send safety](references/daily-arxiv-email.md#checked-gmail-reconciliation-and-send-safety) section |
 | `send` | the complete `reconcile` context, including all receipt, lease, proof, retry, denial, and reauthorization rules; reload the checked bridge in the isolated send execution phase |

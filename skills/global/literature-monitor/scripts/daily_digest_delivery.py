@@ -45,8 +45,6 @@ def pdf_required_sections(digest: dict[str, Any]) -> tuple[str, ...]:
         raise DeliveryValidationError("Report category or profile differs from the bound configuration")
     return (
         "每日总览", "重点推荐论文", "潜在关注论文",
-        f"{config['report_category']} Top 50",
-        f"其余 {config['report_category']} 更新",
         "已配置分类检索覆盖", "检索和筛选统计",
     )
 SELECTED_PAPER_LABELS = (
@@ -370,17 +368,6 @@ def _build_pdf(digest: dict[str, Any], output: Path) -> None:
     story.extend((Paragraph("对当前研究的可执行启发", heading), Paragraph("<br/>".join(f"• {_paragraph(value)}" for value in digest["actionable_insights"]), body)))
     story.append(PageBreak())
     story.append(Paragraph(sections[3], heading))
-    for index, paper in enumerate(digest["cs_cv_report"]["detailed"], 1):
-        story.append(Paragraph(f"{index}. {_paragraph(paper['title'])}", paper_heading))
-        story.append(Paragraph(f"arXiv:{_paragraph(paper['arxiv_id'])} · 相关度 {paper['relevance_score']}/100 · <link href='{_paragraph(paper['arxiv_url'])}'>arXiv 链接</link>", meta))
-        for field_label, field in (("核心结论", "core_conclusion"), ("研究问题", "research_problem"), ("方法概述", "method_overview"), ("主要贡献", "contributions")):
-            story.append(Paragraph(f"<b>{field_label}：</b>{_paragraph(paper[field])}", label))
-    story.append(Paragraph(sections[4], heading))
-    for index, paper in enumerate(digest["cs_cv_report"]["compact"], len(digest["cs_cv_report"]["detailed"]) + 1):
-        story.append(Paragraph(f"{index}. {_paragraph(paper['title'])} · arXiv:{_paragraph(paper['arxiv_id'])} · {paper['relevance_score']}/100", paper_heading))
-        story.append(Paragraph(f"{_paragraph(paper['core_conclusion'])} · <link href='{_paragraph(paper['arxiv_url'])}'>arXiv 链接</link>", body))
-    story.append(PageBreak())
-    story.append(Paragraph(sections[5], heading))
     for entry in digest["retrieval_coverage"]:
         story.append(Paragraph(f"{_paragraph(entry['category'])}：raw={entry['raw_count']}，unique={entry['unique_count']}，complete=true", body))
     story.append(Paragraph("检索和筛选统计", heading))
@@ -392,10 +379,7 @@ def _build_pdf(digest: dict[str, Any], output: Path) -> None:
 
 
 def _all_pdf_ids(digest: dict[str, Any]) -> list[str]:
-    papers = [
-        *digest["focus_papers"], *digest["watch_papers"],
-        *digest["cs_cv_report"]["detailed"], *digest["cs_cv_report"]["compact"],
-    ]
+    papers = [*digest["focus_papers"], *digest["watch_papers"]]
     return [str(paper["arxiv_id"]) for paper in papers]
 
 
@@ -468,7 +452,7 @@ def _validate_pdf(digest: dict[str, Any], pdf_path: Path, *, smoke_render: bool 
 
 
 def _validate_html(digest: dict[str, Any], path: Path) -> dict[str, Any]:
-    sections = pdf_required_sections(digest)
+    pdf_required_sections(digest)
     if not path.is_file() or path.stat().st_size <= 0:
         raise DeliveryValidationError("HTML body is missing or empty")
     if path.stat().st_size > HTML_MAX_BYTES:
@@ -478,22 +462,17 @@ def _validate_html(digest: dict[str, Any], path: Path) -> dict[str, Any]:
         raise DeliveryValidationError("HTML body completeness markers are missing or reversed")
     if 'content="html-pdf-single-v4"' not in text and "content='html-pdf-single-v4'" not in text:
         raise DeliveryValidationError("HTML body format marker is missing")
-    if f"<h2>{sections[3]}</h2>" not in text:
-        raise DeliveryValidationError("HTML report category heading differs from the bound configuration")
     lowered = text.lower()
     for marker in TRUNCATION_MARKERS:
         if marker in lowered:
             raise DeliveryValidationError(f"HTML body contains truncation marker: {marker}")
     selected = [*digest["focus_papers"], *digest["watch_papers"]]
-    for paper in [*selected, *digest["cs_cv_report"]["detailed"]]:
+    for paper in selected:
         arxiv_id = str(paper["arxiv_id"])
         if text.count(f"data-arxiv-id='{arxiv_id}'") != 1:
             raise DeliveryValidationError(f"HTML body must contain one card for {arxiv_id}")
     for label in SELECTED_PAPER_LABELS:
-        expected = len(selected)
-        if label in {"方法概述：", "主要贡献："}:
-            expected += len(digest["cs_cv_report"]["detailed"])
-        if text.count(label) != expected:
+        if text.count(label) != len(selected):
             raise DeliveryValidationError(f"HTML field {label} count must equal selected-paper count")
     return {
         "html_path": str(path.resolve()),
@@ -528,9 +507,8 @@ def _manifest_value(digest: dict[str, Any], html_record: dict[str, Any], pdf_rec
         "inventory_count": int(digest["inventory_summary"]["inventory_count"]),
         "focus": len(digest["focus_papers"]),
         "watch": len(digest["watch_papers"]),
-        "cv_top50": len(digest["cs_cv_report"]["detailed"]),
-        "cv_compact": len(digest["cs_cv_report"]["compact"]),
-        "expected_html_ids": [str(paper["arxiv_id"]) for paper in [*digest["focus_papers"], *digest["watch_papers"], *digest["cs_cv_report"]["detailed"]]],
+        "cv_remainder": int(digest["cs_cv_report"]["total"]),
+        "expected_html_ids": [str(paper["arxiv_id"]) for paper in [*digest["focus_papers"], *digest["watch_papers"]]],
         "expected_pdf_ids": _all_pdf_ids(digest),
         "selected_field_labels": list(SELECTED_PAPER_LABELS),
         "mime_chunk_bytes": MIME_CHUNK_BYTES,

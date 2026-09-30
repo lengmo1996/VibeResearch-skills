@@ -60,18 +60,6 @@ DEFAULT_REVIEW_PAGE_SIZE = 15
 DEFAULT_REVIEW_PAGE_MAX_BYTES = 30_000
 MAX_REVIEW_PAGES = 2
 REVIEW_ABSTRACT_MAX_CHARS = 1_200
-DEFAULT_CV_SUMMARY_PAGE_MAX_BYTES = 30_000
-MAX_CV_SUMMARY_PAGES = 20
-MAX_CV_SUMMARY_RECORDS = 2_000
-CV_DETAILED_LIMIT = 50
-CV_SUMMARY_SOURCE_LIMITS = (360, 280, 220, 180, 140, 100)
-CV_SUMMARY_PROSE_LIMITS = {
-    "core_conclusion": 60,
-    "research_problem": 48,
-    "method_overview": 60,
-    "contributions": 48,
-}
-CV_COMPACT_CONCLUSION_LIMIT = 56
 MAX_EMAIL_HTML_BYTES = 90_000
 MAX_EMAIL_FOCUS = 10
 MAX_EMAIL_WATCH = 10
@@ -300,6 +288,21 @@ CV_COMPACT_FIELDS = (
     "pdf_url",
     "relevance_score",
     "core_conclusion",
+)
+# Untranslated metadata for the ranked remaining cs.CV papers. They are not
+# rendered in the email or PDF; commit records them as delivered so later
+# announcements do not resurface them.
+CS_CV_REPORT_FIELDS = (
+    "title",
+    "arxiv_id",
+    "version",
+    "announcement_date",
+    "announcement_types",
+    "query_sources",
+    "submitted_or_updated",
+    "arxiv_url",
+    "pdf_url",
+    "relevance_score",
 )
 CHINESE_PROSE_RE = re.compile(r"[\u3400-\u4dbf\u4e00-\u9fff]")
 PAPER_CHINESE_PROSE_FIELDS = (
@@ -2986,8 +2989,9 @@ def canonicalize_digest(digest: dict[str, Any]) -> dict[str, Any]:
     for remainder_name in ("cs_cv_report", "cv_daily_remainder"):
         remainder = value.get(remainder_name, {})
         if isinstance(remainder, dict):
-            remainder["detailed"] = sorted(remainder.get("detailed", []), key=paper_sort_key)
-            remainder["compact"] = sorted(remainder.get("compact", []), key=paper_sort_key)
+            for field in ("detailed", "compact", "papers"):
+                if isinstance(remainder.get(field), list):
+                    remainder[field] = sorted(remainder[field], key=paper_sort_key)
     value["reading_order"] = [
         paper["title"] for paper in value["focus_papers"] + value["watch_papers"]
     ]
@@ -3059,7 +3063,7 @@ def cv_delivery_coverage_errors(digest: dict[str, Any]) -> list[str]:
     remainder = digest.get("cs_cv_report") if digest.get("schema_version") == SCHEMA_VERSION else digest.get("cv_daily_remainder")
     remainder_papers: list[Any] = []
     if isinstance(remainder, dict):
-        for field in ("detailed", "compact"):
+        for field in ("detailed", "compact", "papers"):
             papers = remainder.get(field)
             if isinstance(papers, list):
                 remainder_papers.extend(papers)
@@ -4163,15 +4167,6 @@ def run_resume_status(root: Path, requested_run_id: str) -> dict[str, Any]:
     if (run_dir / "digest-v4.json").is_file():
         status.update({"phase": "digest_ready", "next_action": "render"})
         return status
-    if (run_dir / "cv-summary-manifest-v4.json").is_file():
-        compact = cv_summary_status(root.resolve(), run_id)
-        status.update(
-            {
-                "phase": compact.get("phase", "cv_summary"),
-                "next_action": compact.get("next_action", "cv-summary-status"),
-            }
-        )
-        return status
     if (run_dir / "review-manifest-v3.json").is_file():
         compact = review_status(root.resolve(), run_id)
         status.update(
@@ -5095,7 +5090,7 @@ def review_status(root: Path, run_id: str) -> dict[str, Any]:
         "phase": "review_complete",
         "completed_pages": len(pages),
         "total_pages": len(pages),
-        "next_action": "prepare_cv_summary",
+        "next_action": "finalize_digest",
     }
 
 
@@ -5313,440 +5308,51 @@ def _select_review_results(
     return source_by_id, focus, watch
 
 
-def _abstract_sentences(abstract: str) -> list[str]:
-    text = " ".join(str(abstract).split())
-    if not text:
-        return ["No abstract text was supplied."]
-    values = [part.strip() for part in re.split(r"(?<=[.!?])\s+", text) if part.strip()]
-    return values or [text]
-
-
-def _pick_source_sentence(
-    sentences: list[str], cues: tuple[str, ...], fallback: int
-) -> str:
-    for sentence in sentences:
-        lowered = sentence.lower()
-        if any(cue in lowered for cue in cues):
-            return sentence
-    index = min(max(fallback, 0), len(sentences) - 1)
-    return sentences[index]
-
-
-def _deterministic_cv_extracts(paper: dict[str, Any]) -> dict[str, str]:
-    sentences = _abstract_sentences(str(paper.get("abstract", "")))
-    return {
-        "core_conclusion": _pick_source_sentence(
-            sentences,
-            ("result", "outperform", "improv", "achiev", "demonstrat", "show that"),
-            len(sentences) - 1,
-        ),
-        "research_problem": _pick_source_sentence(
-            sentences,
-            ("problem", "challenge", "task", "aim", "address", "investigate"),
-            0,
-        ),
-        "method_overview": _pick_source_sentence(
-            sentences,
-            ("method", "framework", "model", "architecture", "approach", "pipeline"),
-            1,
-        ),
-        "contributions": _pick_source_sentence(
-            sentences,
-            ("propose", "introduce", "present", "develop", "contribution", "novel"),
-            1,
-        ),
-    }
-
-
-def _cv_summary_rank_key(item: dict[str, Any]) -> tuple[Any, ...]:
+def _cs_cv_report_rank_key(item: dict[str, Any]) -> tuple[Any, ...]:
     model_score = item.get("model_score")
     effective = int(model_score) if type(model_score) is int else int(item["prefilter_score"])
     return (-effective, *_review_rank_key(item))
 
 
-def _cv_summary_page_values(
-    run_id: str,
-    records: list[dict[str, Any]],
-    *,
-    page_max_bytes: int,
-    max_pages: int,
-) -> tuple[list[dict[str, Any]], int]:
-    if len(records) > MAX_CV_SUMMARY_RECORDS:
-        raise DigestValidationError(
-            (_report_category_text('cs.CV summary record safety limit exceeded: ') + f'{len(records)}' + ' > ' + f'{MAX_CV_SUMMARY_RECORDS}')
-        )
-    pending = [record for record in records if not record.get("existing_translation")]
-    if not pending:
-        return [], 0
-    for source_limit in CV_SUMMARY_SOURCE_LIMITS:
-        wire = []
-        for record in pending:
-            fields = (
-                ("core_conclusion", "research_problem", "method_overview", "contributions")
-                if record["summary_kind"] == "detailed"
-                else ("core_conclusion",)
-            )
-            wire.append(
-                [
-                    record["arxiv_id"],
-                    "d" if record["summary_kind"] == "detailed" else "c",
-                    [str(record["source_extracts"][field])[:source_limit] for field in fields],
-                ]
-            )
-        pages: list[dict[str, Any]] = []
-        current: list[list[Any]] = []
-        for item in wire:
-            candidate = [*current, item]
-            page = {
-                "schema_version": SCHEMA_VERSION,
-                "run_id": run_id,
-                "page": len(pages) + 1,
-                "format": "[arxiv_id,kind(d|c),source_fields]",
-                "items": candidate,
-            }
-            if current and len(_json_bytes(page)) > page_max_bytes:
-                pages.append(
-                    {
-                        "schema_version": SCHEMA_VERSION,
-                        "run_id": run_id,
-                        "page": len(pages) + 1,
-                        "format": "[arxiv_id,kind(d|c),source_fields]",
-                        "items": current,
-                    }
-                )
-                current = [item]
-            else:
-                current = candidate
-        if current:
-            pages.append(
-                {
-                    "schema_version": SCHEMA_VERSION,
-                    "run_id": run_id,
-                    "page": len(pages) + 1,
-                    "format": "[arxiv_id,kind(d|c),source_fields]",
-                    "items": current,
-                }
-            )
-        if len(pages) <= max_pages and all(
-            len(_json_bytes(page)) <= page_max_bytes for page in pages
+def _cs_cv_report_papers(
+    ledger: dict[str, Any],
+    decisions: list[dict[str, Any]],
+    selected_ids: set[str],
+) -> list[dict[str, Any]]:
+    'Rank the remaining selected report category inventory once, without any translation.'
+
+    decision_by_id = {str(item["arxiv_id"]): item for item in decisions}
+    ranked: list[dict[str, Any]] = []
+    for item in ledger["inventory"]:
+        paper = item["paper"]
+        arxiv_id = str(paper["arxiv_id"])
+        if (
+            REPORT_CATEGORY not in paper.get("query_sources", [])
+            or arxiv_id in selected_ids
+            or item.get("local_classification") in {"hidden", "already_known"}
         ):
-            return pages, source_limit
-    raise DigestValidationError(
-        (_report_category_text('cs.CV translation input cannot fit the configured dynamic page budget: max_pages=') + f'{max_pages}' + ', page_max_bytes=' + f'{page_max_bytes}')
-    )
-
-
-def prepare_cv_summary(
-    root: Path,
-    run_id: str,
-    *,
-    page_max_bytes: int = DEFAULT_CV_SUMMARY_PAGE_MAX_BYTES,
-    max_pages: int = MAX_CV_SUMMARY_PAGES,
-) -> dict[str, Any]:
-    configure_public_runtime(root)
-    if not 8_000 <= page_max_bytes <= DEFAULT_CV_SUMMARY_PAGE_MAX_BYTES:
-        raise DigestValidationError(_report_category_text('cs.CV summary page maximum must be 8000..30000 bytes'))
-    if not 1 <= max_pages <= MAX_CV_SUMMARY_PAGES:
-        raise DigestValidationError(
-            (_report_category_text('cs.CV summary supports 1..') + f'{MAX_CV_SUMMARY_PAGES}' + ' pages')
-        )
-    root = root.resolve()
-    with _exclusive_gate_state_lock(root / "digest-transaction.lock"):
-        run_dir, review_manifest, ledger, review_pages = _load_review_state(root, run_id)
-        manifest_path = run_dir / "cv-summary-manifest-v4.json"
-        translation_started = bool(list(run_dir.glob("cv-summary-decision-*.json")))
-        if manifest_path.exists() and translation_started:
-            _existing_run_dir, existing_manifest, _existing_source, _existing_pages = (
-                _load_cv_summary_state(root, run_id)
-            )
-            page_max_bytes = int(existing_manifest["page_max_bytes"])
-            max_pages = int(existing_manifest["max_pages"])
-        decisions, _missing = _load_review_decisions(
-            run_dir, run_id, review_pages, require_complete=True
-        )
-        decision_by_id = {str(item["arxiv_id"]): item for item in decisions}
-        _source_by_id, focus_decisions, watch_decisions = _select_review_results(
-            ledger, decisions
-        )
-        selected_ids = {
-            str(item["arxiv_id"]) for item in focus_decisions + watch_decisions
-        }
-        records: list[dict[str, Any]] = []
-        for item in ledger["inventory"]:
-            paper = item["paper"]
-            arxiv_id = str(paper["arxiv_id"])
-            if (
-                REPORT_CATEGORY not in paper.get("query_sources", [])
-                or arxiv_id in selected_ids
-                or item.get("local_classification") in {"hidden", "already_known"}
-            ):
-                continue
-            decision = decision_by_id.get(arxiv_id)
-            if decision and decision.get("semantic_exclusion_reason") is not None:
-                continue
-            records.append(
-                {
-                    "paper": copy.deepcopy(paper),
-                    "arxiv_id": arxiv_id,
-                    "local_topic_group": item["local_topic_group"],
-                    "prefilter_score": int(item["prefilter_score"]),
-                    "prefilter_reasons": copy.deepcopy(item["prefilter_reasons"]),
-                    "prefilter_metrics": copy.deepcopy(item["prefilter_metrics"]),
-                    "model_score": decision.get("relevance_score") if decision else None,
-                    "source_extracts": _deterministic_cv_extracts(paper),
-                    "existing_translation": (
-                        {
-                            field: _clip_email_prose(
-                                decision[field], CV_SUMMARY_PROSE_LIMITS[field]
-                            )
-                            for field in CV_SUMMARY_PROSE_LIMITS
-                        }
-                        if decision
-                        else None
-                    ),
-                }
-            )
-        records.sort(key=_cv_summary_rank_key)
-        for index, record in enumerate(records):
-            record["summary_kind"] = "detailed" if index < CV_DETAILED_LIMIT else "compact"
-            if record.get("existing_translation") and record["summary_kind"] == "compact":
-                record["existing_translation"] = {
-                    "core_conclusion": _clip_email_prose(
-                        record["existing_translation"]["core_conclusion"],
-                        CV_COMPACT_CONCLUSION_LIMIT,
-                    )
-                }
-        pages, source_limit = _cv_summary_page_values(
-            run_id,
-            records,
-            page_max_bytes=page_max_bytes,
-            max_pages=max_pages,
-        )
-        page_records = []
-        for page in pages:
-            path = run_dir / f"cv-summary-page-{page['page']:03d}.json"
-            payload = _json_bytes(page)
-            page_records.append(
-                {
-                    "page": page["page"],
-                    "path": str(path),
-                    "count": len(page["items"]),
-                    "bytes": len(payload),
-                    "sha256": hashlib.sha256(payload).hexdigest(),
-                }
-            )
-        source = {
-            "schema_version": SCHEMA_VERSION,
-            "run_id": run_id,
-            "announcement_date": ledger["announcement_date"],
-            "records": records,
-        }
-        source_path = run_dir / "cv-summary-source-v4.json"
-        manifest = {
-            "schema_version": SCHEMA_VERSION,
-            "coverage_policy": DAILY_COVERAGE_POLICY,
-            "report_category": REPORT_CATEGORY,
-            "public_profile_sha256": _require_public_configuration()["_config_sha256"],
-            "run_id": run_id,
-            "page_max_bytes": page_max_bytes,
-            "max_pages": max_pages,
-            "page_count": len(page_records),
-            "source_clip_chars": source_limit,
-            "record_count": len(records),
-            "detailed_count": min(CV_DETAILED_LIMIT, len(records)),
-            "compact_count": max(0, len(records) - CV_DETAILED_LIMIT),
-            "translation_count": sum(not item.get("existing_translation") for item in records),
-            "source_path": str(source_path),
-            "source_sha256": _json_sha256(source),
-            "review_manifest_sha256": _json_sha256(review_manifest),
-            "pages": page_records,
-        }
-        if manifest_path.exists() and read_json(manifest_path) == manifest:
-            return {
-                "run_id": run_id,
-                "records": len(records),
-                "pages": len(page_records),
-                "model_visible_bytes": sum(item["bytes"] for item in page_records),
-                "manifest": str(manifest_path),
-                "reused": True,
+            continue
+        decision = decision_by_id.get(arxiv_id)
+        if decision and decision.get("semantic_exclusion_reason") is not None:
+            continue
+        ranked.append(
+            {
+                "paper": paper,
+                "arxiv_id": arxiv_id,
+                "prefilter_score": int(item["prefilter_score"]),
+                "prefilter_metrics": item["prefilter_metrics"],
+                "model_score": decision.get("relevance_score") if decision else None,
             }
-        if translation_started:
-            raise DigestValidationError(_report_category_text('cs.CV summary source changed after translation began'))
-        atomic_write_json(source_path, source)
-        for record, page in zip(page_records, pages):
-            atomic_write_json(Path(record["path"]), page)
-        atomic_write_json(manifest_path, manifest)
-        return {
-            "run_id": run_id,
-            "records": len(records),
-            "pages": len(page_records),
-            "model_visible_bytes": sum(item["bytes"] for item in page_records),
-            "manifest": str(manifest_path),
-            "reused": False,
-        }
-
-
-def _load_cv_summary_state(
-    root: Path, run_id: str
-) -> tuple[Path, dict[str, Any], dict[str, Any], list[tuple[dict[str, Any], dict[str, Any]]]]:
-    run_dir = announcement_batch_output_path(root.resolve(), run_id, TRACKED_CATEGORIES[0]).parent
-    manifest = read_json(run_dir / "cv-summary-manifest-v4.json")
-    _validate_public_artifact_profile(manifest)
-    if manifest.get("schema_version") != SCHEMA_VERSION or manifest.get("run_id") != run_id:
-        raise DigestValidationError(_report_category_text('v4 cs.CV summary manifest identity mismatch'))
-    page_max_bytes = manifest.get("page_max_bytes")
-    max_pages = manifest.get("max_pages")
-    if not isinstance(page_max_bytes, int) or not 8_000 <= page_max_bytes <= DEFAULT_CV_SUMMARY_PAGE_MAX_BYTES:
-        raise DigestValidationError(_report_category_text('v4 cs.CV summary page maximum is invalid'))
-    if not isinstance(max_pages, int) or not 1 <= max_pages <= MAX_CV_SUMMARY_PAGES:
-        raise DigestValidationError(_report_category_text('v4 cs.CV summary page safety limit is invalid'))
-    source_path = Path(str(manifest.get("source_path") or ""))
-    if not source_path.is_file() or hashlib.sha256(source_path.read_bytes()).hexdigest() != manifest.get("source_sha256"):
-        raise DigestValidationError(_report_category_text('v4 cs.CV summary source hash mismatch'))
-    source = read_json(source_path)
-    if source.get("schema_version") != SCHEMA_VERSION or source.get("run_id") != run_id:
-        raise DigestValidationError(_report_category_text('v4 cs.CV summary source identity mismatch'))
-    source_records = source.get("records")
-    if not isinstance(source_records, list) or len(source_records) > MAX_CV_SUMMARY_RECORDS:
-        raise DigestValidationError(_report_category_text('v4 cs.CV summary source record safety limit exceeded'))
-    if manifest.get("record_count") != len(source_records):
-        raise DigestValidationError(_report_category_text('v4 cs.CV summary source record count mismatch'))
-    page_manifest = manifest.get("pages")
-    if not isinstance(page_manifest, list) or manifest.get("page_count") != len(page_manifest):
-        raise DigestValidationError(_report_category_text('v4 cs.CV summary page count mismatch'))
-    pages = []
-    page_arxiv_ids: list[str] = []
-    for expected, record in enumerate(page_manifest, start=1):
-        path = Path(str(record.get("path") or ""))
-        if record.get("page") != expected or not path.is_file():
-            raise DigestValidationError((_report_category_text('missing v4 cs.CV summary page ') + f'{expected}'))
-        if hashlib.sha256(path.read_bytes()).hexdigest() != record.get("sha256"):
-            raise DigestValidationError((_report_category_text('v4 cs.CV summary page ') + f'{expected}' + ' hash mismatch'))
-        page = read_json(path)
-        payload_bytes = len(_json_bytes(page))
-        if payload_bytes > page_max_bytes:
-            raise DigestValidationError((_report_category_text('v4 cs.CV summary page ') + f'{expected}' + ' exceeds byte budget'))
-        if record.get("bytes") != payload_bytes or record.get("count") != len(page.get("items", [])):
-            raise DigestValidationError((_report_category_text('v4 cs.CV summary page ') + f'{expected}' + ' metadata mismatch'))
-        if page.get("schema_version") != SCHEMA_VERSION or page.get("run_id") != run_id or page.get("page") != expected:
-            raise DigestValidationError((_report_category_text('v4 cs.CV summary page ') + f'{expected}' + ' identity mismatch'))
-        page_arxiv_ids.extend(str(item[0]) for item in page.get("items", []))
-        pages.append((record, page))
-    if len(pages) > max_pages or len(pages) > MAX_CV_SUMMARY_PAGES:
-        raise DigestValidationError(_report_category_text('v4 cs.CV summary page budget exceeded'))
-    pending_arxiv_ids = [
-        str(record.get("arxiv_id"))
-        for record in source_records
-        if not record.get("existing_translation")
-    ]
-    if page_arxiv_ids != pending_arxiv_ids:
-        raise DigestValidationError(
-            _report_category_text('v4 cs.CV summary pages do not cover pending IDs in fixed order')
         )
-    if manifest.get("translation_count") != len(pending_arxiv_ids):
-        raise DigestValidationError(_report_category_text('v4 cs.CV summary translation count mismatch'))
-    return run_dir, manifest, source, pages
-
-
-def _cv_translation_contract(run_id: str, record: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "schema_version": SCHEMA_VERSION,
-        "input_template": {
-            "schema_version": SCHEMA_VERSION,
-            "run_id": run_id,
-            "page": record["page"],
-            "source_page_sha256": record["sha256"],
-            "translations": [],
-        },
-        "translation_fields": list(CV_SUMMARY_PROSE_LIMITS),
-        "compact_field": "core_conclusion",
-        "prose_limits": {**CV_SUMMARY_PROSE_LIMITS, "compact_core_conclusion": CV_COMPACT_CONCLUSION_LIMIT},
-        "rules": "faithful Chinese translation only; do not rescore, classify, infer, or add claims",
-    }
-
-
-def _validate_cv_translation(
-    run_id: str,
-    record: dict[str, Any],
-    page: dict[str, Any],
-    value: dict[str, Any],
-) -> dict[str, Any]:
-    if value.get("schema_version") != SCHEMA_VERSION or value.get("run_id") != run_id:
-        raise DigestValidationError(_report_category_text('cs.CV translation identity mismatch'))
-    if value.get("page") != record["page"] or value.get("source_page_sha256") != record["sha256"]:
-        raise DigestValidationError(_report_category_text('cs.CV translation page/hash mismatch'))
-    values = value.get("translations")
-    items = page.get("items")
-    if not isinstance(values, list) or not isinstance(items, list) or len(values) != len(items):
-        raise DigestValidationError(_report_category_text('cs.CV translation count mismatch'))
-    if [str(item.get("arxiv_id")) for item in values if isinstance(item, dict)] != [str(item[0]) for item in items]:
-        raise DigestValidationError(_report_category_text('cs.CV translation IDs/order mismatch'))
-    normalized = []
-    for source_item, translation in zip(items, values):
-        arxiv_id, kind = str(source_item[0]), str(source_item[1])
-        fields = tuple(CV_SUMMARY_PROSE_LIMITS) if kind == "d" else ("core_conclusion",)
-        result = {"arxiv_id": arxiv_id}
-        for field in fields:
-            prose = str(translation.get(field, "")).strip()
-            limit = CV_SUMMARY_PROSE_LIMITS[field] if kind == "d" else CV_COMPACT_CONCLUSION_LIMIT
-            if validate_chinese_prose(prose, field) or len(prose) > limit:
-                raise DigestValidationError(f"invalid {field} translation for {arxiv_id}")
-            result[field] = prose
-        normalized.append(result)
-    return {
-        "schema_version": SCHEMA_VERSION,
-        "run_id": run_id,
-        "page": record["page"],
-        "source_page_sha256": record["sha256"],
-        "translations": normalized,
-    }
-
-
-def cv_summary_status(root: Path, run_id: str) -> dict[str, Any]:
-    configure_public_runtime(root)
-    run_dir, manifest, _source, pages = _load_cv_summary_state(root.resolve(), run_id)
-    missing = [record["page"] for record, _page in pages if not (run_dir / f"cv-summary-decision-{record['page']:03d}.json").exists()]
-    if missing:
-        number = int(missing[0])
-        record = manifest["pages"][number - 1]
-        return {
-            "run_id": run_id,
-            "phase": "cv_summary",
-            "completed_pages": len(pages) - len(missing),
-            "total_pages": len(pages),
-            "next_page": record["path"],
-            "next_page_number": number,
-            "next_page_sha256": record["sha256"],
-            "decision_contract": _cv_translation_contract(run_id, record),
-            "next_action": "record_cv_summary_page",
-        }
-    return {
-        "run_id": run_id,
-        "phase": "cv_summary_complete",
-        "completed_pages": len(pages),
-        "total_pages": len(pages),
-        "next_action": "finalize_digest",
-    }
-
-
-def record_cv_summary_page(
-    root: Path, run_id: str, page_number: int, input_path: Path
-) -> dict[str, Any]:
-    configure_public_runtime(root)
-    root = root.resolve()
-    with _exclusive_gate_state_lock(root / "digest-transaction.lock"):
-        run_dir, _manifest, _source, pages = _load_cv_summary_state(root, run_id)
-        if not 1 <= page_number <= len(pages):
-            raise DigestValidationError(_report_category_text('cs.CV summary page number is out of range'))
-        record, page = pages[page_number - 1]
-        value = _validate_cv_translation(run_id, record, page, read_json(input_path.resolve()))
-        output = run_dir / f"cv-summary-decision-{page_number:03d}.json"
-        if output.exists() and read_json(output) != value:
-            raise DigestValidationError(_report_category_text('cs.CV translation page already has different content'))
-        replayed = output.exists()
-        if not replayed:
-            atomic_write_json(output, value)
-        return {"run_id": run_id, "page": page_number, "recorded": len(value["translations"]), "path": str(output), "replayed": replayed}
+    ranked.sort(key=_cs_cv_report_rank_key)
+    papers = []
+    for record in ranked:
+        paper = copy.deepcopy(record["paper"])
+        paper["relevance_score"] = int(
+            record["model_score"] if type(record["model_score"]) is int else record["prefilter_score"]
+        )
+        papers.append({field: paper.get(field) for field in CS_CV_REPORT_FIELDS})
+    return papers
 
 
 def finalize_digest(root: Path, run_id: str) -> dict[str, Any]:
@@ -5754,33 +5360,11 @@ def finalize_digest(root: Path, run_id: str) -> dict[str, Any]:
     root = root.resolve()
     run_dir, review_manifest, ledger, review_pages = _load_review_state(root, run_id)
     decisions, _missing = _load_review_decisions(run_dir, run_id, review_pages, require_complete=True)
-    cv_run_dir, cv_manifest, cv_source, cv_pages = _load_cv_summary_state(root, run_id)
-    if cv_run_dir != run_dir:
-        raise DigestValidationError(_report_category_text('review and cs.CV summary run directories differ'))
-    translations: dict[str, dict[str, Any]] = {}
-    for record, page in cv_pages:
-        path = run_dir / f"cv-summary-decision-{record['page']:03d}.json"
-        if not path.exists():
-            raise DigestValidationError((_report_category_text('cs.CV translation is incomplete; missing page ') + f"{record['page']}"))
-        value = _validate_cv_translation(run_id, record, page, read_json(path))
-        translations.update({str(item["arxiv_id"]): item for item in value["translations"]})
     source_by_id, focus_decisions, watch_decisions = _select_review_results(ledger, decisions)
     focus = [_v3_selected_paper(source_by_id[str(item["arxiv_id"])], item) for item in focus_decisions]
     watch = [_v3_selected_paper(source_by_id[str(item["arxiv_id"])], item) for item in watch_decisions]
-    detailed, compact = [], []
-    for record in cv_source["records"]:
-        paper = copy.deepcopy(record["paper"])
-        translated = record.get("existing_translation") or translations.get(record["arxiv_id"])
-        if not isinstance(translated, dict):
-            raise DigestValidationError((_report_category_text('missing cs.CV translation for ') + f"{record['arxiv_id']}"))
-        paper["relevance_score"] = int(record["model_score"] if type(record.get("model_score")) is int else record["prefilter_score"])
-        if record["summary_kind"] == "detailed":
-            for field in CV_SUMMARY_PROSE_LIMITS:
-                paper[field] = translated[field]
-            detailed.append({field: paper.get(field) for field in CV_DETAILED_FIELDS})
-        else:
-            paper["core_conclusion"] = translated["core_conclusion"]
-            compact.append({field: paper.get(field) for field in CV_COMPACT_FIELDS})
+    selected_ids = {str(item["arxiv_id"]) for item in focus_decisions + watch_decisions}
+    cv_papers = _cs_cv_report_papers(ledger, decisions, selected_ids)
     exclusion_stats = copy.deepcopy(ledger["exclusion_stats"])
     for decision in decisions:
         reason = decision.get("semantic_exclusion_reason")
@@ -5792,7 +5376,7 @@ def finalize_digest(root: Path, run_id: str) -> dict[str, Any]:
     decision_by_id = {str(item["arxiv_id"]): item for item in decisions}
     result_ledger = copy.deepcopy(ledger)
     result_ledger["model_decisions"] = decisions
-    result_ledger["cs_cv_report"] = cv_source["records"]
+    result_ledger["cs_cv_report"] = cv_papers
     result_json = run_dir / "inventory-result-v4.json"
     result_markdown = run_dir / "inventory-report-v4.md"
     atomic_write_json(result_json, result_ledger)
@@ -5821,7 +5405,7 @@ def finalize_digest(root: Path, run_id: str) -> dict[str, Any]:
             "retrieved": int(ledger["retrieved_count"]), "unique": int(ledger["unique_count"]),
             "candidates": int(ledger["candidate_count"]), "model_reviewed": len(decisions),
             "budget_deferred": int(ledger["budget_deferred_count"]), "local_background": int(ledger["local_background_count"]),
-            "focus": len(focus), "watch": len(watch), "cv_remainder": len(detailed) + len(compact),
+            "focus": len(focus), "watch": len(watch), "cv_remainder": len(cv_papers),
             "excluded_hidden": int(exclusion_stats["total_hidden"]),
         },
         "inventory_summary": {
@@ -5829,16 +5413,14 @@ def finalize_digest(root: Path, run_id: str) -> dict[str, Any]:
             "model_candidate_limit": int(review_manifest["candidate_limit"]),
             "model_visible_bytes": sum(record["bytes"] for record in review_manifest["pages"]),
             "review_page_count": len(review_manifest["pages"]),
-            "cv_summary_page_count": len(cv_manifest["pages"]),
-            "cv_summary_visible_bytes": sum(record["bytes"] for record in cv_manifest["pages"]),
         },
-        "overview": (_report_category_text('本次完整检索七个 arXiv 分类，共获得 ') + f"{ledger['retrieved_count']}" + ' 条公告记录，去重后 ' + f"{ledger['unique_count']}" + ' 篇；模型复核 ' + f'{len(decisions)}' + ' 篇，推荐重点 ' + f'{len(focus)}' + ' 篇、关注 ' + f'{len(watch)}' + _report_category_text(' 篇，并整理其余 cs.CV ') + f'{len(detailed) + len(compact)}' + ' 篇。'),
+        "overview": (_report_category_text('本次完整检索七个 arXiv 分类，共获得 ') + f"{ledger['retrieved_count']}" + ' 条公告记录，去重后 ' + f"{ledger['unique_count']}" + ' 篇；模型复核 ' + f'{len(decisions)}' + ' 篇，推荐重点 ' + f'{len(focus)}' + ' 篇、关注 ' + f'{len(watch)}' + _report_category_text(' 篇；其余 cs.CV ') + f'{len(cv_papers)}' + ' 篇仅记入本地清单。'),
         "reading_order": [paper["title"] for paper in focus[:3]],
         "focus_papers": focus, "watch_papers": watch,
         "trends": trends, "actionable_insights": insights,
         "retrieval_coverage": copy.deepcopy(ledger["retrieval_coverage"]),
         "exclusion_stats": exclusion_stats,
-        "cs_cv_report": {"total": len(detailed) + len(compact), "detailed": detailed, "compact": compact},
+        "cs_cv_report": {"total": len(cv_papers), "papers": cv_papers},
         "arxiv_tools": ["mcp__arxiv_daily__fetch_announcement_phase"],
         "next_version_check_cursor": int(read_json(root / "last-successful-run.json").get("version_check_cursor", 0)),
         "local_reports": {"inventory_json": str(result_json), "inventory_markdown": str(result_markdown)},
@@ -5847,7 +5429,7 @@ def finalize_digest(root: Path, run_id: str) -> dict[str, Any]:
     validate_digest(digest)
     output = run_dir / "digest-v4.json"
     atomic_write_json(output, digest)
-    return {"run_id": run_id, "digest": str(output), "focus": len(focus), "watch": len(watch), "cv_remainder": len(detailed) + len(compact), "inventory": len(ledger["inventory"]), "local_report": str(result_markdown)}
+    return {"run_id": run_id, "digest": str(output), "focus": len(focus), "watch": len(watch), "cv_remainder": len(cv_papers), "inventory": len(ledger["inventory"]), "local_report": str(result_markdown)}
 
 
 def prepare_screening(
@@ -7225,7 +6807,7 @@ def validate_digest_v4(digest: dict[str, Any]) -> None:
         errors.extend(
             require_fields(
                 inventory_summary,
-                ("inventory_count", "report_record_count", "model_candidate_limit", "model_visible_bytes", "review_page_count", "cv_summary_page_count", "cv_summary_visible_bytes"),
+                ("inventory_count", "report_record_count", "model_candidate_limit", "model_visible_bytes", "review_page_count"),
                 "digest.inventory_summary",
             )
         )
@@ -7235,15 +6817,6 @@ def validate_digest_v4(digest: dict[str, Any]) -> None:
             errors.append("digest.inventory_summary.review_page_count must be 0..2")
         if not isinstance(inventory_summary.get("model_visible_bytes"), int) or not 0 <= inventory_summary.get("model_visible_bytes", -1) <= DEFAULT_REVIEW_PAGE_MAX_BYTES * MAX_REVIEW_PAGES:
             errors.append("digest.inventory_summary.model_visible_bytes exceeds 60000")
-        if not isinstance(inventory_summary.get("cv_summary_page_count"), int) or not 0 <= inventory_summary.get("cv_summary_page_count", -1) <= MAX_CV_SUMMARY_PAGES:
-            errors.append(
-                f"digest.inventory_summary.cv_summary_page_count must be 0..{MAX_CV_SUMMARY_PAGES}"
-            )
-        if not isinstance(inventory_summary.get("cv_summary_visible_bytes"), int) or not 0 <= inventory_summary.get("cv_summary_visible_bytes", -1) <= DEFAULT_CV_SUMMARY_PAGE_MAX_BYTES * MAX_CV_SUMMARY_PAGES:
-            errors.append(
-                "digest.inventory_summary.cv_summary_visible_bytes exceeds "
-                f"{DEFAULT_CV_SUMMARY_PAGE_MAX_BYTES * MAX_CV_SUMMARY_PAGES}"
-            )
         if (
             not isinstance(inventory_summary.get("report_record_count"), int)
             or inventory_summary.get("report_record_count", -1)
@@ -7310,50 +6883,31 @@ def validate_digest_v4(digest: dict[str, Any]) -> None:
     if not isinstance(remainder, dict):
         errors.append("digest.cs_cv_report must be an object")
     else:
-        detailed = remainder.get("detailed")
-        compact = remainder.get("compact")
-        if not isinstance(detailed, list) or not isinstance(compact, list):
-            errors.append("digest.cs_cv_report detailed/compact must be arrays")
+        papers = remainder.get("papers")
+        if not isinstance(papers, list):
+            errors.append("digest.cs_cv_report.papers must be an array")
         else:
-            if len(detailed) > CV_DETAILED_LIMIT:
-                errors.append("digest.cs_cv_report.detailed exceeds 50 papers")
-            if remainder.get("total") != len(detailed) + len(compact):
-                errors.append("digest.cs_cv_report.total must equal detailed + compact")
+            if remainder.get("total") != len(papers):
+                errors.append("digest.cs_cv_report.total must equal papers length")
             if isinstance(stats, dict) and stats.get("cv_remainder") != remainder.get("total"):
                 errors.append("digest.stats.cv_remainder must equal cs_cv_report.total")
             remainder_ids: set[str] = set()
-            for collection, papers, fields, prose_fields in (
-                ("detailed", detailed, CV_DETAILED_FIELDS, CV_DETAILED_CHINESE_PROSE_FIELDS),
-                ("compact", compact, CV_COMPACT_FIELDS, CV_COMPACT_CHINESE_PROSE_FIELDS),
-            ):
-                for index, paper in enumerate(papers):
-                    label = f"digest.cs_cv_report.{collection}[{index}]"
-                    if not isinstance(paper, dict):
-                        errors.append(f"{label} must be an object")
-                        continue
-                    errors.extend(require_fields(paper, fields, label))
-                    errors.extend(validate_announcement_identity(paper, label))
-                    if paper.get("announcement_date") != digest_date:
-                        errors.append(
-                            f"{label}.announcement_date must equal digest.date"
-                        )
-                    for field in prose_fields:
-                        errors.extend(validate_chinese_prose(paper.get(field), f"{label}.{field}"))
-                        if isinstance(paper.get(field), str):
-                            limit = (
-                                CV_SUMMARY_PROSE_LIMITS[field]
-                                if collection == "detailed"
-                                else CV_COMPACT_CONCLUSION_LIMIT
-                            )
-                            if len(paper[field]) > limit:
-                                errors.append(f"{label}.{field} exceeds {limit} characters")
-                    arxiv_id = str(paper.get("arxiv_id", ""))
-                    if arxiv_id in selected_ids or arxiv_id in remainder_ids:
-                        errors.append(f"paper {arxiv_id} is duplicated across email sections")
-                    remainder_ids.add(arxiv_id)
-                    score = paper.get("relevance_score")
-                    if type(score) is not int or not 0 <= score <= 100:
-                        errors.append(f"{label}.relevance_score must be 0..100")
+            for index, paper in enumerate(papers):
+                label = f"digest.cs_cv_report.papers[{index}]"
+                if not isinstance(paper, dict):
+                    errors.append(f"{label} must be an object")
+                    continue
+                errors.extend(require_fields(paper, CS_CV_REPORT_FIELDS, label))
+                errors.extend(validate_announcement_identity(paper, label))
+                if paper.get("announcement_date") != digest_date:
+                    errors.append(f"{label}.announcement_date must equal digest.date")
+                arxiv_id = str(paper.get("arxiv_id", ""))
+                if arxiv_id in selected_ids or arxiv_id in remainder_ids:
+                    errors.append(f"paper {arxiv_id} is duplicated across digest sections")
+                remainder_ids.add(arxiv_id)
+                score = paper.get("relevance_score")
+                if type(score) is not int or not 0 <= score <= 100:
+                    errors.append(f"{label}.relevance_score must be 0..100")
     local_reports = digest.get("local_reports")
     if not isinstance(local_reports, dict) or not all(
         isinstance(local_reports.get(field), str) and local_reports[field].strip()
@@ -7362,7 +6916,7 @@ def validate_digest_v4(digest: dict[str, Any]) -> None:
         errors.append("digest.local_reports must contain inventory paths")
     if not errors:
         report = digest["cs_cv_report"]
-        for paper in [*digest["focus_papers"], *digest["watch_papers"], *report["detailed"], *report["compact"]]:
+        for paper in [*digest["focus_papers"], *digest["watch_papers"], *report["papers"]]:
             sources = paper.get("query_sources")
             if (not isinstance(sources, list) or not sources
                     or any(not isinstance(value, str) or value not in TRACKED_CATEGORIES for value in sources)
@@ -8274,14 +7828,8 @@ def render_html_v4(digest: dict[str, Any]) -> str:
         ("是否值得精读", "worth_reading"),
         ("建议 follow", "follow_up"),
     )
-    cv_fields = (
-        ("核心结论", "core_conclusion"),
-        ("研究问题", "research_problem"),
-        ("方法概述", "method_overview"),
-        ("主要贡献", "contributions"),
-    )
-    style = "body{margin:0;background:#f5f7fb;color:#172033;font:14px/1.55 Arial,'Microsoft YaHei',sans-serif}main{max-width:920px;margin:auto;padding:18px}header,.panel,.paper{background:#fff;border:1px solid #dfe5ef;border-radius:10px;padding:14px;margin:0 0 12px}.paper{border-left:4px solid #4263eb}h1{margin:0 0 5px;font-size:25px}h2{font-size:19px;margin:18px 0 9px}h3{font-size:16px;margin:0 0 5px}.group{color:#1e3a8a;margin:22px 0 7px}p{margin:5px 0}.meta,.muted{color:#667085}.label{font-weight:700;color:#243b64}a{color:#2457c5;text-decoration:none}.cv{padding:10px}.stats{word-spacing:8px}footer{color:#667085;padding:10px 2px}"
-    for selected_limit, cv_limit in ((180, 90), (145, 72), (115, 58), (90, 48)):
+    style = "body{margin:0;background:#f5f7fb;color:#172033;font:14px/1.55 Arial,'Microsoft YaHei',sans-serif}main{max-width:920px;margin:auto;padding:18px}header,.panel,.paper{background:#fff;border:1px solid #dfe5ef;border-radius:10px;padding:14px;margin:0 0 12px}.paper{border-left:4px solid #4263eb}h1{margin:0 0 5px;font-size:25px}h2{font-size:19px;margin:18px 0 9px}h3{font-size:16px;margin:0 0 5px}.group{color:#1e3a8a;margin:22px 0 7px}p{margin:5px 0}.meta,.muted{color:#667085}.label{font-weight:700;color:#243b64}a{color:#2457c5;text-decoration:none}.stats{word-spacing:8px}footer{color:#667085;padding:10px 2px}"
+    for selected_limit in (180, 145, 115, 90):
         blocks = [
             "<!doctype html><html lang='zh-CN'><head><meta charset='utf-8'>",
             "<meta name='daily-arxiv-delivery-format' content='html-pdf-single-v4'>",
@@ -8325,16 +7873,7 @@ def render_html_v4(digest: dict[str, Any]) -> str:
                     paper_index += 1
         blocks.append(f"<section class='panel'><h2>今日研究趋势</h2><ul>{html_list(digest['trends'])}</ul></section>")
         blocks.append(f"<section class='panel'><h2>对当前研究的可执行启发</h2><ul>{html_list(digest['actionable_insights'])}</ul></section>")
-        blocks.append(_report_category_text('<h2>cs.CV Top 50</h2>'))
-        for index, paper in enumerate(digest["cs_cv_report"]["detailed"], 1):
-            rows = "".join(
-                f"<p><span class='label'>{label}：</span>{emphasized(_clip_email_prose(paper[field], cv_limit))}</p>"
-                for label, field in cv_fields
-            )
-            blocks.append(
-                f"<article class='paper cv' data-arxiv-id='{emphasized(paper['arxiv_id'])}'><h3>{index}. <a href='{emphasized(paper['arxiv_url'])}'>{emphasized(paper['title'])}</a></h3><p class='meta'>arXiv:{emphasized(paper['arxiv_id'])} · 相关度 {paper['relevance_score']}</p>{rows}</article>"
-            )
-        blocks.append(_report_category_text('<footer>完整 cs.CV 条目及七类覆盖统计见 PDF 附件。<!--DAILY_ARXIV_BODY_END--></footer></main></body></html>'))
+        blocks.append(_report_category_text('<footer>七类检索覆盖及筛选统计见 PDF 附件。<!--DAILY_ARXIV_BODY_END--></footer></main></body></html>'))
         rendered = "".join(blocks)
         if len(rendered.encode("utf-8")) <= MAX_EMAIL_HTML_BYTES:
             return rendered
@@ -8494,31 +8033,11 @@ def markdown_cv_compact(paper: dict[str, Any], index: int) -> str:
 
 
 def render_markdown_v4(digest: dict[str, Any]) -> str:
-    remainder = digest["cs_cv_report"]
-    detailed = "".join(
-        markdown_cv_detailed(paper, index)
-        for index, paper in enumerate(remainder["detailed"], 1)
-    )
-    compact = "".join(
-        markdown_cv_compact(paper, index)
-        for index, paper in enumerate(
-            remainder["compact"], len(remainder["detailed"]) + 1
-        )
-    )
     coverage = "\n".join(
         f"- {entry['category']}: raw={entry['raw_count']}, unique={entry['unique_count']}, complete=true"
         for entry in digest["retrieval_coverage"]
     )
-    return (
-        render_markdown_v3(digest)
-        + _report_category_text('\n## cs.CV Top 50\n\n')
-        + (detailed or _report_category_text('本次无其它 cs.CV Top 50 条目。\n\n'))
-        + _report_category_text('## 其余 cs.CV 更新\n\n')
-        + (compact or _report_category_text('本次无其余 cs.CV 条目。\n'))
-        + _report_category_text('\n## 七类检索覆盖\n\n')
-        + coverage
-        + "\n"
-    )
+    return render_markdown_v3(digest) + _report_category_text('\n## 七类检索覆盖\n\n') + coverage + "\n"
 
 
 def render_markdown(digest: dict[str, Any]) -> str:
@@ -8990,7 +8509,7 @@ def upgrade_v3_pending(root: Path, run_id: str) -> dict[str, Any]:
             "run_id": run_id,
             "archived_pending": str(archive),
             "reused_review_pages": len(pages),
-            "next_action": "review_status" if missing else "prepare_cv_summary",
+            "next_action": "review_status" if missing else "finalize_digest",
         }
 
 
@@ -9190,11 +8709,15 @@ def _commit_success_locked(
         if len(gmail_message_ids) != 1:
             raise DigestValidationError("v4 delivery must commit exactly one Gmail message ID")
         remainder = pending["cs_cv_report"]
+        # Pending digests finalized before cs.CV translation was removed still
+        # carry the detailed/compact split.
+        remainder_papers = remainder.get("papers")
+        if remainder_papers is None:
+            remainder_papers = [*remainder["detailed"], *remainder["compact"]]
         delivered_papers = (
             list(pending["focus_papers"])
             + list(pending["watch_papers"])
-            + list(remainder["detailed"])
-            + list(remainder["compact"])
+            + list(remainder_papers)
         )
     elif pending.get("schema_version") == 3:
         remainder = {"total": 0, "detailed": [], "compact": []}
@@ -9407,31 +8930,6 @@ def parse_args() -> argparse.Namespace:
     review_record_parser.add_argument("--page", required=True, type=int)
     review_record_parser.add_argument("--input", required=True, type=Path)
 
-    cv_summary_parser = subparsers.add_parser(
-        "prepare-cv-summary",
-        help=_report_category_text('prepare deterministic bounded pages for all eligible cs.CV translations'),
-    )
-    cv_summary_parser.add_argument("--root", required=True, type=Path)
-    cv_summary_parser.add_argument("--run-id", required=True)
-    cv_summary_parser.add_argument(
-        "--page-max-bytes", type=int, default=DEFAULT_CV_SUMMARY_PAGE_MAX_BYTES
-    )
-    cv_summary_parser.add_argument("--max-pages", type=int, default=MAX_CV_SUMMARY_PAGES)
-
-    cv_summary_status_parser = subparsers.add_parser(
-        "cv-summary-status", help=_report_category_text('return only the next bounded v4 cs.CV translation page')
-    )
-    cv_summary_status_parser.add_argument("--root", required=True, type=Path)
-    cv_summary_status_parser.add_argument("--run-id", required=True)
-
-    cv_summary_record_parser = subparsers.add_parser(
-        "record-cv-summary-page", help=_report_category_text('validate and record one bounded v4 cs.CV translation page')
-    )
-    cv_summary_record_parser.add_argument("--root", required=True, type=Path)
-    cv_summary_record_parser.add_argument("--run-id", required=True)
-    cv_summary_record_parser.add_argument("--page", required=True, type=int)
-    cv_summary_record_parser.add_argument("--input", required=True, type=Path)
-
     finalize_parser = subparsers.add_parser(
         "finalize-digest", help="assemble digest-v4 and complete local inventory reports"
     )
@@ -9617,24 +9115,6 @@ def main() -> int:
         return 0
     if args.command == "record-review-page":
         result = record_review_page(
-            args.root.resolve(), args.run_id, args.page, args.input
-        )
-        print(json.dumps(result, ensure_ascii=False))
-        return 0
-    if args.command == "prepare-cv-summary":
-        result = prepare_cv_summary(
-            args.root.resolve(),
-            args.run_id,
-            page_max_bytes=args.page_max_bytes,
-            max_pages=args.max_pages,
-        )
-        print(json.dumps(result, ensure_ascii=False))
-        return 0
-    if args.command == "cv-summary-status":
-        print(json.dumps(cv_summary_status(args.root.resolve(), args.run_id), ensure_ascii=False))
-        return 0
-    if args.command == "record-cv-summary-page":
-        result = record_cv_summary_page(
             args.root.resolve(), args.run_id, args.page, args.input
         )
         print(json.dumps(result, ensure_ascii=False))

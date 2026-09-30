@@ -114,28 +114,6 @@ for page_record in manifest['pages']:
         'decisions': decisions,
     })
     runtime.record_review_page(root, run_id, page['page'], path)
-runtime.prepare_cv_summary(root, run_id)
-summary = runtime.read_json(run_dir / 'cv-summary-manifest-v4.json')
-assert summary['pages'], 'fixture must exercise complete-report summary pages'
-for page_record in summary['pages']:
-    page = runtime.read_json(Path(page_record['path']))
-    translations = []
-    for arxiv_id, kind, _source_fields in page['items']:
-        value = {'arxiv_id': arxiv_id, 'core_conclusion': '该合成样例检查概率摘要的中文报告字段。'}
-        if kind == 'd':
-            value.update({
-                'research_problem': '该合成样例检查概率研究问题的报告表示。',
-                'method_overview': '通过合成输入测试摘要审核后的报告内容。',
-                'contributions': '该合成样例用于验证报告覆盖和字段完整性。',
-            })
-        translations.append(value)
-    path = run_dir / f"summary-input-{page['page']:03d}.json"
-    runtime.atomic_write_json(path, {
-        'schema_version': runtime.SCHEMA_VERSION, 'run_id': run_id,
-        'page': page['page'], 'source_page_sha256': page_record['sha256'],
-        'translations': translations,
-    })
-    runtime.record_cv_summary_page(root, run_id, page['page'], path)
 finalized = runtime.finalize_digest(root, run_id)
 digest = runtime.read_json(Path(finalized['digest']))
 runtime.validate_digest(digest)
@@ -146,7 +124,7 @@ assert len(digest['focus_papers']) == len(categories)
 report = digest['cs_cv_report']
 assert report['total'] == 1
 assert digest['report_already_known_count'] == int(bool(data.get('known_paper')))
-assert all(data['report_category'] in row['query_sources'] for row in report['detailed'] + report['compact'])
+assert all(data['report_category'] in row['query_sources'] for row in report['papers'])
 assert (root / 'last-successful-run.json').read_bytes() == initial_success_bytes, 'Rendering must not commit delivery'
 assert (root / 'sent-papers.json').read_bytes() == initial_sent_bytes
 '''
@@ -972,7 +950,7 @@ assert runtime.TRACKED_CATEGORIES == ('math.PR', 'quant-ph')
         self.run_non_cs_pipeline(["quant-ph"], "quant-ph", r'''
 assert digest['report_already_known_count'] == 1
 displayed = [*digest['focus_papers'], *digest['watch_papers'],
-             *digest['cs_cv_report']['detailed'], *digest['cs_cv_report']['compact']]
+             *digest['cs_cv_report']['papers']]
 assert '2607.00003' not in {paper['arxiv_id'] for paper in displayed}
 assert '2607.00003' not in runtime.render_html(digest)
 ''', known_paper=True)
@@ -982,8 +960,7 @@ assert '2607.00003' not in runtime.render_html(digest)
 changed = copy.deepcopy(digest)
 assert changed['report_already_known_count'] == 0
 assert changed['cs_cv_report']['total'] == 1
-changed['cs_cv_report']['detailed'] = []
-changed['cs_cv_report']['compact'] = []
+changed['cs_cv_report']['papers'] = []
 changed['cs_cv_report']['total'] = 0
 changed['stats']['cv_remainder'] = 0
 changed['report_already_known_count'] = 1
@@ -1009,8 +986,7 @@ from pypdf import PdfReader
 schema = json.loads(Path(data['schema']).read_text(encoding='utf-8'))
 jsonschema.Draft202012Validator(schema).validate(digest)
 html_text = runtime.render_html(digest)
-assert 'math.PR Top 50' in html_text
-assert 'cs.CV Top 50' not in html_text
+assert 'Top 50' not in html_text
 assert 'cs.CV seven Seven' in html_text, 'Source title was rewritten as product text'
 source_phrase = '用户原文保留 cs.CV seven Seven 文本。'
 source_digest = copy.deepcopy(digest)
@@ -1030,10 +1006,11 @@ delivery._register_pdf_fonts = lambda: ('STSong-Light', 'STSong-Light')
 pdf_path = run_dir / 'portable-report.pdf'
 delivery._build_pdf(digest, pdf_path)
 record = delivery._validate_pdf(digest, pdf_path, smoke_render=False)
-assert record['pdf_pages'] >= 3
+assert record['pdf_pages'] >= 2
 assert record['pdf_rendered_pages'] == []
 extracted = '\n'.join(page.extract_text() or '' for page in PdfReader(str(pdf_path)).pages)
-assert 'math.PR Top 50' in extracted and 'cs.CV Top 50' not in extracted
+assert '已配置分类检索覆盖' in extracted and 'Top 50' not in extracted
+assert '其余 math.PR 更新' not in extracted
 for category in data['categories']:
     assert category in extracted
 assert (root / 'last-successful-run.json').read_bytes() == initial_success_bytes
@@ -1050,7 +1027,7 @@ except runtime.DigestValidationError:
 else:
     raise AssertionError('Digest accepted missing configured coverage')
 changed = copy.deepcopy(digest)
-changed['cs_cv_report']['detailed'][0]['query_sources'] = ['quant-ph']
+changed['cs_cv_report']['papers'][0]['query_sources'] = ['quant-ph']
 try:
     runtime.validate_digest(changed)
 except runtime.DigestValidationError:

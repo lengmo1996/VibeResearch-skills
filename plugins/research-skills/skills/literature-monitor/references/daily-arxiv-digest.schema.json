@@ -128,9 +128,7 @@
         "report_record_count",
         "model_candidate_limit",
         "model_visible_bytes",
-        "review_page_count",
-        "cv_summary_page_count",
-        "cv_summary_visible_bytes"
+        "review_page_count"
       ],
       "properties": {
         "inventory_count": {
@@ -153,16 +151,6 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 2
-        },
-        "cv_summary_page_count": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 20
-        },
-        "cv_summary_visible_bytes": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 600000
         }
       }
     },
@@ -240,27 +228,20 @@
     },
     "cs_cv_report": {
       "type": "object",
+      "description": "Ranked untranslated metadata for the remaining report-category papers; recorded as delivered at commit but not rendered.",
       "required": [
         "total",
-        "detailed",
-        "compact"
+        "papers"
       ],
       "properties": {
         "total": {
           "type": "integer",
           "minimum": 0
         },
-        "detailed": {
-          "type": "array",
-          "maxItems": 50,
-          "items": {
-            "$ref": "#/$defs/cvDetailed"
-          }
-        },
-        "compact": {
+        "papers": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/cvCompact"
+            "$ref": "#/$defs/cvReport"
           }
         }
       }
@@ -342,94 +323,7 @@
     }
   },
   "$defs": {
-    "cvDetailed": {
-      "type": "object",
-      "required": [
-        "title",
-        "authors",
-        "arxiv_id",
-        "version",
-        "announcement_date",
-        "announcement_types",
-        "query_sources",
-        "categories",
-        "submitted_or_updated",
-        "arxiv_url",
-        "pdf_url",
-        "relevance_score",
-        "core_conclusion",
-        "research_problem",
-        "method_overview",
-        "contributions"
-      ],
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "authors": {
-          "type": "array"
-        },
-        "arxiv_id": {
-          "type": "string"
-        },
-        "version": {
-          "type": [
-            "integer",
-            "null"
-          ]
-        },
-        "announcement_date": {
-          "type": "string",
-          "format": "date"
-        },
-        "announcement_types": {
-          "type": "array"
-        },
-        "query_sources": {
-          "type": "array",
-          "minItems": 1,
-          "maxItems": 16,
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/arxivCategory"
-          }
-        },
-        "categories": {
-          "type": "array"
-        },
-        "submitted_or_updated": {
-          "type": "string"
-        },
-        "arxiv_url": {
-          "type": "string"
-        },
-        "pdf_url": {
-          "type": "string"
-        },
-        "relevance_score": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 100
-        },
-        "core_conclusion": {
-          "type": "string",
-          "maxLength": 60
-        },
-        "research_problem": {
-          "type": "string",
-          "maxLength": 48
-        },
-        "method_overview": {
-          "type": "string",
-          "maxLength": 60
-        },
-        "contributions": {
-          "type": "string",
-          "maxLength": 48
-        }
-      }
-    },
-    "cvCompact": {
+    "cvReport": {
       "type": "object",
       "required": [
         "title",
@@ -441,8 +335,7 @@
         "submitted_or_updated",
         "arxiv_url",
         "pdf_url",
-        "relevance_score",
-        "core_conclusion"
+        "relevance_score"
       ],
       "properties": {
         "title": {
@@ -486,10 +379,6 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 100
-        },
-        "core_conclusion": {
-          "type": "string",
-          "maxLength": 56
         }
       }
     },

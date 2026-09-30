@@ -98,7 +98,7 @@ Do not change the recipient from authenticated self. Loading credentials,
 connecting Gmail or completing configuration does not authorize a send.
 
 Follow the complete protocol for atomic coverage of EVERY configured category,
-bounded review, translation of the configured report category, rendering,
+bounded review, rendering,
 independent Draft/SENT raw-MIME attestation, proof phases,
 leases, monotonic send attempts, exact-SENT-first recovery and backlog commits.
 Use the checked bridge; do not call a Gmail connector outside it. Preserve all
