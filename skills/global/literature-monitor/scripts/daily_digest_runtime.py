@@ -304,6 +304,23 @@ CS_CV_REPORT_FIELDS = (
     "pdf_url",
     "relevance_score",
 )
+# Digests finalized before translation was removed keep cs_cv_report as a
+# translated detailed/compact split; they are still validated and re-rendered
+# exactly as sent.
+LEGACY_CV_DETAILED_LIMIT = 50
+LEGACY_CV_PROSE_LIMITS = {
+    "core_conclusion": 60,
+    "research_problem": 48,
+    "method_overview": 60,
+    "contributions": 48,
+}
+LEGACY_CV_COMPACT_CONCLUSION_LIMIT = 56
+LEGACY_CV_EMAIL_FIELDS = (
+    ("核心结论", "core_conclusion"),
+    ("研究问题", "research_problem"),
+    ("方法概述", "method_overview"),
+    ("主要贡献", "contributions"),
+)
 CHINESE_PROSE_RE = re.compile(r"[\u3400-\u4dbf\u4e00-\u9fff]")
 PAPER_CHINESE_PROSE_FIELDS = (
     "recommendation",
@@ -6883,31 +6900,52 @@ def validate_digest_v4(digest: dict[str, Any]) -> None:
     if not isinstance(remainder, dict):
         errors.append("digest.cs_cv_report must be an object")
     else:
-        papers = remainder.get("papers")
-        if not isinstance(papers, list):
-            errors.append("digest.cs_cv_report.papers must be an array")
+        # (name, papers, required fields, Chinese prose fields, prose limits)
+        collections: list[tuple[str, list[Any], tuple[str, ...], tuple[str, ...], dict[str, int]]] | None
+        if "papers" in remainder or "detailed" not in remainder:
+            papers = remainder.get("papers")
+            collections = [("papers", papers, CS_CV_REPORT_FIELDS, (), {})] if isinstance(papers, list) else None
+            if collections is None:
+                errors.append("digest.cs_cv_report.papers must be an array")
         else:
-            if remainder.get("total") != len(papers):
-                errors.append("digest.cs_cv_report.total must equal papers length")
+            detailed, compact = remainder.get("detailed"), remainder.get("compact")
+            collections = None
+            if not isinstance(detailed, list) or not isinstance(compact, list):
+                errors.append("digest.cs_cv_report detailed/compact must be arrays")
+            else:
+                if len(detailed) > LEGACY_CV_DETAILED_LIMIT:
+                    errors.append("digest.cs_cv_report.detailed exceeds 50 papers")
+                collections = [
+                    ("detailed", detailed, CV_DETAILED_FIELDS, CV_DETAILED_CHINESE_PROSE_FIELDS, LEGACY_CV_PROSE_LIMITS),
+                    ("compact", compact, CV_COMPACT_FIELDS, CV_COMPACT_CHINESE_PROSE_FIELDS, {"core_conclusion": LEGACY_CV_COMPACT_CONCLUSION_LIMIT}),
+                ]
+        if collections is not None:
+            if remainder.get("total") != sum(len(papers) for _, papers, *_rest in collections):
+                errors.append("digest.cs_cv_report.total must equal its paper count")
             if isinstance(stats, dict) and stats.get("cv_remainder") != remainder.get("total"):
                 errors.append("digest.stats.cv_remainder must equal cs_cv_report.total")
             remainder_ids: set[str] = set()
-            for index, paper in enumerate(papers):
-                label = f"digest.cs_cv_report.papers[{index}]"
-                if not isinstance(paper, dict):
-                    errors.append(f"{label} must be an object")
-                    continue
-                errors.extend(require_fields(paper, CS_CV_REPORT_FIELDS, label))
-                errors.extend(validate_announcement_identity(paper, label))
-                if paper.get("announcement_date") != digest_date:
-                    errors.append(f"{label}.announcement_date must equal digest.date")
-                arxiv_id = str(paper.get("arxiv_id", ""))
-                if arxiv_id in selected_ids or arxiv_id in remainder_ids:
-                    errors.append(f"paper {arxiv_id} is duplicated across digest sections")
-                remainder_ids.add(arxiv_id)
-                score = paper.get("relevance_score")
-                if type(score) is not int or not 0 <= score <= 100:
-                    errors.append(f"{label}.relevance_score must be 0..100")
+            for name, papers, fields, prose_fields, limits in collections:
+                for index, paper in enumerate(papers):
+                    label = f"digest.cs_cv_report.{name}[{index}]"
+                    if not isinstance(paper, dict):
+                        errors.append(f"{label} must be an object")
+                        continue
+                    errors.extend(require_fields(paper, fields, label))
+                    errors.extend(validate_announcement_identity(paper, label))
+                    if paper.get("announcement_date") != digest_date:
+                        errors.append(f"{label}.announcement_date must equal digest.date")
+                    for field in prose_fields:
+                        errors.extend(validate_chinese_prose(paper.get(field), f"{label}.{field}"))
+                        if isinstance(paper.get(field), str) and len(paper[field]) > limits[field]:
+                            errors.append(f"{label}.{field} exceeds {limits[field]} characters")
+                    arxiv_id = str(paper.get("arxiv_id", ""))
+                    if arxiv_id in selected_ids or arxiv_id in remainder_ids:
+                        errors.append(f"paper {arxiv_id} is duplicated across digest sections")
+                    remainder_ids.add(arxiv_id)
+                    score = paper.get("relevance_score")
+                    if type(score) is not int or not 0 <= score <= 100:
+                        errors.append(f"{label}.relevance_score must be 0..100")
     local_reports = digest.get("local_reports")
     if not isinstance(local_reports, dict) or not all(
         isinstance(local_reports.get(field), str) and local_reports[field].strip()
@@ -6916,7 +6954,8 @@ def validate_digest_v4(digest: dict[str, Any]) -> None:
         errors.append("digest.local_reports must contain inventory paths")
     if not errors:
         report = digest["cs_cv_report"]
-        for paper in [*digest["focus_papers"], *digest["watch_papers"], *report["papers"]]:
+        report_papers = report["papers"] if "papers" in report else [*report["detailed"], *report["compact"]]
+        for paper in [*digest["focus_papers"], *digest["watch_papers"], *report_papers]:
             sources = paper.get("query_sources")
             if (not isinstance(sources, list) or not sources
                     or any(not isinstance(value, str) or value not in TRACKED_CATEGORIES for value in sources)
@@ -7828,8 +7867,13 @@ def render_html_v4(digest: dict[str, Any]) -> str:
         ("是否值得精读", "worth_reading"),
         ("建议 follow", "follow_up"),
     )
-    style = "body{margin:0;background:#f5f7fb;color:#172033;font:14px/1.55 Arial,'Microsoft YaHei',sans-serif}main{max-width:920px;margin:auto;padding:18px}header,.panel,.paper{background:#fff;border:1px solid #dfe5ef;border-radius:10px;padding:14px;margin:0 0 12px}.paper{border-left:4px solid #4263eb}h1{margin:0 0 5px;font-size:25px}h2{font-size:19px;margin:18px 0 9px}h3{font-size:16px;margin:0 0 5px}.group{color:#1e3a8a;margin:22px 0 7px}p{margin:5px 0}.meta,.muted{color:#667085}.label{font-weight:700;color:#243b64}a{color:#2457c5;text-decoration:none}.stats{word-spacing:8px}footer{color:#667085;padding:10px 2px}"
-    for selected_limit in (180, 145, 115, 90):
+    # Digests finalized before the cs.CV report was dropped carry the
+    # detailed/compact split; keep the exact layout their email was sent with
+    # so later attestation of the sent email can re-render it byte for byte.
+    report = digest["cs_cv_report"]
+    legacy_cv = None if "papers" in report else report["detailed"]
+    style = "body{margin:0;background:#f5f7fb;color:#172033;font:14px/1.55 Arial,'Microsoft YaHei',sans-serif}main{max-width:920px;margin:auto;padding:18px}header,.panel,.paper{background:#fff;border:1px solid #dfe5ef;border-radius:10px;padding:14px;margin:0 0 12px}.paper{border-left:4px solid #4263eb}h1{margin:0 0 5px;font-size:25px}h2{font-size:19px;margin:18px 0 9px}h3{font-size:16px;margin:0 0 5px}.group{color:#1e3a8a;margin:22px 0 7px}p{margin:5px 0}.meta,.muted{color:#667085}.label{font-weight:700;color:#243b64}a{color:#2457c5;text-decoration:none}" + (".cv{padding:10px}" if legacy_cv is not None else "") + ".stats{word-spacing:8px}footer{color:#667085;padding:10px 2px}"
+    for selected_limit, cv_limit in ((180, 90), (145, 72), (115, 58), (90, 48)):
         blocks = [
             "<!doctype html><html lang='zh-CN'><head><meta charset='utf-8'>",
             "<meta name='daily-arxiv-delivery-format' content='html-pdf-single-v4'>",
@@ -7873,7 +7917,19 @@ def render_html_v4(digest: dict[str, Any]) -> str:
                     paper_index += 1
         blocks.append(f"<section class='panel'><h2>今日研究趋势</h2><ul>{html_list(digest['trends'])}</ul></section>")
         blocks.append(f"<section class='panel'><h2>对当前研究的可执行启发</h2><ul>{html_list(digest['actionable_insights'])}</ul></section>")
-        blocks.append(_report_category_text('<footer>七类检索覆盖及筛选统计见 PDF 附件。<!--DAILY_ARXIV_BODY_END--></footer></main></body></html>'))
+        if legacy_cv is None:
+            blocks.append(_report_category_text('<footer>七类检索覆盖及筛选统计见 PDF 附件。<!--DAILY_ARXIV_BODY_END--></footer></main></body></html>'))
+        else:
+            blocks.append(_report_category_text('<h2>cs.CV Top 50</h2>'))
+            for index, paper in enumerate(legacy_cv, 1):
+                rows = "".join(
+                    f"<p><span class='label'>{label}：</span>{emphasized(_clip_email_prose(paper[field], cv_limit))}</p>"
+                    for label, field in LEGACY_CV_EMAIL_FIELDS
+                )
+                blocks.append(
+                    f"<article class='paper cv' data-arxiv-id='{emphasized(paper['arxiv_id'])}'><h3>{index}. <a href='{emphasized(paper['arxiv_url'])}'>{emphasized(paper['title'])}</a></h3><p class='meta'>arXiv:{emphasized(paper['arxiv_id'])} · 相关度 {paper['relevance_score']}</p>{rows}</article>"
+                )
+            blocks.append(_report_category_text('<footer>完整 cs.CV 条目及七类覆盖统计见 PDF 附件。<!--DAILY_ARXIV_BODY_END--></footer></main></body></html>'))
         rendered = "".join(blocks)
         if len(rendered.encode("utf-8")) <= MAX_EMAIL_HTML_BYTES:
             return rendered
