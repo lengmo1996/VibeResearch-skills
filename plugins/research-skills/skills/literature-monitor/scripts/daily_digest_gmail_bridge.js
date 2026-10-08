@@ -1690,7 +1690,10 @@
       ` --expected-size ${manifest[`${kind}_bytes`]}` +
       ` --expected-sha256 ${quotePowerShell(manifest[`${kind}_sha256`])}` +
       ` --offset ${offset} --max-bytes ${MIME_CHUNK_BYTES}` +
-      "; exit $LASTEXITCODE";
+      // The tool merges stderr into output, and an interpreter warning such as
+      // getpath's "Failed to find real location" would prefix the strict JSON.
+      // Drop the child's stderr; the exit code still rejects a failed read.
+      " 2>$null; exit $LASTEXITCODE";
     const processError = () => mimePreparationError(
       "local_mime_chunk_process_error",
       "Attested MIME chunk reader did not complete successfully",
@@ -2334,7 +2337,9 @@
   async function recordReceipt({
     receiptInput,
     sendLeaseToken = null,
-    pipedReceiptInput = false,
+    // Receipt frames are small, so default to redirected pipes: ConPTY can
+    // repaint a wrapped character into the receipt path and fail write-ahead.
+    pipedReceiptInput = true,
     pythonExe,
     scriptPath,
     root,

@@ -206,6 +206,15 @@ for (const respond of responses) {
 }
 """)
 
+    def test_child_stderr_is_kept_out_of_the_strict_json_channel(self):
+        self.run_js(r"""
+const f = harness();
+verifyPayload(await f.prepare(), f);
+for (const call of f.state.calls) {
+  assert.match(call.command, / --max-bytes 24000 2>\$null; exit \$LASTEXITCODE$/);
+}
+""")
+
     def test_truncated_session_is_drained_before_retry_even_when_marker_is_split(self):
         self.run_js(r"""
 const f = harness({respond({call, state}) {

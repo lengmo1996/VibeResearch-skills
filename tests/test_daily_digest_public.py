@@ -1095,7 +1095,8 @@ let reads = 0;
 global.tools = {
   async exec_command(input) {
     // Decode only the checked helper's quoted command shape; CI needs no PowerShell.
-    const suffix = '; exit $LASTEXITCODE';
+    // The real command discards child stderr, matching output: result.stdout below.
+    const suffix = ' 2>$null; exit $LASTEXITCODE';
     assert.ok(input.cmd.startsWith('& ') && input.cmd.endsWith(suffix));
     const command = input.cmd.slice(2, -suffix.length);
     const tokens = command.match(/'(?:[^']|'')*'|[^\s]+/g).map(value =>
